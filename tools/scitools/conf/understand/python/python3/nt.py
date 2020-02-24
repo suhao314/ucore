@@ -1,0 +1,142 @@
+import __builtin__
+
+class stat_result(__builtin__.object):
+     def __add__(): pass
+     def __contains__(): pass
+     def __eq__(): pass
+     def __ge__(): pass
+     def __getitem__(): pass
+     def __getslice__(): pass
+     def __gt__(): pass
+     def __hash__(): pass
+     def __le__(): pass
+     def __len__(): pass
+     def __lt__(): pass
+     def __mul__(): pass
+     def __ne__(): pass
+     def __reduce__(): pass
+     def __rmul__(): pass
+     st_atime = 0
+     st_ctime = 0
+     st_dev = 0
+     st_gid = 0
+     st_ino = 0
+     st_mode = 0
+     st_mtime = 0
+     st_nlink = 0
+     st_size = 0
+     st_uid = 0
+     __new__ = 0
+     n_fields = 13
+     n_sequence_fields = 10
+     n_unnamed_fields = 3
+    
+class statvfs_result(__builtin__.object):
+     def __add__(): pass
+     def __contains__(): pass
+     def __eq__(): pass
+     def __ge__(): pass
+     def __getitem__(): pass
+     def __getslice__(): pass
+     def __gt__(): pass
+     def __hash__(): pass
+     def __le__(): pass
+     def __len__(): pass
+     def __lt__(): pass
+     def __mul__(): pass
+     def __ne__(): pass
+     def __reduce__(): pass
+     def __repr__(): pass
+     def __rmul__(): pass
+     f_bavail = 0
+     f_bfree = 0
+     f_blocks = 0
+     f_bsize = 0
+     f_favail = 0
+     f_ffree = 0
+     f_files = 0
+     f_flag = 0
+     f_frsize = 0
+     f_namemax = 0
+     __new__ = 0
+     n_fields = 10
+     n_sequence_fields = 10
+     n_unnamed_fields = 0
+
+def abort(): pass
+def access(): pass
+def chdir(): pass
+def chmod(): pass
+def close(): pass
+def closerange(): pass
+def dup(): pass
+def dup2(): pass
+def execv(): pass
+def execve(): pass
+def fdopen(): pass
+def fstat(): pass
+def fsync(): pass
+def getcwd(): pass
+def getcwdu(): pass
+def getpid(): pass
+def isatty(): pass
+def kill(): pass
+def listdir(): pass
+def lseek(): pass
+def lstat(): pass
+def mkdir(): pass
+def open(): pass
+def pipe(): pass
+def popen(): pass
+def popen2(): pass
+def popen3(): pass
+def popen4(): pass
+def putenv(): pass
+def read(): pass
+def remove(): pass
+def rename(): pass
+def rmdir(): pass
+def spawnv(): pass
+def spawnve(): pass
+def startfile(): pass
+def stat(): pass
+def stat_float_times(): pass
+def strerror(): pass
+def system(): pass
+def tempnam(): pass
+def times(): pass
+def tmpfile(): pass
+def tmpnam(): pass
+def umask(): pass
+def unlink(): pass
+def urandom(): pass
+def utime(): pass
+def waitpid(): pass
+def write(): pass
+F_OK = 0
+O_APPEND = 8
+O_BINARY = 32768
+O_CREAT = 256
+O_EXCL = 1024
+O_NOINHERIT = 128
+O_RANDOM = 16
+O_RDONLY = 0
+O_RDWR = 2
+O_SEQUENTIAL = 32
+O_SHORT_LIVED = 4096
+O_TEMPORARY = 64
+O_TEXT = 16384
+O_TRUNC = 512
+O_WRONLY = 1
+P_DETACH = 4
+P_NOWAIT = 1
+P_NOWAITO = 3
+P_OVERLAY = 2
+P_WAIT = 0
+R_OK = 4
+TMP_MAX = 32767
+W_OK = 2
+X_OK = 1
+environ = {}
+
+

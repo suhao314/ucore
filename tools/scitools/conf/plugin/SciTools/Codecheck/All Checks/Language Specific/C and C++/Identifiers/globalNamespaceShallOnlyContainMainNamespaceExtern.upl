@@ -1,0 +1,129 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson 
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Inappropriate global declaration %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "The global namespace shall only contain main, namespace declarations and extern 'C' declarations";}
+
+# This is the full description of the rule being tested
+sub description { return "The global namespace shall only contain main, namespace declarations and extern 'C' declarations.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Declaring names into appropriate namespaces reduces the names found during lookup, helping to
+ensure that the names found meet developer expectations.</p>
+
+<p><b>Exception</b><br>
+The types defined for compliance with the noBasicNumericalType rule may also be in the global namespace.</p>
+
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  // Compliant Typedef s allowed in the global namespace by exception
+  typedef char char_t;
+  typedef signed char int8_t;
+  typedef signed short int16_t;
+  typedef signed int int32_t;
+  typedef signed long int64_t;
+  typedef unsigned char uint8_t;
+  typedef unsigned short uint16_t;
+  typedef unsigned int uint32_t;
+  typedef unsigned long uint64_t;
+  typedef float float32_t;
+  typedef double float64_t;
+  typedef long double float128_t;
+  // Compliant Typedef s allowed in the global namespace by exception  
+
+  void f1 ( int ); // Non-compliant
+  int x1; // Non-compliant  
+
+  namespace
+  {
+    void f2 ( int ); // Compliant
+    int x2; // Compliant
+  }  
+
+  namespace MY_API
+  {
+    void b2 ( int ); // Compliant
+    int x2; // Compliant
+  }  
+
+  int main ( ) // Compliant
+  {
+    return 0;
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all items that are declared or defined within this file
+  my @allDefined = $file->filerefs("Define, Declare", "~Macro ~Header", 1);
+  return unless @allDefined;
+
+  # loop through all defined and declared items 
+  REF: foreach my $def ( @allDefined ) {
+    next unless $def->ent->parent and $def->ent->parent->name =~ /\.[c|C].?.?$|\.[h|H].?.?$/;
+    next if $def->ent->name eq 'main';
+    next if $def->ent->kindname eq 'Namespace';
+    next if $def->ent->kindname eq 'Typedef' and $def->ent->name =~ /char_t|int8_t|int16_t|int32_t|int64_t|uint8_t|uint16_t|uint32_t|uint64_t|float32_t|float64_t|float128_t/;
+
+    # Spin up a lexer
+    my $lexeme = $def->lexeme;
+    while ( $lexeme and $lexeme->text ne ';') {
+      # If we find the keyword 'extern' then we can move onto the next reference
+      next REF if $lexeme->text eq 'extern';
+      $lexeme = $lexeme->prevUseful;
+    }
+
+    # If we get to this point we must have a violation
+    throwError($check, $def->ent, $file, $def->line, $def->column, ERR1, $def->ent->name);
+  }
+}

@@ -1,0 +1,91 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use Codecheck::Libraries::InfoSiftr qw(resolveTypedefs);
+
+use constant MAX_NUM => 2;
+use constant IGNOREMDA => "Ignore multi-dimensional arrays";
+
+use constant ERR1 => 'Violation: object "%1" includes more than ' . MAX_NUM . ' levels of indirection (%2 levels).';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+  $check->add_tr_text(IGNOREMDA);
+}
+
+sub name { 'No more than 2 levels of indirection.' }
+
+sub description { 'The declaration of objects should contain no more than 2 levels of pointer indirection.' }
+
+sub detailed_description { <<'END_DESC'
+Use of more than 2 levels of indirection can seriously impair the ability to understand the behaviour of the code, and should therefore be avoided. Since arrays are actually pointers to the first element in the array, multi-dimensional arrays may also be reported as violations by default.
+
+<p><b>Developer's Note</b><br>
+This check only works using the Strict Parser. To change your parser settings, click
+Project -> Configure Project then select Languages on the left and then click
+Strict*.
+</p>
+
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 0 }
+
+sub test_global { 1 }
+
+sub define_options {
+  my $check = shift; 
+  $check->option->checkbox("ignoreMulti",IGNOREMDA,0);
+  }
+
+sub check {
+	my $check = shift;
+	my %typelist;
+  
+  my $ignoreMultiDimensArray = $check->option->lookup("ignoreMulti");
+	foreach my $file ($check->get_files) {
+	next unless $file->kind->check('c file');
+		my $type;
+		foreach my $ref ($file->filerefs('declare, define', 'object, parameter, function', 0)) {
+			if($typelist{$ref->ent->type}){
+			$type = $typelist{$ref->ent->type};
+			}
+			else{
+				$type = resolveTypedefs($ref->ent->type, $check->db);
+				$typelist{$ref->ent->type} = $type;
+			}
+		
+		while ($type =~ m! \( (.*?) \) !xg) { # must be a function pointer
+			# thus, we must handle the two significant parts separately
+			my $contents = $1;
+			(my $stars = $1) =~ s![^*]!!g if $ignoreMultiDimensArray;
+      (my $stars = $1) =~ s![^*\[]!!g unless $ignoreMultiDimensArray;
+			my $levels = length $stars;
+			
+			if ($levels > MAX_NUM) {
+				$check->violation($ref->ent, $ref->file, $ref->line, $ref->column, ERR1, $ref->ent->longname, $levels);
+			}
+			
+			$type =~ s! \( \Q$contents\E \) !!xg;
+		}
+		
+    
+		$type =~ s![^*\[]!!g  unless $ignoreMultiDimensArray;
+    $type =~ s![^*]!!g  if $ignoreMultiDimensArray;
+		my $levels = length $type;
+		
+		if ($levels > MAX_NUM) {
+			$check->violation($ref->ent, $ref->file, $ref->line, $ref->column, ERR1, $ref->ent->longname, $levels);
+		}
+	}
+	}
+	return;
+}

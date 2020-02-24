@@ -1,0 +1,243 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+use constant OPT1 => "Case/Default clauses with return";
+use constant OPT1RETURN=> "Return allowed";
+use constant OPT1NORETURN=> "Return not allowed";
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Unconditional throw or break statement does not terminate non-empty switch-clause in %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "6-4-5 An unconditional throw or break statement shall terminate every non-empty switch-clause";}
+
+# This is the full description of the rule being tested
+sub description { return "6-4-5 (Required) An unconditional throw or break statement shall terminate every non-empty switch-clause.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+If a developer fails to add a <i>break</i> statement to the end of a <i>switch-clause</i>, then control flow “falls�?
+into any following <i>switch-clause</i>. Whilst this is sometimes intentional, it is often an error.</p>
+<p>
+To ensure that such errors can be detected, the last statement in every <i>switch-clause</i> shall be a
+<i>break</i> statement, or if the <i>switch-clause</i> is a compound statement, then the last statement in the
+compound statement shall be a break statement.</p>
+<p>
+A special case exists if the <i>switch-clause</i> is empty, as this allows groups of clauses requiring
+identical statements to be created.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  switch ( x )
+  {
+    case 0:
+      break; // Compliant
+    case 1:  // Compliant - empty drop through
+    case 2:  // allows a group
+      break; // Compliant
+    case 3:
+      throw; // Compliant
+    case 4:
+      a = b;
+             // Non-compliant - non empty drop through
+    default:
+      ;      // Non-compliant – default must also have "break"
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+  my $check = shift;
+  $check->option->radio_vert("returnAllowed",OPT1,[OPT1RETURN,OPT1NORETURN],OPT1NORETURN);
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# Subroutine designed to scan switch statements
+sub checkAswitch {
+
+  # Pull all needed data from the calling function
+  my $check = shift;
+  my $file = shift;
+  my $ref = shift;
+  my $lexeme = shift;
+  my $canReturn = $check->option->lookup("returnAllowed") eq OPT1RETURN;
+  
+  # Push lexeme forward until our first case
+  while ( $lexeme->text ne "{" ) {
+    $lexeme = $lexeme->nextUseful
+  }
+  
+  # Start counting curly braces, initialize our string for comparison and set start point
+  my $count = 1;
+  my $string = "";
+  $lexeme = $lexeme->nextUseful;
+  
+  my $lineNumber = $lexeme->line_begin;
+  my $columnNumber = $lexeme->column_begin;
+  
+  # While we are within our switch body
+  while ( $count > 0 ) {
+
+    if ( $lexeme->text eq "switch" ) {
+
+      # Encountered nested switch, going recursive
+      $lexeme = checkAswitch($check, $file, $ref, $lexeme);
+
+    }
+
+  	# If we see either case or default, we know we have completed a case
+  	if ( $lexeme->text eq "case" || $lexeme->text eq "default" ) {
+
+  	  # Test to make sure this was not an empty case
+  	  my $empty = 0;
+  	  $empty = 1 if $string !~ /;/ || $string eq "";
+
+
+      if ( $canReturn ) {
+
+        #throwError($check, $ref->ent,$file,$lineNumber,$columnNumber, $string );
+
+        if ( $string =~ /\:\{/ ) {
+          throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $empty || $string =~ /break;}$|throw[^;]*;}$|return[^;]*;}$|break;$|throw[^;]*;$|return[^;]*;$/;
+        } else {
+          throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $empty || $string =~ /break;$|throw[^;]*;$|return[^;]*;$/;
+        }
+        
+
+      } else {
+
+        #throwError($check, $ref->ent,$file,$lineNumber,$columnNumber, $string );
+
+        if ( $string =~ /\:\{/ ) {
+          throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $empty || $string =~ /break;}$|throw[^;]*;}$|break;$|throw[^;]*;$/;
+        } else {
+          throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $empty || $string =~ /break;$|throw[^;]*;$/;
+        }
+
+      } 
+
+  	  #reset string
+  	  $string = "";
+  	  $lineNumber = $lexeme->line_begin;
+      $columnNumber = $lexeme->column_begin;
+
+  	# Counters
+  	} elsif ( $lexeme->text eq "{" ) {
+
+  	  $count++;
+      $string .= $lexeme->text;
+
+  	} elsif ( $lexeme->text eq "}" ) {
+
+  	  $count--;
+      $string .= $lexeme->text;
+
+  	# Build string for future comparison
+  	} else {
+
+  	  $string .= $lexeme->text;
+
+  	}
+
+    #throwError($check, $ref->ent,$file,$lineNumber,$columnNumber, $lexeme->text );
+    $lexeme = $lexeme->nextUseful if $lexeme->nextUseful;
+
+  }
+
+  if ( $canReturn ) {
+
+    #throwError($check, $ref->ent,$file,$lineNumber,$columnNumber, $string );
+
+    if ( $string =~ /^\:\{/ ) {
+      throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $string =~ /break;}}$|throw[^;]*;}}$|return[^;]*;}}$|break;}$|throw[^;]*;}$|return[^;]*;}$/;
+    } else {
+      throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $string =~ /break;}$|throw[^;]*;}$|return[^;]*;}$/;
+    }
+
+  } else {
+
+    #throwError($check, $ref->ent,$file,$lineNumber,$columnNumber, $string );
+
+    if ( $string =~ /^\:\{/ ) {
+      throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $string =~ /break;}}$|throw[^;]*;}}$|break;}$|throw[^;]*;}$/;
+    } else {
+      throwError($check, $ref->ent,$file,$lineNumber,$columnNumber,ERR1,$ref->scope->name) unless $string =~ /break;}$|throw[^;]*;}$/;
+    }
+
+  }
+  return $lexeme;
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function(@functionsDefined) {
+
+  	my $text = $function->ent->contents;
+  	# Remove any // style comments
+  	$text =~ s/\/\/.*\n/\n/g;
+  	# Remove any /* */ style comments
+    $text =~ s/\/\*.*\*\//\n/gs;
+    # Next unless we have a switch statement
+    next unless $text =~ /\s+switch(\s+|\()/;
+
+    # Get end point
+    my $end = $function->ent->ref("End");
+
+    # Spin up a lexer
+    my $lexeme = $function->lexeme;
+	
+  	#While I am still within the function
+  	while ( $lexeme and $lexeme->line_begin < $end->line ) {
+
+  	  $lexeme = checkAswitch($check, $file, $function, $lexeme) if $lexeme->text eq "switch";
+      $lexeme = $lexeme->nextUseful;
+
+  	}
+  }
+}

@@ -1,0 +1,256 @@
+# This script is designed to run with Understand - CodeCheck
+# Rewritten by Kyle Jackson
+# 12-5-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Include guards not used in file';
+use constant ERR2 => 'endif not last element of file';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+
+# This is the short error the Understand will use
+sub name { 
+  return 'Include guards shall be provided';
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return '(Required) Include guards shall be provided.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p>
+The <i>include guard</i> shall use one of the following two forms:
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  <start-of-file>
+  // Comments allowed here
+  #if !defined ( identifier )
+  #define identifier
+    // Contents of file
+  #endif
+  <end-of-file>
+
+  <start-of-file>
+  // Comments allowed here
+  #ifndef identifier
+  #define identifier
+    // Contents of file
+  #endif
+  <end-of-file>
+
+</pre>
+
+<p><b>Rationale</b><br>
+When a translation unit contains a complex hierarchy of nested <i>header files</i>, it is possible for a
+particular <i>header file</i> to be included more than once. This can be, at best, a source of confusion. If
+this multiple inclusion leads to multiple or conflicting definitions, then this can result in undefined
+or erroneous behaviour.
+</p>
+
+<p>
+These forms are mandated to facilitate checking.
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  // file.h
+  #ifndef FILE_H
+  #endif
+
+  // file.cc
+  #include "file.h"
+  #define FILE_H      // Non-compliant
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+
+}
+
+
+# This subroutine checks for the ifndef include guard
+sub includeGuard {
+
+  my $lexeme = shift;
+
+  if ( lc ( $lexeme->text ) eq 'if' ) {
+
+    $lexeme = $lexeme->nextUseful;
+    return 0 unless $lexeme->text eq '!';
+    $lexeme = $lexeme->nextUseful;
+    return 0 unless lc ( $lexeme->text ) eq 'defined';
+
+  } elsif ( lc ( $lexeme->text ) eq 'ifndef' ) {
+
+    # Do nothing
+
+  } else {
+
+    return 0;
+
+  }
+
+  $lexeme = $lexeme->nextUseful;
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq '(';
+  return 0 if $lexeme->token ne 'Identifier';
+  $lexeme = $lexeme->nextUseful;
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq ')';
+  return 0 unless $lexeme->text eq '#';
+  $lexeme = $lexeme->nextUseful;
+  return 0 unless lc ( $lexeme->text ) eq 'define';
+  $lexeme = $lexeme->nextUseful;
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq '(';
+  return 0 if $lexeme->token ne 'Identifier';
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq ')';
+
+  return 1;
+}
+
+
+# This subroutine checks for the ifdef include guard
+sub includeGuardAlt {
+
+  my $lexeme = shift;
+
+  if ( lc ( $lexeme->text ) eq 'if' ) {
+
+    $lexeme = $lexeme->nextUseful;
+    return 0 unless lc ( $lexeme->text ) eq 'defined';
+
+  } elsif ( lc ( $lexeme->text ) eq 'ifdef' ) {
+
+    # Do nothing
+
+  } else {
+
+    return 0;
+
+  }
+
+  $lexeme = $lexeme->nextUseful;
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq '(';
+  return 0 if $lexeme->token ne 'Identifier';
+  $lexeme = $lexeme->nextUseful;
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq ')';
+  return 0 unless $lexeme->text eq '#';
+  $lexeme = $lexeme->nextUseful;
+  return 0 unless lc ( $lexeme->text ) eq 'error';
+
+  while ( $lexeme and $lexeme->text ne 'else' ) {
+    $lexeme = $lexeme->nextUseful;
+  }
+
+  return 0 unless $lexeme;
+  $lexeme = $lexeme->nextUseful;
+  return 0 unless $lexeme->text eq '#';
+  $lexeme = $lexeme->nextUseful;
+  return 0 unless lc ( $lexeme->text ) eq 'define';
+  $lexeme = $lexeme->nextUseful;
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq '(';
+  return 0 if $lexeme->token ne 'Identifier';
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq ')';
+
+  return 1;
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  return unless $file->kind->longname =~ /\bHeader\b/;
+  
+  # This check requires use of the Understand lexer. Initialize and check for failure 
+  my $lexer = $file->lexer( 1, , 0, 1 );
+  return unless $lexer;
+  
+  # $lexeme is initialized as the first element returned from the lexer
+  my $lexeme = $lexer->first();
+  
+  # Special case for an empty file
+  unless ( $lexeme->nextUseful ) {
+
+    $check->violation( $lexeme->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1 );
+    return;
+
+  }
+
+  # Move past all the white space and comments, test just in case no comments exist
+  $lexeme = $lexeme->nextUseful unless $lexeme->text eq '#';
+
+  # Move onto the start of the first macro
+  $lexeme = $lexeme->nextUseful;
+
+  # Check for the approved forms of include guards
+  my $passed = ( includeGuard( $lexeme ) or includeGuardAlt( $lexeme ) );
+  $check->violation( $lexeme->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1 ) unless $passed;
+  return unless $passed;
+
+  # Check the end of the file for the second half of the include guard
+  my $endOfFile = 0;
+  my $finalLexeme = $lexeme;
+
+  # Walk through the file looking for an endif
+  while ( $lexeme ) {
+
+    # If this is the last element of the file, set our flag
+    if ( $lexeme->text eq 'endif' ) {
+      $endOfFile = 1 unless $lexeme->nextUseful;
+    }
+
+    $finalLexeme = $lexeme;
+    $lexeme = $lexeme->nextUseful;
+
+  }
+  $check->violation( $finalLexeme->ent, $file, $finalLexeme->line_begin, $finalLexeme->column_begin, ERR2 ) unless $endOfFile;
+}

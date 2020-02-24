@@ -1,0 +1,194 @@
+# Identify discarded return values
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => "Discarded Return Values";
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name{
+  return '0-1-7 The value returned by a function having a non-void return type that is not an overloaded operator shall always be used';
+}
+
+sub description {
+  return "0-1-7 (Required) The value returned by a function having a non-void return type that is not an overloaded operator shall always be used";
+}
+
+sub detailed_description{
+  return <<"END_DESC"
+<p><b>Rationale</b><br>
+In C++ it is possible to call a function without using the return value, which may be an error. The return value of a function shall always be used.
+Overloaded operators are excluded, as they should behave in the same way as built-in operators.</p>
+<p><b>Exception</b><br>
+The return value of a function may be discarded by use of a (void) cast.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  uint16_t func ( uint16_t para1 ) 
+  { 
+     return para1; 
+  }
+  void discarded ( uint16_t para2 ) 
+  { 
+     func ( para2 );         // value discarded – Non-compliant 
+     (void)func ( para2 );   // Compliant 
+  }</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/;
+  #return 1;
+}
+
+sub test_entity {
+  return 1;
+}
+
+sub test_global {
+  return 0;
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("c file ~unresolved ~unknown");
+  my $lexer = $file->lexer() or return;
+  my $lexeme = $lexer->first();
+  
+  while($lexeme){
+    $lexeme = nouse_context($lexeme, $check);
+    $lexeme = nextLexeme($lexeme);
+  }
+}
+
+#################################
+# Any call refs will be unused.
+# Return at unbalanced ')' or ';'.
+sub nouse_context {
+  my $lexeme = shift;
+  my $check = shift;
+
+  while ($lexeme) {
+    my $text = $lexeme->text();
+    if ($text =~ m{=|\*=|/=|%=|\+=|-=|<<=|>>=|&=|\|=|^=}) {
+      $lexeme = use_context(nextLexeme($lexeme));
+    } elsif ($text =~ m/if|while|switch/) {
+      $lexeme = nextLexeme($lexeme) while ($lexeme and $lexeme->text() ne "(");
+      $lexeme = use_context(nextLexeme($lexeme));
+      $lexeme = nextLexeme($lexeme) if ($lexeme and $lexeme->text() eq ")");
+    } elsif ($text eq "for") {
+      $lexeme = nextLexeme($lexeme) while ($lexeme and $lexeme->text() ne "(");
+      $lexeme = nouse_context(nextLexeme($lexeme), $check);
+      $lexeme = use_context(nextLexeme($lexeme)) if ($lexeme and $lexeme->text() eq ";");
+      $lexeme = nouse_context(nextLexeme($lexeme), $check) if ($lexeme and $lexeme->text() eq ";");
+      $lexeme = nextLexeme($lexeme) if ($lexeme and $lexeme->text() eq ")");
+    } elsif ($text eq "return") {
+      $lexeme = use_context(nextLexeme($lexeme));
+    } elsif ($text eq "(") {
+      $lexeme = nouse_context(nextLexeme($lexeme), $check);
+      $lexeme = nextLexeme($lexeme) if ($lexeme and $lexeme->text() eq ")");
+    } elsif ($text eq ")") {
+      last;
+    } elsif ($text eq ";") {
+      last;
+    } else {
+      my $ref = $lexeme->ref();
+      if ($ref and $ref->kind()->check("callby")) {
+      nouse_value($ref, $check, $lexeme);
+      $lexeme = nextLexeme($lexeme) while ($lexeme and $lexeme->text() ne "(");
+      $lexeme = use_context(nextLexeme($lexeme));
+      $lexeme = nextLexeme($lexeme) if ($lexeme and $lexeme->text() eq ")");
+      } else {
+      $lexeme = nextLexeme($lexeme);
+      }
+    }
+  }
+
+  return $lexeme;
+}
+
+# Any call refs will be used.
+# Return at an unbalanced ')' or ';'.
+sub use_context {
+    my $lexeme = shift;
+    while ($lexeme) {
+      last if ($lexeme->text() eq ")");
+      last if ($lexeme->text() eq ";");
+      if ($lexeme->text() eq "(") {
+        while ($lexeme->text() ne ")") {
+          $lexeme = use_context(nextLexeme($lexeme)) or return $lexeme;
+        }
+      }
+      $lexeme = nextLexeme($lexeme);
+    }
+    return $lexeme;
+}
+
+# Indicate a call reference has occured in a non-use context.
+sub nouse_value {
+    my $ref = shift;
+    my $check = shift;
+	my $lexeme = shift;
+    my $ent = $ref->scope();
+    my $type = $ent->type();
+	
+	my $parent;
+    return if !$type or $type eq "void";
+  
+  #if the return value is specifically cast to void it is okay
+  my $prev = prevLexeme($lexeme);
+  if ($prev && $prev->token eq "Operator" && $prev->text eq "::"){
+	$parent = prevLexeme($prev);
+  }
+  if ($parent && $parent->ent && $lexeme->ent->parent->id == $parent->ent->id){
+	$prev = prevLexeme($parent);
+  }
+  my $prev2 = prevLexeme($prev) if $prev && $prev->token eq "Punctuation" && $prev->text eq ")";
+  return if $prev2 && $prev2->text eq "void";
+  
+  #in a cout, it's okay
+  while ($prev && !($prev->token eq "Punctuation" && $prev->text eq ";") ){
+    return if $prev->text eq "<<";  
+    $prev = prevLexeme($prev);
+  } 
+  
+  #Test if the return value is used in a deref
+  my $next = nextLexeme($lexeme);
+  my $parenCount = 0;
+  while ($next && !($next->token eq "Punctuation" && $next->text eq ";") ){
+    $parenCount-- if $next->token eq "Punctuation" && $next->text eq ")";
+    $parenCount++ if $next->token eq "Punctuation" && $next->text eq "(";
+    $next = nextLexeme($next);
+    last unless $parenCount;
+	}
+  return if $next && $next->token eq "Operator" && $next->text eq "->";
+  
+    $check->violation($ref->ent,$ref->file,$ref->line,$ref->column,ERR1);
+}
+
+
+# Return the next interesting lexeme or undef when all lexemes
+# are used.
+sub nextLexeme {
+    my $lexeme = shift;
+    while ($lexeme) {
+      $lexeme = $lexeme->next() or return undef;
+      next if ($lexeme->token() =~ m/Comment|Whitespace|Newline/);
+      return $lexeme;
+    };
+    return undef;
+}
+
+# Return the previous interesting lexeme or undef when all lexemes
+# are used.
+sub prevLexeme {
+    my $lexeme = shift;
+    while ($lexeme) {
+      $lexeme = $lexeme->previous() or return undef;
+      next if ($lexeme->token() =~ m/Comment|Whitespace|Newline/);
+      return $lexeme;
+    };
+    return undef;
+}

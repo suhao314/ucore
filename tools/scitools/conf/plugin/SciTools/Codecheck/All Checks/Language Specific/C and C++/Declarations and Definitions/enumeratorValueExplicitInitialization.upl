@@ -1,0 +1,109 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use Codecheck::Libraries::InfoSiftr qw(skipWhitespace);
+
+use constant ERR1 => 'Violation: invalid "=" in enum "%1" on element "%2"; needs to be all explicitly initialized, only the first, or none.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '"=" construct in enumerator list shall only be used on either the first item alone, or all items explicitly.' }
+
+sub description { 'In an enumerator list, the "=" construct shall not be used to explicitly initialise members other than the first, unless all items are explicitly initialised.' }
+
+sub detailed_description { <<'END_DESC'
+If an enumerator list is given with no explicit initialisation of members, then C allocates a sequence of integers starting at 0 for the first element and increasing by 1 for each subsequent element.
+<p>
+An explicit initialisation of the first element, as permitted by the above rule, forces the allocation of integers to start at the given value. When adopting this approach, it is essential to ensure that the initialisation value used is small enough that no subsequent value in the list will exceed the <i>int</i> storage used by enumeration constants.
+<p>
+Explicit initialisation of all items in the list, which is also permissible, prevents the mixing of automatic and manual allocation, which is error prone. However, it is then the responsibility of the programmer to ensure that all values are in the required range, and that values are not unintentionally duplicated.
+<pre>
+    enum colour { red=3, blue, green, yellow=5 };  /* non compliant */
+        /* green and yellow represent the same value - this is duplication */
+    enum colour { red=3, blue=4, green=5, yellow=5 };  /* compliant */
+        /* green and yellow represent the same value - this is duplication */
+</pre>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+sub getEnumeratorExplicitInit {
+	my $ent = shift;
+	my $lexer = shift;
+	
+	return undef unless $lexer;
+	
+	return undef unless $ent->kind->check('enumerator');
+	
+	my $lexeme = $lexer->lexeme($ent->ref->line, $ent->ref->column);
+	
+	return undef unless $lexeme;
+	
+	$lexeme = skipWhitespace($lexeme->next);
+	
+	return undef unless $lexeme && $lexeme->text eq '=';
+	
+	$lexeme = skipWhitespace($lexeme->next);
+	
+	return undef unless $lexeme;
+	
+	#return undef unless $lexeme->text =~ m/ ^ -? \d+ $ /x;
+	# it could be a number, but it could also be an expression or even macro use
+	
+	return $lexeme->text;
+}
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c file');
+	
+	my $lexer = $file->lexer(0);
+	
+	foreach my $ref ($file->filerefs('define', 'enum', 1)) {
+		my $ent = $ref->ent;
+		
+		my @all = map { $_->ent } $ent->refs('define', 'enumerator', 1);
+		my @explicit;
+		foreach my $enumerator (@all) {
+			# narrow down to explicit initializations
+			my $init = getEnumeratorExplicitInit($enumerator, $lexer);
+			next unless defined $init;
+			
+			push @explicit, $enumerator;
+		}
+		
+		my $firstIsExplicit = (
+			@all >= 1
+			&& @explicit >= 1
+			&& $all[0]->uniquename eq $explicit[0]->uniquename
+		);
+		
+		unless (
+			!@explicit
+			|| @explicit == @all
+			|| (@explicit == 1 && $firstIsExplicit)
+		) {
+			foreach my $enumerator (@explicit) {
+				$check->violation($enumerator, $enumerator->ref->file, $enumerator->ref->line, $enumerator->ref->column, ERR1, $ent->longname, $enumerator->longname);
+			}
+		}
+	}
+	
+	return;
+}

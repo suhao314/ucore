@@ -1,0 +1,123 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson 
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Using-directive found in file: %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "7-3-4 using-directives shall not be used";}
+
+# This is the full description of the rule being tested
+sub description { return "7-3-4 (Required) using-directives shall not be used.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+<i>using-directives</i> add additional scopes to the set of scopes searched during name lookup. All
+identifiers in these scopes become visible, increasing the possibility that the identifier found by
+the compiler does not meet developer expectations.</p>
+<p>
+<i>using-declarations</i> or fully qualified names restricts the set of names considered to only the name
+explicitly specified, and so are safer options.</p>
+
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  namespace NS1
+  {
+    int i1;
+    int j1;
+    int k1;
+  }
+  using namespace NS1; // Non-compliant  
+
+  namespace NS2
+  {
+    int i2;
+    int j2;
+    int k2;
+  }U
+  using NS2::j2; // Compliant  
+
+  namespace NS3
+  {
+    int i3;
+    int j3;
+    int k3;
+  }  
+
+  void f ()
+  {
+    ++i1;
+    ++j2;
+    ++NS3::k3;
+  }
+  </pre>
+<BR />
+<p>
+In the above, i1 is found via the <i>using-directive</i>. However, as a result of the <i>using-directive</i>, j1 and
+k1 are also visible. The <i>using-declaration</i> allows j2 to be found while i2 and k2 remain hidden.
+Finally, the qualified name NS3::k3 unambiguously refers to k3, and i3, j3 and k3 remain hidden
+to normal lookup.</p>
+<p><b>See also</b><br>
+ISO/IEC 14882:2003 [1] §7.3.4</p>
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+
+  # Check that we are looking at a file
+  return unless $file->kind->check("c file");
+
+  # Pull the contents of the file
+  my $text = $file->contents;
+  # Remove any // style comments
+  $text =~ s/\/\/.*\n/\n/g;
+  # Remove any /* */ style comments
+  $text =~ s/\/\*.*\*\//\n/gs;
+
+  # Check if an using-directive is used and throw an error if so
+  throwError($check, $file, $file, 0 , 0, ERR1, $file->name) if $text =~ /using\s+namespace/;
+}

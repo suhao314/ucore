@@ -1,0 +1,86 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+use constant ERR1 => 'No comment with variable declaration';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "Variables should be commented";}
+
+sub description { return "Each variable declaration should have a comment";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Variable declarations should be commented for maintainability and to make it obvious what each is being used for.<br>
+Note that any variables declared within macro definitions will not be checked.<br>
+One of these formats are required</p>
+<pre>  a. /* this is a comment */
+     int x;
+  b. /* this is a 
+        comment */
+     int x;
+  c. int x; /* this is a comment */
+  </pre>
+<p>Exceptions</b><br>
+Any exceptions should be in a comma delimited list of literals that will not be tested. For example: test,foo,bar</p>  
+  
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{
+  my $check = shift;
+  $check->option->text('exceptions','Exception List(Comma Delimited)',''); 
+}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check('c file'); 
+  my @varDefs = $file->filerefs("define, init","object",1);
+  
+   my $textList = $check->option->lookup('exceptions');
+  $textList =~ s/\s//g; #Strip whitespace in list;
+  my @exceptions = split(',',$textList);
+  my $lexer;
+
+  REF:foreach my $ref (@varDefs){
+    my @comments = $ref->ent->comments("before","raw","definein");
+    push (@comments, $ref->ent->comments("after","raw","definein"));
+    next REF if @comments;
+	
+    my $type = $ref->ent->ref("typed");
+    if($type){
+      @comments = $type->ent->comments("before","raw","definein");
+      push (@comments, $type->ent->comments("after","raw","definein"));
+      next REF if @comments;
+    }
+    
+    #use lexer to avoid reporting on variables declared within macro definitions.
+    $lexer = $file->lexer unless $lexer;
+    return unless $lexer;
+    
+    my $lexeme = $lexer->lexeme($ref->line,$ref->column);
+    next REF if $lexeme->ent && $lexeme->ent->kind->check("Macro");
+    next REF if $lexeme && $lexeme->text ~~ @exceptions;
+    while($lexeme && $lexeme->text !~ /\n/){
+      next REF if $lexeme->token eq "Comment";
+      $lexeme=$lexeme->next;
+    }
+    $check->violation($ref->ent,$file,$ref->line,$ref->column,ERR1); 
+  }
+}
+

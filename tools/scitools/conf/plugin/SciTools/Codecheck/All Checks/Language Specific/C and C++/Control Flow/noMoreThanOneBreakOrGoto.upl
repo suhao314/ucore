@@ -1,0 +1,305 @@
+# This script is designed to run with Understand - CodeCheck
+# Rewritten by Kyle Jackson
+# 12/22/14
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'More than one break or goto in loop iteration statment';
+use constant ERR2 => 'Irregular loop construction, cannot test loop.';
+use constant ERR3 => 'Unresolved label %1, cannot test this goto statement.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+  $check->add_tr_text(ERR3);
+}
+
+
+# This is the short error the Understand will use
+sub name { 
+  return 'For any iteration statement there shall be no more than one break or goto statement used for loop termination';
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return '( Required ) For any iteration statement there shall be no more than one break or goto statement used for loop termination.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p>
+<b>Rationale</b><br>
+Restricting the number of exits from a loop is done in the interests of good structured programming.
+One <i>break</i> or <i>goto</i> statement is acceptable in a loop since this allows, for example, for dual outcome
+loops or optimal coding.
+</p>
+
+<p>
+<b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  for ( int32_t i = 0; i &lt; 10; i++ )
+  {
+    if ( ... )
+    {
+      break; // Compliant
+    }
+  }
+
+  while ( ... )
+    {
+    if ( ... )
+    {
+      break; // Compliant
+    }
+  }
+
+  for ( int32_t i = 0; i &lt; 10; i++ )
+  {
+    if ( ... )
+    {
+      break;
+    }
+    else if ( ... )
+    {
+      break; // Non-compliant – second jump from loop
+    }
+    else
+    {
+      ...
+    }
+  }
+
+  while ( ... )
+  {
+    if ( ... )
+    {
+      break;
+    }
+    if ( ... )
+    {
+      break; // Non-compliant – second jump from loop
+    }
+  }
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for each time we see a for, do or while loop
+sub checkLoop {
+
+  # Pull in my parameters
+  my $check = shift;
+  my $file = shift;
+  my $lexeme = shift;
+
+
+  # We found a loop, set anchor for potential errors and enter the loop body
+  my $errorAnchor = $lexeme;
+
+  # Create list of Goto's to check
+  my $start = $lexeme->line_begin;
+  my @gotos;
+
+  # Are we looking at a Do while?
+  if ( lc ( $lexeme->text ) eq 'do' ) {
+
+    $lexeme = $lexeme->nextUseful;
+
+  # We are either looking at a for loop or a while loop
+  } else {
+
+    $lexeme = $lexeme->nextUseful;
+    $lexeme = $lexeme->nextUseful;
+    my $paren = 1;
+
+    while ( $paren > 0 ) {
+
+      $paren++ if $lexeme->text eq '(';
+      $paren-- if $lexeme->text eq ')';
+      $lexeme = $lexeme->nextUseful;
+
+    }
+
+  }
+
+  # Are we looking at a block of a single line
+  while ( !( $lexeme->text eq '{' or $lexeme->text eq ';' ) ) {
+    $lexeme = $lexeme->nextUseful;
+  }
+  return $lexeme if $lexeme->text eq ';';
+  $lexeme = $lexeme->nextUseful;
+
+  # Initialize my variables needed for tracking loop conclusion and exit counts
+  my $count = 1;
+  my $exits = 0;
+
+  # Special case for if we see a switch statement
+  my $switchCount = 0;
+  my $inSwitch = 0;
+
+  while ( $lexeme and $count > 0 ) {
+
+    # check to see if we are the start of a loop
+    my $toCompare = lc ( $lexeme->text );
+    if ( ( $toCompare eq  'while' ) or  ( $toCompare eq  'do' ) or ( $toCompare eq  'for' ) ) {
+
+      $lexeme = checkLoop( $check, $file, $lexeme );
+
+    } elsif ( $toCompare eq 'switch' ) {
+
+      while ( $lexeme->text ne '{' ) {
+        $lexeme = $lexeme->nextUseful;
+      }
+      $lexeme = $lexeme->nextUseful;
+      $switchCount++;
+      $inSwitch = 1;
+
+    }
+
+    # Test expected loop opening curly brace
+    unless ( $lexeme ) {
+      $check->violation( $errorAnchor->ent, $file, $errorAnchor->line_begin, $errorAnchor->column_begin, ERR2 );
+      return;
+    }
+
+    $inSwitch = 0 if $switchCount == 0;
+
+    # Track progression through loop
+    $count++ if $lexeme->text eq '{';
+    $count-- if $lexeme->text eq '}';
+
+    # Track progression through switch
+    $switchCount++ if $lexeme->text eq '{' and $inSwitch > 0;
+    $switchCount-- if $lexeme->text eq '}' and $inSwitch > 0;
+
+    # Loop for keywords that need to be counted
+    $exits++ if lc ( $lexeme->text ) eq 'break' and $inSwitch == 0;
+
+    # Add to list to check later
+    if ( $lexeme->text eq 'goto' ) {
+      unless ( $lexeme->nextUseful->ent ) {
+        $check->violation( $errorAnchor->ent, $file, $errorAnchor->line_begin, $errorAnchor->column_begin, ERR3, $errorAnchor->nextUseful->text );
+      } else {
+        push( @gotos, $lexeme->nextUseful->ent );
+      }
+    }
+
+    # Move to next iteration
+    $lexeme = $lexeme->nextUseful;
+
+  }
+
+  # Test expected loop closing curly brace
+  unless ( $lexeme ) {
+    $check->violation( $errorAnchor->ent, $file, $errorAnchor->line_begin, $errorAnchor->column_begin, ERR2 );
+    return;
+  }
+
+  foreach my $goto ( @gotos ) {
+
+    
+    my $label = $goto->ref( 'Definein' );
+    $label = $goto->ref( 'Declarein' ) unless $label;
+    my $labelLine = $label->line;
+
+    if ( $labelLine < $start or $labelLine > $lexeme->line_begin ) {
+      $exits++;
+    }
+
+  }
+
+  #Check exits and throw error if it is too high
+  $check->violation( $errorAnchor->ent, $file, $errorAnchor->line_begin, $errorAnchor->column_begin, ERR1 ) if $exits > 1;
+  return $lexeme;
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("C File");
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function (@functionsDefined) {
+    
+    # Pull text of function
+    my $text = $function->ent->contents;
+    # Remove any // style comments
+    $text =~ s/\/\/.*\n/\n/g;
+    # Remove any /* */ style comments
+    $text =~ s/\/\*.*\*\//\n/gs;
+    # check if a loop exists
+    my $loopExists = 0;
+    $loopExists = 1 if $text =~/\s+while\s*\(/;
+    $loopExists = 1 if $text =~/\s+do\s+/;
+    $loopExists = 1 if $text =~/\s+for\s*\(/;
+    next unless $loopExists == 1;
+
+    # Spin up lexer to find loops
+    my $lexeme = $function->lexeme();
+
+    # Check entire function
+    my $end = $function->ent->ref('end')->line;
+    while ( $lexeme and $lexeme->line_begin < $end ) {
+
+      # check to see if we are the start of a loop
+      my $toCompare = lc ( $lexeme->text );
+      if ( ( $toCompare eq  'while' ) or  ( $toCompare eq  'do' ) or ( $toCompare eq  'for' ) ) {
+
+        $lexeme = checkLoop( $check, $file, $lexeme );
+
+      } else {
+
+        $lexeme = $lexeme->nextUseful;
+
+      }
+
+    }
+  }
+}

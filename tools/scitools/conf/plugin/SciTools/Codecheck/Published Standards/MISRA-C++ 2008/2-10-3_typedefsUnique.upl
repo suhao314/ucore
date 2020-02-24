@@ -1,0 +1,143 @@
+#This script is designed to run with Understand - CodeCheck
+#Rule 2–10–3 A typedef name (including qualification, if any) shall be a unique identifier.
+use base qw(Understand::Codecheck);
+#use Data::Dumper; #This doesn't appear to actually be needed, and fails to load with the javaapi causing a runtime error.
+use strict;
+
+
+use constant ERR1 => 'Violation: typedef "%1" reused.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '2-10-3 A typedef name shall be a unique identifier' }
+
+sub description { '2-10-3 (Required) A typedef name (including qualification, if any) shall be a unique identifier.' }
+
+sub detailed_description { <<'END_DESC'
+Reusing a <i>typedef</i> name either as another <i>typedef</i> name or for any other purpose may lead to developer confusion.
+The same <i>typedef</i> shall not be duplicated anywhere in the <i>project</i>, even if the declarations are identical.
+Note that where the type definition is made in a <i>header file</i>, and that <i>header file</i> is included in multiple source files, this rule is not violated.
+It is valid to reuse a <i>typedef</i> name in another <i>namespace</i>.
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 0 }
+
+sub test_global { 1 }
+
+sub define_options { }
+
+sub lookup {
+	my $seen = shift;
+	my $layers = shift;
+	
+	my $current = shift @$layers;
+	
+	if (!@$layers) {
+		return {
+			bool => defined $seen->{$current},
+			obj => $seen->{$current},
+		};
+	}
+	if (!defined $seen->{$current}) {
+		return {
+			bool => 0,
+		};
+	}
+	
+	return lookup($seen->{current}, $layers);
+}
+
+sub store {
+	my $seen = shift;
+	my $layers = shift;
+	my $ref = shift;
+	
+	my $current = shift @$layers;
+	
+	if (!@$layers) {
+		if (ref $ref) {
+			if (defined $seen->{$current}) {
+				return 0;
+			}
+			$seen->{$current} = $ref;
+		}
+		else {
+			if (defined $seen->{$current}) {
+				$seen->{$current}++;
+			}
+			else {
+				$seen->{$current} = 1;
+			}
+		}
+		return 1;
+	}
+	
+	$seen->{$current} = {} if (!defined $seen->{$current});
+	
+	return store($seen->{$current}, $layers, $ref);
+}
+
+sub search {
+	my $errs = shift;
+	my $name = shift;
+	
+	foreach my $key (keys %$errs) {
+		if (!ref $errs->{$key}) {
+			return $errs->{$key} if $key eq $name;
+		}
+		else {
+			my $ret = search($errs->{$key}, $name);
+			return $ret if $ret;
+		}
+	}
+	return 0;
+}
+sub check {
+	my $check = shift;
+	
+	my %seen;
+	my %errors;
+	foreach my $file ($check->get_files()) {
+    next unless $file->kind->check('c file');
+		foreach my $ref ($file->filerefs('define', 'c typedef', 0)) {
+			my $seenLookup = lookup(\%seen, [split(m/::/, $ref->ent->longname)]);
+			if ($seenLookup->{bool}) {
+				$check->violation($ref->ent, $file, $ref->line, $ref->column, ERR1, $ref->ent->name);
+				store(\%errors, [split(m/::/, $ref->ent->longname)], 1);
+				
+				if (lookup(\%errors, [split(m/::/, $ref->ent->longname)])->{obj} == 2) {
+					my $ref2 = $seenLookup->{obj};
+					$check->violation($ref2->ent, $ref2->file, $ref2->line, $ref2->column, ERR1, $ref2->ent->name);
+				}
+			}
+			else {
+				store(\%seen, [split(m/::/, $ref->ent->longname)], $ref);
+				store(\%errors, [split(m/::/, $ref->ent->longname)], 1);
+			}
+		}
+	}
+	foreach my $file ($check->get_files()) {
+		foreach my $ref ($file->filerefs('define, declare', 'c function, c object', 0)) {
+			my $seenLookup = lookup(\%seen, [split(m/::/, $ref->ent->longname)]);
+			if ($seenLookup->{bool}) {
+				$check->violation($ref->ent, $file, $ref->line, $ref->column, ERR1, $ref->ent->name);
+			}
+			else {
+				if ($ref->ent->longname eq $ref->ent->name && search(\%errors, $ref->ent->name)) {
+					$check->violation($ref->ent, $file, $ref->line, $ref->column, ERR1, $ref->ent->name);
+				}
+			}
+		}
+	}
+	
+	return;
+}

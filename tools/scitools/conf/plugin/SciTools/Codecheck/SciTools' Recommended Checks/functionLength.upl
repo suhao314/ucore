@@ -1,0 +1,74 @@
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => 'Max Length(%1) Exceeded: %2 lines of Code.';
+use constant ERR2 => 'Max Length(%1) Exceeded: %2 lines.';
+use constant OPT1 => "Maximum Lines";
+use constant OPT2 => "Count only Lines of Code(ignore comment lines, blank lines, etc)";
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub name {
+  return "Functions Too Long";
+}
+
+sub description {
+  return "Program units should not have more than the specified number of lines";
+}
+
+sub detailed_description {
+  return  <<"END_DESC"
+<p><b>Rationale</b><br>
+Long functions are usually complex and difficult to read meaning they are also difficult to comprehend and to test.<br>
+Functions, Methods, Packages, Procedures, Subroutines etc. are tested by this check.</p>
+END_DESC
+}
+
+sub test_language {
+  return 1;
+}
+
+sub test_entity {
+  return 1;
+}
+
+sub define_options{
+ my $check = shift;
+ $check->option->integer("LineLimit",OPT1,200);           
+ $check->option->checkbox("CodeOnly",OPT2,0);
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("file");
+  
+  my @definerefs = $file->filerefs("definein, declarein body, vhdl declare","ada entry, ada function, ada procedure, ada protected, ada task,"
+     ."c function,"
+   ."csharp method,"
+   ."fortran block data, fortran function, fortran interface, fortran program, fortran subroutine,"
+   ."java method,"
+   ."jovial subroutine,"
+   ."pascal compunit, pascal function, pascal procedure,"
+   ."vhdl procedure, vhdl function, vhdl process, vhdl architecture",1);
+
+  foreach my $ref (@definerefs){
+    my $func = $ref->ent;
+ 
+    
+    my $maxLines = $check->option->lookup("LineLimit");
+    my $codeOnly = $check->option->lookup("CodeOnly");
+    
+    my $lines = $func->metric("CountLine");
+    my $linesCode = $func->metric("CountLineCode");
+    
+    if ($codeOnly && $linesCode > $maxLines){
+      $check->violation($func,$ref->file,$ref->line,-1,ERR1,$maxLines,$linesCode);
+    }elsif(!$codeOnly && $lines > $maxLines){
+      $check->violation($func,$file,$ref->line,-1,ERR2,$maxLines,$lines);
+    }
+  }
+}

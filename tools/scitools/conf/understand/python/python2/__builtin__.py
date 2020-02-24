@@ -1,0 +1,897 @@
+class basestring(object):
+   __new__ = 0
+    
+class bool(int):
+   def __and__(): pass
+   def __or__(): pass
+   def __rand__(): pass
+   def __repr__(): pass
+   def __ror__(): pass
+   def __rxor__(): pass
+   def __str__(): pass
+   def __xor__(): pass
+
+   __new__ = 0
+
+class buffer(object):
+   def __add__(): pass
+   def __cmp__(): pass
+   def __delitem__(): pass
+   def __delslice__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __getslice__(): pass
+   def __hash__(): pass
+   def __len__(): pass
+   def __mul__(): pass
+   def __repr__(): pass
+   def __rmul__(): pass
+   def __setitem__(): pass
+   def __setslice__(): pass
+   def __str__(): pass
+     
+   __new__ = 0
+    
+class bytearray(object):
+   def __add__(): pass
+   def __alloc__(): pass
+   def __contains__(): pass
+   def __delitem__(): pass
+   def __eq__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __gt__(): pass
+   def __iadd__(): pass
+   def __imul__(): pass
+   def __init__(): pass
+   def __iter__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __reduce__(): pass
+   def __repr__(): pass
+   def __rmul__(): pass
+   def __setitem__(): pass
+   def __sizeof__(): pass
+   def __str__(): pass
+   def append(): pass
+   def capitalize(): pass
+   def center(): pass
+   def count(): pass
+   def decode(): pass
+   def endswith(): pass
+   def expandtabs(): pass
+   def extend(): pass
+   def find(): pass
+   def index(): pass
+   def insert(): pass
+   def isalnum(): pass
+   def isalpha(): pass
+   def isdigit(): pass
+   def islower(): pass
+   def isspace(): pass
+   def istitle(): pass
+   def isupper(): pass
+   def join(): pass
+   def ljust(): pass
+   def lower(): pass
+   def lstrip(): pass
+   def partition(): pass
+   def pop(): pass
+   def remove(): pass
+   def replace(): pass
+   def reverse(): pass
+   def rfind(): pass
+   def rindex(): pass
+   def rjust(): pass
+   def rpartition(): pass
+   def rsplit(): pass
+   def rstrip(): pass
+   def split(): pass
+   def splitlines(): pass
+   def startswith(): pass
+   def strip(): pass
+   def swapcase(): pass
+   def title(): pass
+   def translate(): pass
+   def upper(): pass
+   def zfill(): pass
+
+   __new__ = 0
+   fromhex = 0
+    
+class str(basestring):
+   def __add__(): pass
+   def __contains__(): pass
+   def __eq__(): pass
+   def __format__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __getnewargs__(): pass
+   def __getslice__(): pass
+   def __gt__(): pass
+   def __hash__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __mod__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __repr__(): pass
+   def __rmod__(): pass
+   def __rmul__(): pass
+   def __sizeof__(): pass
+   def __str__(): pass
+   def capitalize(): pass
+   def center(): pass
+   def count(): pass
+   def decode(): pass
+   def encode(): pass
+   def endswith(): pass
+   def expandtabs(): pass
+   def find(): pass
+   def format(): pass
+   def index(): pass
+   def isalnum(): pass
+   def isalpha(): pass
+   def isdigit(): pass
+   def islower(): pass
+   def isspace(): pass
+   def istitle(): pass
+   def isupper(): pass
+   def join(): pass
+   def ljust(): pass
+   def lower(): pass
+   def lstrip(): pass
+   def partition(): pass
+   def replace(): pass
+   def rfind(): pass
+   def rindex(): pass
+   def rjust(): pass
+   def rpartition(): pass
+   def rsplit(): pass
+   def rstrip(): pass
+   def split(): pass
+   def splitlines(): pass
+   def startswith(): pass
+   def strip(): pass
+   def swapcase(): pass
+   def title(): pass
+   def translate(): pass
+   def upper(): pass
+   def zfill(): pass
+   __new__ = 0
+     
+bytes = str
+
+class classmethod(object):
+   def __get__(): pass
+   def __getattribute__(): pass
+   def __init__(): pass
+   __func__ = 0
+   __new__ = 0
+    
+class complex(object):
+   def __abs__(): pass
+   def __add__(): pass
+   def __coerce__(): pass
+   def __div__(): pass
+   def __divmod__(): pass
+   def __eq__(): pass
+   def __float__(): pass
+   def __floordiv__(): pass
+   def __format__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getnewargs__(): pass
+   def __gt__(): pass
+   def __hash__(): pass
+   def __int__(): pass
+   def __le__(): pass
+   def __long__(): pass
+   def __lt__(): pass
+   def __mod__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __neg__(): pass
+   def __nonzero__(): pass
+   def __pos__(): pass
+   def __pow__(): pass
+   def __radd__(): pass
+   def __rdiv__(): pass
+   def __rdivmod__(): pass
+   def __repr__(): pass
+   def __rfloordiv__(): pass
+   def __rmod__(): pass
+   def __rmul__(): pass
+   def __rpow__(): pass
+   def __rsub__(): pass
+   def __rtruediv__(): pass
+   def __str__(): pass
+   def __sub__(): pass
+   def __truediv__(): pass
+   def conjugate(): pass
+     
+   imag = 0
+   real = 0
+   __new__ = 0
+    
+class dict(object):
+   def __cmp__(): pass
+   def __contains__(): pass
+   def __delitem__(): pass
+   def __eq__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __gt__(): pass
+   def __init__(): pass
+   def __iter__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __ne__(): pass
+   def __repr__(): pass
+   def __setitem__(): pass
+   def __sizeof__(): pass
+   def clear(): pass
+   def copy(): pass
+   def get(): pass
+   def has_key(): pass
+   def items(): pass
+   def iteritems(): pass
+   def iterkeys(): pass
+   def itervalues(): pass
+   def keys(): pass
+   def pop(): pass
+   def popitem(): pass
+   def setdefault(): pass
+   def update(): pass
+   def values(): pass
+   def viewitems(): pass
+   def viewkeys(): pass
+   def viewvalues(): pass
+     
+   __hash__ = None
+   __new__ = 0
+   fromkeys = 0
+    
+class enumerate(object):
+   def __getattribute__(): pass
+   def __iter__(): pass
+   def next(): pass
+   __new__ = 0
+    
+class file(object):
+   def __delattr__(): pass
+   def __enter__(): pass
+   def __exit__(): pass
+   def __getattribute__(): pass
+   def __init__(): pass
+   def __iter__(): pass
+   def __repr__(): pass
+   def __setattr__(): pass
+   def close(): pass
+   def fileno(): pass
+   def flush(): pass
+   def isatty(): pass
+   def next(): pass
+   def read(): pass
+   def readinto(): pass
+   def readline(): pass
+   def readlines(): pass
+   def seek(): pass
+   def tell(): pass
+   def truncate(): pass
+   def write(): pass
+   def writelines(): pass
+   def xreadlines(): pass
+
+   closed = 0
+   errors = 0
+   mode = 0
+   name = 0
+   newlines = 0
+   softspace = 0
+   __new__ = 0
+    
+class float(object):
+   def __abs__(): pass
+   def __add__(): pass
+   def __coerce__(): pass
+   def __div__(): pass
+   def __divmod__(): pass
+   def __eq__(): pass
+   def __float__(): pass
+   def __floordiv__(): pass
+   def __format__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getnewargs__(): pass
+   def __gt__(): pass
+   def __hash__(): pass
+   def __int__(): pass
+   def __le__(): pass
+   def __long__(): pass
+   def __lt__(): pass
+   def __mod__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __neg__(): pass
+   def __nonzero__(): pass
+   def __pos__(): pass
+   def __pow__(): pass
+   def __radd__(): pass
+   def __rdiv__(): pass
+   def __rdivmod__(): pass
+   def __repr__(): pass
+   def __rfloordiv__(): pass
+   def __rmod__(): pass
+   def __rmul__(): pass
+   def __rpow__(): pass
+   def __rsub__(): pass
+   def __rtruediv__(): pass
+   def __str__(): pass
+   def __sub__(): pass
+   def __truediv__(): pass
+   def __trunc__(): pass
+   def as_integer_ratio(): pass
+   def conjugate(): pass
+   def hex(): pass
+   def is_integer(): pass
+
+   imag = 0
+   real = 0
+   __getformat__ = 0
+   __new__ = 0
+   __setformat__ = 0
+   fromhex = 0
+    
+class frozenset(object):
+   def __and__(): pass
+   def __cmp__(): pass
+   def __contains__(): pass
+   def __eq__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __gt__(): pass
+   def __hash__(): pass
+   def __iter__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __ne__(): pass
+   def __or__(): pass
+   def __rand__(): pass
+   def __reduce__(): pass
+   def __repr__(): pass
+   def __ror__(): pass
+   def __rsub__(): pass
+   def __rxor__(): pass
+   def __sizeof__(): pass
+   def __sub__(): pass
+   def __xor__(): pass
+   def copy(): pass
+   def difference(): pass
+   def intersection(): pass
+   def isdisjoint(): pass
+   def issubset(): pass
+   def issuperset(): pass
+   def symmetric_difference(): pass
+   def union(): pass
+   __new__ = 0
+    
+class int(object):
+   def __abs__(): pass
+   def __add__(): pass
+   def __and__(): pass
+   def __cmp__(): pass
+   def __coerce__(): pass
+   def __div__(): pass
+   def __divmod__(): pass
+   def __float__(): pass
+   def __floordiv__(): pass
+   def __format__(): pass
+   def __getattribute__(): pass
+   def __getnewargs__(): pass
+   def __hash__(): pass
+   def __hex__(): pass
+   def __index__(): pass
+   def __int__(): pass
+   def __invert__(): pass
+   def __long__(): pass
+   def __lshift__(): pass
+   def __mod__(): pass
+   def __mul__(): pass
+   def __neg__(): pass
+   def __nonzero__(): pass
+   def __oct__(): pass
+   def __or__(): pass
+   def __pos__(): pass
+   def __pow__(): pass
+   def __radd__(): pass
+   def __rand__(): pass
+   def __rdiv__(): pass
+   def __rdivmod__(): pass
+   def __repr__(): pass
+   def __rfloordiv__(): pass
+   def __rlshift__(): pass
+   def __rmod__(): pass
+   def __rmul__(): pass
+   def __ror__(): pass
+   def __rpow__(): pass
+   def __rrshift__(): pass
+   def __rshift__(): pass
+   def __rsub__(): pass
+   def __rtruediv__(): pass
+   def __rxor__(): pass
+   def __str__(): pass
+   def __sub__(): pass
+   def __truediv__(): pass
+   def __trunc__(): pass
+   def __xor__(): pass
+   def bit_length(): pass
+   def conjugate(): pass
+     
+   denominator = 0
+   imag = 0
+   numerator = 0
+   real = 0
+   __new__ = 0
+    
+class list(object):
+   def __add__(): pass
+   def __contains__(): pass
+   def __delitem__(): pass
+   def __delslice__(): pass
+   def __eq__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __getslice__(): pass
+   def __gt__(): pass
+   def __iadd__(): pass
+   def __imul__(): pass
+   def __init__(): pass
+   def __iter__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __repr__(): pass
+   def __reversed__(): pass
+   def __rmul__(): pass
+   def __setitem__(): pass
+   def __setslice__(): pass
+   def __sizeof__(): pass
+   def append(): pass
+   def count(): pass
+   def extend(): pass
+   def index(): pass
+   def insert(): pass
+   def pop(): pass
+   def remove(): pass
+   def reverse(): pass
+   def sort(): pass
+     
+   __hash__ = None
+   __new__ = 0
+    
+class long(object):
+   def __abs__(): pass
+   def __add__(): pass
+   def __and__(): pass
+   def __cmp__(): pass
+   def __coerce__(): pass
+   def __div__(): pass
+   def __divmod__(): pass
+   def __float__(): pass
+   def __floordiv__(): pass
+   def __format__(): pass
+   def __getattribute__(): pass
+   def __getnewargs__(): pass
+   def __hash__(): pass
+   def __hex__(): pass
+   def __index__(): pass
+   def __int__(): pass
+   def __invert__(): pass
+   def __long__(): pass
+   def __lshift__(): pass
+   def __mod__(): pass
+   def __mul__(): pass
+   def __neg__(): pass
+   def __nonzero__(): pass
+   def __oct__(): pass
+   def __or__(): pass
+   def __pos__(): pass
+   def __pow__(): pass
+   def __radd__(): pass
+   def __rand__(): pass
+   def __rdiv__(): pass
+   def __rdivmod__(): pass
+   def __repr__(): pass
+   def __rfloordiv__(): pass
+   def __rlshift__(): pass
+   def __rmod__(): pass
+   def __rmul__(): pass
+   def __ror__(): pass
+   def __rpow__(): pass
+   def __rrshift__(): pass
+   def __rshift__(): pass
+   def __rsub__(): pass
+   def __rtruediv__(): pass
+   def __rxor__(): pass
+   def __sizeof__(): pass
+   def __str__(): pass
+   def __sub__(): pass
+   def __truediv__(): pass
+   def __trunc__(): pass
+   def __xor__(): pass
+   def bit_length(): pass
+   def conjugate(): pass
+   denominator = 0
+   imag = 0
+   numerator = 0
+   real = 0
+   __new__ = 0
+    
+class memoryview(object):
+   def __delitem__(): pass
+   def __eq__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __gt__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __ne__(): pass
+   def __repr__(): pass
+   def __setitem__(): pass
+   def tobytes(): pass
+   def tolist(): pass
+     
+   format = 0
+   itemsize = 0
+   ndim = 0
+   readonly = 0
+   shape = 0
+   strides = 0
+   suboffsets = 0
+   __new__ = 0
+    
+class object: pass
+    
+class property(object):
+   def __delete__(): pass
+   def __get__(): pass
+   def __getattribute__(): pass
+   def __init__(): pass
+   def __set__(): pass
+   def deleter(): pass
+   def getter(): pass
+   def setter(): pass
+   fdel = 0
+   fget = 0
+   fset = 0
+   __new__ = 0
+    
+class reversed(object):
+   def __getattribute__(): pass
+   def __iter__(): pass
+   def __length_hint__(): pass
+   def next(): pass
+   __new__ = 0
+    
+class set(object):
+   def __and__(): pass
+   def __cmp__(): pass
+   def __contains__(): pass
+   def __eq__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __gt__(): pass
+   def __iand__(): pass
+   def __init__(): pass
+   def __ior__(): pass
+   def __isub__(): pass
+   def __iter__(): pass
+   def __ixor__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __ne__(): pass
+   def __or__(): pass
+   def __rand__(): pass
+   def __reduce__(): pass
+   def __repr__(): pass
+   def __ror__(): pass
+   def __rsub__(): pass
+   def __rxor__(): pass
+   def __sizeof__(): pass
+   def __sub__(): pass
+   def __xor__(): pass
+   def add(): pass
+   def clear(): pass
+   def copy(): pass
+   def difference(): pass
+   def difference_update(): pass
+   def discard(): pass
+   def intersection(): pass
+   def intersection_update(): pass
+   def isdisjoint(): pass
+   def issubset(): pass
+   def issuperset(): pass
+   def pop(): pass
+   def remove(): pass
+   def symmetric_difference(): pass
+   def symmetric_difference_update(): pass
+   def union(): pass
+   def update(): pass
+   __hash__ = None
+   __new__ = 0
+    
+class slice(object):
+   def __cmp__(): pass
+   def __getattribute__(): pass
+   def __hash__(): pass
+   def __reduce__(): pass
+   def __repr__(): pass
+   def indices(): pass
+   start = 0
+   step = 0
+   stop = 0
+   __new__ = 0
+    
+class staticmethod(object):
+   def __get__(): pass
+   def __getattribute__(): pass
+   def __init__(): pass
+   __func__ = 0
+   __new__ = 0
+    
+class str(basestring):
+   def __add__(): pass
+   def __contains__(): pass
+   def __eq__(): pass
+   def __format__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __getnewargs__(): pass
+   def __getslice__(): pass
+   def __gt__(): pass
+   def __hash__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __mod__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __repr__(): pass
+   def __rmod__(): pass
+   def __rmul__(): pass
+   def __sizeof__(): pass
+   def __str__(): pass
+   def capitalize(): pass
+   def center(): pass
+   def count(): pass
+   def decode(): pass
+   def encode(): pass
+   def endswith(): pass
+   def expandtabs(): pass
+   def find(): pass
+   def format(): pass
+   def index(): pass
+   def isalnum(): pass
+   def isalpha(): pass
+   def isdigit(): pass
+   def islower(): pass
+   def isspace(): pass
+   def istitle(): pass
+   def isupper(): pass
+   def join(): pass
+   def ljust(): pass
+   def lower(): pass
+   def lstrip(): pass
+   def partition(): pass
+   def replace(): pass
+   def rfind(): pass
+   def rindex(): pass
+   def rjust(): pass
+   def rpartition(): pass
+   def rsplit(): pass
+   def rstrip(): pass
+   def split(): pass
+   def splitlines(): pass
+   def startswith(): pass
+   def strip(): pass
+   def swapcase(): pass
+   def title(): pass
+   def translate(): pass
+   def upper(): pass
+   def zfill(): pass
+   __new__ = 0
+    
+class super(object):
+   def __get__(): pass
+   def __getattribute__(): pass
+   def __init__(): pass
+   def __repr__(): pass
+   __self__ = 0
+   __self_class__ = 0
+   __thisclass__ = 0
+   __new__ = 0
+    
+class tuple(object):
+   def __add__(): pass
+   def __contains__(): pass
+   def __eq__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __getnewargs__(): pass
+   def __getslice__(): pass
+   def __gt__(): pass
+   def __hash__(): pass
+   def __iter__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __repr__(): pass
+   def __rmul__(): pass
+   def __sizeof__(): pass
+   def count(): pass
+   def index(): pass
+   __new__ = 0
+    
+type = 0
+class unicode(basestring):
+   def __add__(): pass
+   def __contains__(): pass
+   def __eq__(): pass
+   def __format__(): pass
+   def __ge__(): pass
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __getnewargs__(): pass
+   def __getslice__(): pass
+   def __gt__(): pass
+   def __hash__(): pass
+   def __le__(): pass
+   def __len__(): pass
+   def __lt__(): pass
+   def __mod__(): pass
+   def __mul__(): pass
+   def __ne__(): pass
+   def __repr__(): pass
+   def __rmod__(): pass
+   def __rmul__(): pass
+   def __sizeof__(): pass
+   def __str__(): pass
+   def capitalize(): pass
+   def center(): pass
+   def count(): pass
+   def decode(): pass
+   def encode(): pass
+   def endswith(): pass
+   def expandtabs(): pass
+   def find(): pass
+   def format(): pass
+   def index(): pass
+   def isalnum(): pass
+   def isalpha(): pass
+   def isdecimal(): pass
+   def isdigit(): pass
+   def islower(): pass
+   def isnumeric(): pass
+   def isspace(): pass
+   def istitle(): pass
+   def isupper(): pass
+   def join(): pass
+   def ljust(): pass
+   def lower(): pass
+   def lstrip(): pass
+   def partition(): pass
+   def replace(): pass
+   def rfind(): pass
+   def rindex(): pass
+   def rjust(): pass
+   def rpartition(): pass
+   def rsplit(): pass
+   def rstrip(): pass
+   def split(): pass
+   def splitlines(): pass
+   def startswith(): pass
+   def strip(): pass
+   def swapcase(): pass
+   def title(): pass
+   def translate(): pass
+   def upper(): pass
+   def zfill(): pass
+   __new__ = 0
+    
+class xrange(object):
+   def __getattribute__(): pass
+   def __getitem__(): pass
+   def __iter__(): pass
+   def __len__(): pass
+   def __reduce__(): pass
+   def __repr__(): pass
+   def __reversed__(): pass
+   __new__ = 0
+
+def __import__(): pass
+def abs(): pass
+def all(): pass
+def any(): pass
+def apply(): pass
+def bin(): pass
+def callable(): pass
+def chr(): pass
+def cmp(): pass
+def coerce(): pass
+def compile(): pass
+def delattr(): pass
+def dir(): pass
+def divmod(): pass
+def eval(): pass
+def execfile(): pass
+def filter(): pass
+def format(): pass
+def getattr(): pass
+def globals(): pass
+def hasattr(): pass
+def hash(): pass
+def hex(): pass
+def id(): pass
+def input(): pass
+def intern(): pass
+def isinstance(): pass
+def issubclass(): pass
+def iter(): pass
+def len(): pass
+def locals(): pass
+def map(): pass
+def max(): pass
+def min(): pass
+def next(): pass
+def oct(): pass
+def open(): pass
+def ord(): pass
+def pow(): pass
+def print(): pass
+def range(): pass
+def raw_input(): pass
+def reduce(): pass
+def reload(): pass
+def repr(): pass
+def round(): pass
+def setattr(): pass
+def sorted(): pass
+def sum(): pass
+def unichr(): pass
+def vars(): pass
+def zip(): pass
+
+Ellipsis = 0
+False = 0
+None = 0
+NotImplemented = 0
+True = 0
+__debug__ = True
+copyright = 0
+credits = 0
+exit = 0
+help = 0
+license = 0
+quit = 0
+
+

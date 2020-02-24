@@ -1,0 +1,69 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Assembly requires the asm declaration';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "7-4-2 Assembler instructions shall only be introduced using the asm declaration";}
+
+sub description { return "7-4-2 (Required) Assembler instructions shall only be introduced using the asm declaration.";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The asm declaration is available to all C++ implementations, allowing a consistent mechanism to be used.</p>
+<p>However, the parameters to asm are still implementation-defined.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  void Delay_a ( void ) 
+  { 
+     asm ( "NOP" );   // Compliant 
+  }
+  void Delay_b ( void ) 
+  { 
+  #pragma asm 
+     "NOP"            // Non-compliant 
+  #pragma endasm 
+}</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file"); 
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  my $pragmaAsm = 0;
+  foreach my $lexeme ($lexer->lexemes){
+    $pragmaAsm = 1 if $lexeme->token eq "Preprocessor" && $lexeme->text eq "pragma";
+    $pragmaAsm = 0 if $lexeme->token eq "Newline";
+    if($lexeme->token eq "Keyword" && $lexeme->text =~ /^[_]*asm[_]*$/i){
+      next if $lexeme->text eq "asm" && ! $pragmaAsm;
+      $check->violation(0,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1);
+    }
+  
+  }
+  
+  # $check->violation($entity,$file,$line,$column,ERR1,%1,%2);  # the %1 and %2 are optional parameters
+  # $check->violation(0,0,-1,-1,ERR1,%1,%2)  #if no entity or location
+  
+  #my $optionVal = $check->option->lookup($name);
+}

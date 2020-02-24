@@ -1,0 +1,77 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => '<cstring> included in file %1';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "18-0-5 The unbounded functions of library <cstring> shall not be used";}
+
+sub description { return "18-0-5 (Required) The unbounded functions of library <cstring> shall not be used";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The <i>strcpy, strcmp, strcat, strchr, strspn, strcspn, strpbrk, strrchr, strstr, strtok</i> and <i>strlen</i> functions
+within the &lt;<i>cstring</i>&gt; library can read or write beyond the end of a buffer, resulting in <i>undefined
+behaviour</i>.<br>
+Ideally, a safe string handling library should be used.
+</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+#include <ctime> 
+#include <cstring>
+void fn ( const char_t * pChar )
+{
+  char_t array [ 10 ];
+  strcpy ( array, pChar ); // Non-compliant
+}
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+ our %seen;
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+ 	foreach my $libFuncs($file->filerefs(" ","Function")){
+ 		if($libFuncs->ent->name eq "strcpy" || $libFuncs->ent->name eq "strcmp" || $libFuncs->ent->name eq "strcat" || 
+       $libFuncs->ent->name eq "strchr" || $libFuncs->ent->name eq "strspn" || $libFuncs->ent->name eq "strcspn" ||
+       $libFuncs->ent->name eq "strpbrk" || $libFuncs->ent->name eq "strrchr" || $libFuncs->ent->name eq "strstr" ||
+       $libFuncs->ent->name eq "strtok" || $libFuncs->ent->name eq "strlen"){
+ 			my $libUsed = includeCheck($file);
+      if($libUsed){
+        $check->violation($libFuncs->ent,$file,$libFuncs->line,$libFuncs->column,ERR1,$file->name,$libFuncs->ent->name);
+      }
+    }
+ 	}
+}
+
+sub includeCheck {
+  my $file = shift;
+ 
+  if ($seen{$file->id}){
+    return 0;
+  }
+  $seen{$file->id}=1;
+  if($file->name eq "cstring"){
+    return 1;
+  }
+  my @refs = $file->refs("include","file",1);
+  foreach my $ref (@refs){
+    return 1 if includeCheck($ref->ent);
+  }
+}

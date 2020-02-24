@@ -1,0 +1,256 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Loop counter not modified by constant value';
+use constant ERR2 => 'Loop counter inappropriately modifed';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "The loop-counter shall be modified by one of: --, ++, -=n, or +=n; where n remains constant for the duration of the loop";}
+
+# This is the full description of the rule being tested
+sub description { return "The loop-counter shall be modified by one of: --, ++, -=n, or +=n; where n remains constant for the duration of the loop.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+This helps to ensure deterministic loop termination. The other <i>for</i> loop rules mean that the
+modification can only take place within <i>expression</i>.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  for ( x = 0; x < 10; ++x ) // Compliant
+  for ( T x = thing.start( );
+  x != thing.end( );
+  ++x ) // Compliant
+  for ( x = 0; x < 10; x += 1 ) // Compliant
+  for ( x = 0; x < 10; x += n ) // Compliant if n is not modified
+  // within the body of the loop.
+  for ( x = 0; x < 10; x += fn ( ) ) // Non-compliant
+</pre>
+
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function(@functionsDefined) {
+    
+    # Pull text of function
+    my $text = $function->ent->contents;
+    # Remove any // style comments
+    $text =~ s/\/\/.*\n/\n/g;
+    # Remove any /* */ style comments
+    $text =~ s/\/\*.*\*\//\n/gs;
+    # check if a for loop exists
+    next unless $text =~/for\s*\(/;
+
+    # Spin up lexer and find for loop
+    my $lexeme = $function->lexeme();
+
+    # Check entire function
+    my $end = $function->ent->ref('end')->line;
+    while ( $lexeme->line_begin < $end ) {
+
+      if ( $lexeme->token eq 'Keyword' and $lexeme->text eq 'for') {
+
+        # Mark start of for loop and create list for later testing
+        my $forLoopStartPoint = $lexeme->line_begin;
+        my @toTestLater;
+
+        # Move into for loop structure
+        $lexeme = $lexeme->nextUseful();
+        $lexeme = $lexeme->nextUseful();
+
+        # Check the first parameter to the for loop
+        my @init;
+        while ( $lexeme->text ne ';' ) {
+
+          if ( $lexeme->token eq 'Identifier' ) {
+            push ( @init, $lexeme ) if $lexeme->ref and ( $lexeme->ref->kind->name eq 'Set' or $lexeme->ref->kind->name eq 'Init' );
+          }
+          $lexeme = $lexeme->nextUseful;
+
+        }
+
+        my $count = 1;
+
+        # Check the rest of the for loop instantiation
+        ENT : while ( !( $count == 1 and $lexeme->text eq ')' ) ) {
+
+          $count ++ if $lexeme->text eq '(';
+          $count -- if $lexeme->text eq ')';
+          
+          if ( $lexeme->token ne 'Identifier' ) {
+            $lexeme = $lexeme->nextUseful;
+            next ENT;
+          }
+          
+          if ( $lexeme->ref and ( $lexeme->ref->kind->name eq 'Set' or $lexeme->ref->kind->name eq 'Modify' ) ) {
+
+            TRM : foreach my $term( @init ) {
+
+              if ( $lexeme->ent->name eq $term->ent->name ) {
+
+                next TRM if $lexeme->prevUseful->text eq '--';
+                next TRM if $lexeme->prevUseful->text eq '++';
+                next TRM if $lexeme->nextUseful->text eq '--';
+                next TRM if $lexeme->nextUseful->text eq '++';
+
+                if ( $lexeme->nextUseful->text eq '+=' or $lexeme->nextUseful->text eq '-=' ) {
+                  push ( @toTestLater, $lexeme->nextUseful->nextUseful ) if $lexeme->nextUseful->nextUseful->token eq 'Identifier';
+                  next TRM;
+                }
+
+                throwError($check, $lexeme->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR2);
+
+              }
+            }
+          }
+
+          $lexeme = $lexeme->nextUseful;
+
+        }
+
+        my $endForLoop = '';
+        $count = 1;
+
+        # There is no for loop block
+        if ( $lexeme->nextUseful->text ne '{' ) {
+          
+          $endForLoop = ';';
+          $lexeme = $lexeme->nextUseful;
+
+        # There is a standard loop block
+        } else {
+
+          $endForLoop = '}';
+          $lexeme = $lexeme->nextUseful;
+          $lexeme = $lexeme->nextUseful;
+
+        }
+
+        # Copy the lexeme to look at the body of the for loop without losing place in the function
+        my $lexemeBody = $lexeme;
+        my $forLoopEndPoint;
+
+        ENT : while ( !( $count == 1 and $lexemeBody->text eq $endForLoop ) ) {
+
+          $count ++ if $lexemeBody->text eq '{';
+          $count -- if $lexemeBody->text eq '}';
+
+          if ( $lexemeBody->token ne 'Identifier' ) {
+            $lexemeBody = $lexemeBody->nextUseful;
+            next ENT;
+          }
+
+          if ( $lexemeBody->ref and ( $lexemeBody->ref->kind->name eq 'Set' or $lexemeBody->ref->kind->name eq 'Modify' ) ) {
+
+            TRM : foreach my $term( @init ) {
+
+              if ( $lexemeBody->ent->name eq $term->ent->name ) {
+
+                next TRM if $lexemeBody->prevUseful->text eq '--';
+                next TRM if $lexemeBody->prevUseful->text eq '++';
+                next TRM if $lexemeBody->nextUseful->text eq '--';
+                next TRM if $lexemeBody->nextUseful->text eq '++';
+
+                if ( $lexemeBody->nextUseful->text eq '+=' or $lexemeBody->nextUseful->text eq '-=' ) {
+                  push ( @toTestLater, $lexemeBody->nextUseful->nextUseful ) if $lexemeBody->nextUseful->nextUseful->token eq 'Identifier';
+                  next TRM;
+                }
+
+                throwError($check, $lexemeBody->ent, $file, $lexemeBody->line_begin, $lexemeBody->column_begin, ERR2);
+
+              }
+            }
+          }
+
+          $forLoopEndPoint = $lexemeBody->line_begin;
+          $lexemeBody = $lexemeBody->nextUseful;
+
+        }
+
+        foreach my $toTest( @toTestLater ) {
+
+          my @refs = $toTest->ent->refs("Setby, Modifyby");
+          throwError($check, $toTest->ent, $file, $toTest->line_begin, $toTest->column_begin, ERR1) unless @refs;
+
+          foreach my $ref( @refs ) {
+            throwError($check, $toTest->ent, $file, $toTest->line_begin, $toTest->column_begin, ERR1) if $ref->line >= $forLoopStartPoint and $ref->line <= $forLoopEndPoint;
+
+          }
+
+        }
+
+      } else {
+
+        $lexeme = $lexeme->nextUseful;
+
+      }
+
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

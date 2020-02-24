@@ -1,0 +1,113 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson 
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Unnamed namespace used in header file: %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "7-3-3 There shall be no unnamed namespaces in header files";}
+
+# This is the full description of the rule being tested
+sub description { return "7-3-3 (Required) There shall be no unnamed namespaces in header files.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+An unnamed namespace will be unique within each translation unit. Any declarations appearing
+in an unnamed namespace in a header will refer to different entities in each translation unit, which
+may not be consistent with developer expectations.</p>
+
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  // Header.hpp
+  namespace // Non-compliant
+  {
+    extern int32_t x;
+  }  
+
+  // File1.cpp
+  #include "Header.hpp"
+  namespace
+  {
+    int32_t x;
+  }
+  void fn_a ( void )
+  {
+    x = 24;
+  }  
+
+  // File2.cpp
+  #include "Header.hpp"
+  namespace
+  {
+    int32_t x;
+  }
+  void fn_b ( void )
+  {
+    fn_a ( );
+    if ( x == 24 ) // This x will not have been initialized.
+    {
+    }
+  }
+  </pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+
+  # Check that we are looking at a file and that it is a header file
+  return unless $file->kind->check("c file");
+  return unless $file->refs("Includeby");
+
+  # Pull the contents of the file
+  my $text = $file->contents;
+  # Remove any // style comments
+  $text =~ s/\/\/.*\n/\n/g;
+  # Remove any /* */ style comments
+  $text =~ s/\/\*.*\*\//\n/gs;
+
+  # Check if an unnamed namespace is used and throw an error if so
+  throwError($check, $file, $file, 0 , 0, ERR1, $file->name) if $text =~ /namespace\s+\{/;
+}

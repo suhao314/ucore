@@ -1,0 +1,81 @@
+# Report functions which have a depth greater than X.
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => 'Complexity(%1) greater than allowed(%2)';
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name {
+  return "Program Unit Cyclomatic Complexity";
+}
+
+sub description {
+  return "Program Units which have a Cyclomatic Complexity greater than X";
+}
+
+sub detailed_description {
+  return  <<"END_DESC"
+<p><b>Rationale</b><br>
+Overly complex programs are difficult to comprehend and have many possible paths making them difficult to test and validate. There are several variants for Cyclomatic Complexity:</p>
+<p><b>Cyclomatic Complexity</b><br> 
+Also known as McCabe Cyclomatic complexity or as Conditional Complexity and is defined as per the original NIST paper on the subject:<br>
+Edges - Nodes + Connected Components.</p>
+<p><b>Modified Cyclomatic Complexity</b><br> 
+The Cyclomatic Complexity except that each decision in a multi-decision structure (switch in C/Java, Case in Ada, computed 
+Goto and arithmetic if in FORTRAN) statement is not counted and instead the entire multi-way decision structure counts as 1</p>
+<p><b>Strict Cyclomatic Complexity</b><br> 
+The Cyclomatic Complexity with logical conjunction and logical and in conditional expressions also adding 1 to the complexity for each 
+of their occurrences.</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return 1;
+}
+
+sub test_entity {
+  return 1;
+}
+
+sub test_global {
+  return 0;
+}
+
+sub define_options{
+  my $check = shift;
+  $check->option->integer("maxComplexity","Maximum Complexity","5");
+  $check->option->radio_vert("metric","Variant",["Cyclomatic Complexity","Modified Cyclomatic Complexity","Strict Cyclomatic Complexity"],"Cyclomatic Complexity");
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("file");
+  my $maxComplexity = $check->option->lookup("maxComplexity");
+  my $metric = "Cyclomatic";
+  $metric = "CyclomaticModified" if $check->option->lookup("metric") =~ /Modified/;
+  $metric = "CyclomaticStrict" if $check->option->lookup("metric") =~ /Strict/;
+  #Get all the function references
+  my @entrefs = $file->filerefs("define, declare body, vhdl declare","ada entry, ada function, ada package, ada procedure, ada protected, ada task,"
+     ."c function,"
+   ."csharp method,"
+   ."fortran block data, fortran function, fortran interface, fortran program, fortran subroutine,"
+   ."java method,"
+   ."jovial subroutine,"
+   ."pascal compunit, pascal function, pascal procedure,"
+   ."python function,"
+   ."vhdl procedure, vhdl function, vhdl process, vhdl architecture",1);
+   
+
+  foreach my $funcDef (@entrefs){
+    my $complexity = $funcDef->ent->metric($metric);
+    if ($complexity > $maxComplexity) {
+      $check->violation($funcDef->ent,$funcDef->file,$funcDef->line,$funcDef->column,ERR1,$complexity,$maxComplexity);
+    }
+  }
+   
+}

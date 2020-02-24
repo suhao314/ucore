@@ -1,0 +1,148 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'For loop contains more than one loop counter';
+use constant ERR3 => 'Loop variable is a floating point number';
+use constant ERR4 => 'Loop does not contain a traditional loop counter; cannot test';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR3);
+  $check->add_tr_text(ERR4);
+}
+
+# This is the short error the Understand will use
+sub name { return "6-5-1 A for loop shall contain a single loop-counter which shall not have floating type";}
+
+# This is the full description of the rule being tested
+sub description { return "6-5-1 (Required) A for loop shall contain a single loop-counter which shall not have floating type.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+A <i>for</i> loop without exactly one <i>loop-counter</i> is simply a <i>while</i> loop. If this is the desired behaviour,
+then a <i>while</i> loop is more appropriate.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  y = 0;
+  for ( x = 0; x < y; x = y++ ) // Non-compliant
+</pre>
+
+<p><b>Developer's Note:</b><br>
+C/C++ is too open to reasonably test all possible configurations in which multiple loop counters can exist. This test only checks
+for multiple variable usages that can be detected within for loop instantiation {i.e. for ( init; condition; increment ) }. Any variables
+used as a counter outside of instantiation will not be detected.
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function(@functionsDefined) {
+    
+    # Pull text of function
+    my $text = $function->ent->contents;
+    # Remove any // style comments
+    $text =~ s/\/\/.*\n/\n/g;
+    # Remove any /* */ style comments
+    $text =~ s/\/\*.*\*\//\n/gs;
+    # check if a for loop exists
+    next unless $text =~/for\s*\(/;
+
+    # Spin up lexer and find for loop
+    my $lexeme = $function->lexeme();
+
+    # Check entire function
+    my $end = $function->ent->ref('end')->line;
+    while ( $lexeme->line_begin < $end ) {
+
+      #$check->violation($function->ent, $file, $lexeme->line_begin, $lexeme->column_begin, $lexeme->text );
+
+      if ( $lexeme->token eq 'Keyword' and $lexeme->text eq 'for') {
+
+        # Move into for loop structure
+        $lexeme = $lexeme->nextUseful();
+        $lexeme = $lexeme->nextUseful();    
+
+        # Should be at underbar // for ( __ ; ; );
+        if ( $lexeme->text eq ';' ) {    
+
+          throwError($check, $function->ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR4)    
+
+        } 
+
+        # Check the first parameter to the for loop
+        while ( $lexeme->text ne ';' ) {
+
+          if ( $lexeme->token eq 'Identifier' ) {
+            $check->violation( $lexeme->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR3 ) if $lexeme->ent and $lexeme->ent->type =~ /float|double/;
+          }
+
+          throwError($check, $function->ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1) if $lexeme->text eq ',';
+          $lexeme = $lexeme->nextUseful;
+        }    
+
+        # Check the second parameter to the for loop
+        $lexeme = $lexeme->nextUseful;
+        while ( $lexeme->text ne ';' ) {
+          $lexeme = $lexeme->nextUseful;
+        }    
+
+        # Check the third parameter to the for loop
+        while ( $lexeme->text ne ')' ) {
+          throwError($check, $function->ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1) if $lexeme->text eq ',';
+          $lexeme = $lexeme->nextUseful;
+        }
+
+      } else {
+        $lexeme = $lexeme->nextUseful;
+      }
+
+    }
+  }
+}

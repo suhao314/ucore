@@ -1,0 +1,58 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => '"%1" defined in header file.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { 'Definitions in Header Files' }
+
+sub description { 'Objects and Functions should not be defined in Header Files.' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+Header files should be used to declare objects, functions, typedefs, and macros. Header files shall not contain or produce definitions of 
+objects or functions (or fragment of functions or objects) that occupy storage. This makes it clear that only C/CPP files contain executable 
+source code and that header files only contain declarations. A <b>header file</b> is defined as any file that is included via the #include directive, 
+regardless of name or suffix.</p>
+<p><b>Exception</b><br>
+Inline Functions can be defined in the declaration of a class.
+</p>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options {
+  my $check = shift;
+  $check->option->checkbox("allowInlineFuncs","Allow Inline Functions in Header Files",1);
+}
+
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c header file ~unknown');
+	
+	my @refsDefined = $file->filerefs('define', 'c function, c object', 1);
+	
+	foreach my $ref (@refsDefined) {
+  next if $ref->ent->kind->check('member object ~static');
+  next if($ref->ent->kind->check('function') && $ref->scope->kind->check('class') && $check->option->lookup("allowInlineFuncs"));
+		$check->violation($ref->ent, $file, $ref->line, $ref->column, ERR1, $ref->ent->name);
+	}
+	
+	return;
+}

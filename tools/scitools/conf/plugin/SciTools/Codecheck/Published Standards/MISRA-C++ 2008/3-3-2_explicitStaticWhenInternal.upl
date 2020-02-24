@@ -1,0 +1,57 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: Function "%2" appears to have internal linkage within %3, so static keyword should be used.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '3-3-2 If a function has internal linkage then all re-declarations shall include the static storage class specifier.' }
+
+sub description { '3-3-2 (Required) If a function has internal linkage then all re-declarations shall include the static storage class specifier.' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+If  the  declaration  of  a  function  includes  the  static	 storage	 class	 specifier,	 then	 it	 has	 internal	
+linkage.
+A re-declaration of such a function is not required to have the static keyword, but it will still have 
+internal linkage. However, this is implicit and may not be obvious to a developer. It is therefore 
+good practice to apply the static keyword consistently so that the linkage is explicitly stated.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+static void f1 ( ); 
+static void f2 ( );
+       void f1 ( ) { }      // Non-compliant 
+static void f2 ( ) { }      // Compliant
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 0 }
+
+sub test_global { 1 }
+
+sub define_options { }
+
+
+sub check {
+	my $check = shift;
+	
+	FILE: foreach my $file ($check->get_files) {
+    next FILE unless $file->kind->check('c file');
+		REF: foreach my $ref ($file->filerefs('define', 'c function static ~member', 0)) {
+      next REF unless $ref->ent->ref('declarein');
+			if ($ref->ent->contents !~ /^[^\(]*static/){
+        $check->violation($ref->ent, $ref->file, $ref->line, $ref->column, ERR1, $ref->ent->longname, $ref->file->name);
+      }
+		}
+	}
+}
+

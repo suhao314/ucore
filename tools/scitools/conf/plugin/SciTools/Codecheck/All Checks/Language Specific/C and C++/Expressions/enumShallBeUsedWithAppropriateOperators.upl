@@ -1,0 +1,120 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Enum used with an incorrect operator in %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "Expressions with type enum shall not be used as operands to built-in operators other than the subscript operator [ ], the assignment operator =, the equality operators == and !=, the unary & operator, and the relational operators <, <=, >, >=";}
+
+# This is the full description of the rule being tested
+sub description { return "Expressions with type enum shall not be used as operands to built-in operators other than the subscript operator [ ], the assignment operator =, the equality operators == and !=, the unary & operator, and the relational operators <, <=, >, >=.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Enumerations have <I>implementation-defined</I> representation and so should not be used in arithmetic
+contexts.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  enum { COLOUR_0, COLOUR_1, COLOUR_2, COLOUR_COUNT } colour;
+  if ( COLOUR_0 == colour ) // Compliant
+  if ( ( COLOUR_0 + COLOUR_1 ) == colour ) // Non-compliant
+  if ( colour < COLOUR_COUNT ) // Compliant
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+  # Pull a list of all enumerator use refs
+  my @enumerators = $file->filerefs("Use", "Enumerator");
+  
+  # Loop through all enumerator references and check if they are being used correctly
+  foreach my $enum(@enumerators) {
+	
+	# Set all need variables for the check
+    my $flag = 0;
+    my $lexeme = $enum->lexeme;
+	my $backOne = $lexeme->previous->text;
+	my $backTwo = $lexeme->previous->previous->text;
+	my $forwardOne = $lexeme->next->text;
+	my $forwardTwo = $lexeme->next->next->text;
+	
+	# Test each of the above variables for text that should contain [ ] = == != & < <= > >= ( )
+	$flag = 1 if $backOne =~ /\+|\-|\*|\/|%|\+\+|\-\-|!|&&|\|\||~|\||\^|<<|>>|\->|\.|\->\*|\.\*/;
+	$flag = 1 if $backTwo =~ /\+|\-|\*|\/|%|\+\+|\-\-|!|&&|\|\||~|\||\^|<<|>>|\->|\.|\->\*|\.\*/;
+	$flag = 1 if $forwardOne =~ /\+|\-|\*|\/|%|\+\+|\-\-|!|&&|\|\||~|\||\^|<<|>>|\->|\.|\->\*|\.\*/;
+	$flag = 1 if $forwardTwo =~ /\+|\-|\*|\/|%|\+\+|\-\-|!|&&|\|\||~|\||\^|<<|>>|\->|\.|\->\*|\.\*/;
+	
+	# Special case to detect if unary & is used or bitwise & is used
+	if ( $backOne eq "&" || $backTwo eq "&" ) {
+	  my $first = $lexeme->previous->token;
+	  my $second = $lexeme->previous->previous->token;
+	  my $third = $lexeme->previous->previous->previous->token;
+	  my $fourth = $lexeme->previous->previous->previous->previous->token;
+	  $flag = 1 if $first eq "Operator" && $second eq "Identifier";
+	  $flag = 1 if $first eq "Operator" && $third eq "Identifier";
+	  $flag = 1 if $second eq "Operator" && $third eq "Identifier";
+	  $flag = 1 if $second eq "Operator" && $fourth eq "Identifier";
+	}
+	throwError($check, $enum->ent,$file,$enum->line,$enum->column,ERR1,$enum->scope->name) if $flag;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

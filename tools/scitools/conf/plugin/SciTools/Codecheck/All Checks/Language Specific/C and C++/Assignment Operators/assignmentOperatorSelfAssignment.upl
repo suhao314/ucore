@@ -1,0 +1,257 @@
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => "Assignment Operator: Improper format";
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+
+}
+
+
+sub name {
+  return "Assignment Operator Self Assignment";
+}
+
+sub description {
+  return "Report assignment operators that do not check for self assignment.";
+}
+
+sub detailed_description {
+  return "Report assignment operators that do not check for self assignment.
+  The following generalized formats are allowed. Comments and whitespace are
+  allowed anywhere, but otherwise, these formats are rigid:
+    0. xxx operator=(xxx C &p) { [return;] }
+    1. xxx operator=(xxx C &p) { if (this != &p) [{]...[}] [return;] }
+    2. xxx operator=(xxx C &p) { if (*this != p) [{]...[}] [return;] }
+    3. xxx operator=(xxx C &p) { if (p != *this) [{]...[}] [return;] }
+    4. xxx operator=(xxx C &p) { if (&p != this) [{]...[}] [return;] }
+    5. xxx operator=(xxx C &p) { if (this == &p) [{] return ...
+    6. xxx operator=(xxx C &p) { if (*this == p) [{] return ...
+    7. xxx operator=(xxx C &p) { if (p == *this) [{] return ...
+    8. xxx operator=(xxx C &p) { if (&p == this) [{] return ...";
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/;
+}
+
+sub test_entity {
+  return 1;
+}
+
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  my $lexer = undef;
+  # loop through member functions defined in the file
+  foreach my $ref ($file->filerefs("define","member function ~static",1)) {
+      my $func = $ref->ent();
+      next if $func->name() ne "operator=";
+      my ($begin,$end) = getFunctionDefnLines($func);
+      next if (!$begin);
+
+      $lexer = $file->lexer() if (!$lexer);
+      return unless $lexer;
+      do_one_function($check,$file,$func,$lexer,$begin,$end);
+  }
+}
+
+
+sub do_one_function {
+    my $check = shift;
+    my $file = shift;
+    my $func = shift;
+    my $lexer = shift;
+    my $begin = shift;
+    my $end = shift;
+
+    # get parameter name
+    my @params = $func->ents("define","parameter");
+    return if $#params != 0;
+    my $param = $params[0]->name();
+
+    # get lexemes
+    my $lexeme_pos = 0;
+    my @lexemes = $lexer->lexemes($begin,$end);
+    my $lexeme = NextLexeme(\@lexemes, \$lexeme_pos);
+    return if !$lexeme;
+
+    # find opening curly brace
+    while ($lexeme->text ne "{") {
+  $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+    }
+    $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+
+    # FORMAT 0
+    return if $lexeme->text() eq "return";
+    return if $lexeme->text() eq "}";
+
+    # VIOLATION: missing initial 'if'
+    return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "if");
+    $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+
+    # VIOLATION: missing '(' after initial 'if'
+    return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "(");
+    $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+
+    # determine which format this is
+    my $format = 0;
+    if ($lexeme->text() eq "this") {
+  $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  if ($lexeme->text() eq "!=") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "&");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne $param);
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 1;
+  } elsif ($lexeme->text() eq "==") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "&");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne $param);
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 5;
+  } else {
+      return Violation($check,$func,$lexeme,$file);
+  }
+    } elsif ($lexeme->text() eq "*") {
+  $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "this");
+  $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  if ($lexeme->text() eq "!=") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne $param);
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 2;
+  } elsif ($lexeme->text() eq "==") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne $param);
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 6;
+  } else {
+      return Violation($check,$func,$lexeme,$file);
+  }
+    } elsif ($lexeme->text() eq $param) {
+  $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  if ($lexeme->text() eq "!=") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "*");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "this");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 3;
+  } elsif ($lexeme->text() eq "==") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "*");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "this");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 7;
+  } else {
+      return Violation($check,$func,$lexeme,$file);
+  }
+    } elsif ($lexeme->text() eq "&") {
+  $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne $param);
+  $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  if ($lexeme->text() eq "!=") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "this");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 4;
+  } elsif ($lexeme->text() eq "==") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne "this");
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      return Violation($check,$func,$lexeme,$file) if ($lexeme->text() ne ")");
+      $format = 8;
+  } else {
+      return Violation($check,$func,$lexeme,$file);
+  }
+    } else {
+  return Violation($check,$func,$lexeme,$file);
+    }
+    $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+
+    # allow one statement or compound statement, then optional return
+    if ($format >= 1 && $format <= 4) {
+  if ($lexeme->text() eq '{') {
+      my $curly = 1;
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      while ($curly) {
+    ++$curly if ($lexeme->text() eq "{");
+    --$curly if ($lexeme->text() eq "}");
+    $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      }
+  } else {
+      while ($lexeme->text() ne ";") {
+    $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+      }
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  }
+  return if ($lexeme->text() eq "return");
+  return if ($lexeme->text() eq "}");
+  return Violation($check,$func,$lexeme,$file);
+    }
+
+    # require an immediate return, possibly within curly braces, then
+    # allow anything
+    elsif ($format >= 5 && $format <= 8) {
+  if ($lexeme->text() eq "{") {
+      $lexeme = NextLexeme(\@lexemes, \$lexeme_pos) or return;
+  }
+  return if ($lexeme->text() eq "return");
+  return Violation($check,$func,$lexeme,$file);
+    }
+}
+
+
+sub Violation {
+    my $check  = shift;
+    my $func   = shift;
+    my $lexeme = shift;
+    my $file   = shift;
+    $check->violation($func,$file,$lexeme->line_begin, $lexeme->column_begin,ERR1);
+}
+
+
+# Pass a function entity. Return an array of:
+#   the begin line
+#   the end line
+#   the defn file entity
+# Return undef if this info cannot be provided.
+sub getFunctionDefnLines {
+    my $func = shift;
+    my $begin_ref = $func->ref("definein");
+    my $end_ref = $func->ref("end");
+    return undef if (!$begin_ref || !$end_ref);
+    return ($begin_ref->line(), $end_ref->line(), $begin_ref->file());
+}
+
+
+# Return the next interesting lexeme or undef when all lexemes
+# are used.
+sub NextLexeme {
+    my $lexemes = shift;
+    my $lexeme_pos = shift;
+    while (${$lexeme_pos} < $#$lexemes) {
+      my $lexeme = $lexemes->[${$lexeme_pos}++];
+      next if ($lexeme && $lexeme->token() =~ m/Comment|Whitespace|Newline/);
+      return $lexeme;
+    };
+    return undef;
+}
+

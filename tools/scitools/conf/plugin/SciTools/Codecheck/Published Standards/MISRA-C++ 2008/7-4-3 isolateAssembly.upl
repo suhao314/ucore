@@ -1,0 +1,91 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Assembly code must be isolated in a function';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "7-4-3 Assembly language shall be encapsulated and isolated";}
+
+sub description { return "7-4-3 (Required) Assembly language shall be encapsulated and isolated.";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Ensuring that assembly language code is encapsulated and isolated aids portability.
+Where  assembly  language  instructions  are  needed,  they  shall  be  encapsulated  and  isolated  in 
+either assembler functions or C++ functions.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  void Delay ( void ) 
+  { 
+     asm ( "NOP" );    // Compliant 
+  }
+  void fn ( void ) 
+  { 
+     DoSomething ( ); 
+     Delay ( );        // Assembler is encapsulated 
+     DoSomething ( ); 
+     asm ( "NOP" );    // Non-compliant 
+     DoSomething ( ); 
+  }</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file"); 
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  
+  my $lexeme = $lexer->first();
+  my $inFunc =0;
+  my $endRef;
+  my @asmStatements=();
+  my $lastent;
+  
+  while($lexeme){
+    #determine if we are in a function
+    if($lexeme->ref && $lexeme->ent->kind->check("function")){
+      $inFunc = $lexeme->ent if $lexeme->ref->kind->check("definein"); 
+      $endRef = $inFunc->ref("endby") if $inFunc;
+    }
+    if ($inFunc && $lexeme->line_begin >= $endRef->line && $lexeme->column_begin >= $endRef->column){
+      # we are at the end of the function and need to determine if the number of assembly statements
+      # is a healthy percentage of the total statements. Right now all statements need to be assembly
+      my $stmts = $inFunc->metric("CountStmt");
+      if (@asmStatements && @asmStatements < $stmts){
+        foreach my $asmLex(@asmStatements){
+          #$check->violation($inFunc,$file,-1,-1,@asmStatements);
+          $check->violation($inFunc,$file,$asmLex->line_begin,$asmLex->column_begin,ERR1);
+        }
+      }
+      @asmStatements=();
+      $inFunc = 0;
+    }
+
+    if($lexeme->token eq "Keyword" && $lexeme->text =~ /^[_]*asm[_]*$/i){
+      if($inFunc){
+        push(@asmStatements,$lexeme);
+      }else{
+        $check->violation(0,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1);
+      }
+    }
+  }continue{
+    $lexeme=$lexeme->next if $lexeme;
+  }
+}

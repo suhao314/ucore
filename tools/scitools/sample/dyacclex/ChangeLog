@@ -1,0 +1,194 @@
+2005-02-18 13:39  druid
+
+	* release-1-3: Tag for dyacclex-1.3
+
+2005-02-18 11:36  druid
+
+	* debian/changelog: Bump version number
+
+2005-02-18 11:36  druid
+
+	* Makefile: Store .cod files in /usr/share/dyacclex on Linux
+
+2005-02-18 11:35  druid
+
+	* src/lex/dlex.dpr, src/yacc/dyacc.dpr, src/yacc/dyacc.y: Add
+	  openCodFile() procedure to allow .cod files to be stored in
+	  /usr/share/dyacclex on Linux
+
+2005-02-18 10:51  druid
+
+	* src/yacc/Makefile: Do not try to autobuild dyacc.dpr (do it
+	  manually)
+
+2005-02-18 10:47  druid
+
+	* debian, debian/README.Debian, debian/changelog, debian/compat,
+	  debian/control, debian/copyright, debian/dirs, debian/docs,
+	  debian/rules: Add debian package configuration
+
+2005-02-18 10:47  druid
+
+	* test/Makefile: Use absolute path to dcc for Linux
+
+2005-02-18 10:45  druid
+
+	* src/lex/Makefile, src/yacc/Makefile: Use absolute path to dcc for
+	  Linux
+
+2005-02-18 10:44  druid
+
+	* Makefile: Add install target to Makefile
+
+2004-12-13 23:29  druid
+
+	* ., .: Move dyacclex trunk
+
+2004-08-17 20:25  druid
+
+	* src/yacc/dyacc.dpr, src/yacc/dyacc.y: Revert fixed path in uses
+	  clause
+
+2004-08-17 20:19  druid
+
+	* README: Update README file
+
+2004-08-17 20:07  druid
+
+	* src/dlib.pas, src/lex/dlex.dpr, src/lex/lexbase.pas,
+	  src/lex/lexdfa.pas, src/lex/lexlist.pas, src/lex/lexmsgs.pas,
+	  src/lex/lexopt.pas, src/lex/lexpos.pas, src/lex/lexrules.pas,
+	  src/lexlib.pas, src/yacc/dyacc.dpr, src/yacc/yaccbase.pas,
+	  src/yacc/yaccclos.pas, src/yacc/yacclook.pas,
+	  src/yacc/yacclr0.pas, src/yacc/yaccmsgs.pas,
+	  src/yacc/yaccpars.pas, src/yacc/yaccsem.pas,
+	  src/yacc/yacctabl.pas, src/yacc/yyparse.cod, src/yacclib.pas:
+	  Numerous formatting fixes
+
+2004-08-17 19:37  druid
+
+	* src/yacc/dyacc.dpr, src/yacc/dyacc.y, src/yacc/yaccbase.pas,
+	  src/yacc/yaccmsgs.pas, src/yacc/yaccpars.pas,
+	  src/yacc/yaccsem.pas, src/yacc/yyparse.cod: Include
+	  %union/readonly option patch by Morris Johns
+
+2004-08-17 19:27  druid
+
+	* src/lex/lexmsgs.pas: Add readonly option to usage
+
+2004-08-17 19:25  druid
+
+	* src/lex/dlex.dpr, src/lex/lextable.pas: Include
+	  formatting/readonly option patch by Morris Johns
+
+2004-02-24 14:18  druid
+
+	* src/lex/lexbase.pas, src/yacc/yaccbase.pas: Small cleanup
+
+2004-02-24 14:17  druid
+
+	* Makefile, README, src/Makefile, src/dlib.pas, src/lex/Makefile,
+	  src/lex/dlex.dpr, src/lex/lexbase.pas, src/lex/lexdfa.pas,
+	  src/lex/lexlist.pas, src/lex/lexmsgs.pas, src/lex/lexopt.pas,
+	  src/lex/lexpos.pas, src/lex/lexrules.pas, src/lex/lextable.pas,
+	  src/lex/yylex.cod, src/lexlib.pas, src/yacc/Makefile,
+	  src/yacc/dyacc.dpr, src/yacc/dyacc.y, src/yacc/yaccbase.pas,
+	  src/yacc/yaccclos.pas, src/yacc/yacclook.pas,
+	  src/yacc/yacclr0.pas, src/yacc/yaccmsgs.pas,
+	  src/yacc/yaccpars.pas, src/yacc/yaccsem.pas,
+	  src/yacc/yacctabl.pas, src/yacc/yyparse.cod, src/yacclib.pas,
+	  test/Makefile: Updated copyright messages
+
+2004-02-23 20:44  druid
+
+	* Makefile, src/lex/Makefile, src/yacc/Makefile: Cleaned up
+	  makefiles
+
+2004-02-23 20:44  druid
+
+	* src/lex/lexbase.pas, src/yacc/yaccbase.pas: Integrated patches to
+	  fix newStr (Hartmut Honisch)
+
+2004-01-25 20:05  druid
+
+	* src/lex/lexrules.pas: Fixed a bug discovered by Robert Zierer
+
+2003-12-18 21:18  druid
+
+	* README: Word wrapping in README
+
+2003-12-18 21:16  druid
+
+	* test/Makefile, test/expr.y, test/exprtest.dpr: Updated tests
+
+2003-12-18 21:03  druid
+
+	* README: README
+
+2003-12-18 21:01  druid
+
+	* Makefile, src/lex/dlex.dpr, src/lex/lexbase.pas,
+	  src/lex/lexdfa.pas, src/lex/lexlist.pas, src/lex/lexmsgs.pas,
+	  src/lex/lexopt.pas, src/lex/lexpos.pas, src/lex/lexrules.pas,
+	  src/lex/lextable.pas, src/yacc/dyacc.dpr, src/yacc/yaccbase.pas,
+	  src/yacc/yaccclos.pas, src/yacc/yacclook.pas,
+	  src/yacc/yacclr0.pas, src/yacc/yaccmsgs.pas,
+	  src/yacc/yaccpars.pas, src/yacc/yaccsem.pas,
+	  src/yacc/yacctabl.pas: Changed copyright messages to standard
+	  format
+
+2003-12-18 21:01  druid
+
+	* test/Makefile: Small fix for Windows
+
+2003-12-18 20:04  druid
+
+	* LICENSE: GPL license
+
+2003-12-18 19:37  druid
+
+	* test/Makefile: Makefile for test
+
+2003-12-18 19:36  druid
+
+	* src/lex/dlex.dpr, src/lex/yylex.cod, src/yacc/dyacc.dpr,
+	  src/yacc/dyacc.y, src/yacc/yyparse.cod, src/yylex.cod,
+	  src/yyparse.cod: Move .cod files, use ExtractFilePath
+
+2003-12-18 19:18  druid
+
+	* test, test/expr.y, test/exprlex.l, test/exprtest.dpr: Test files
+
+2003-12-18 18:40  druid
+
+	* src/lex/dlex.dpr, src/lex/lexbase.pas, src/lex/lexdfa.pas,
+	  src/lex/lexlist.pas, src/lex/lexmsgs.pas, src/lex/lexopt.pas,
+	  src/lex/lexpos.pas, src/lex/lexrules.pas, src/lex/lextable.pas,
+	  src/yacc/dyacc.dpr, src/yacc/dyacc.y, src/yacc/yaccbase.pas,
+	  src/yacc/yaccclos.pas, src/yacc/yacclook.pas,
+	  src/yacc/yacclr0.pas, src/yacc/yaccmsgs.pas,
+	  src/yacc/yaccpars.pas, src/yacc/yaccsem.pas,
+	  src/yacc/yacctabl.pas, src/yacclib.pas: Case sensitivity for unit
+	  names, remove some heap functions
+
+2003-12-18 17:56  druid
+
+	* src/yacc, src/yacc/Makefile, src/yacc/dyacc.dpr, src/yacc/dyacc.y,
+	  src/yacc/yaccbase.pas, src/yacc/yaccclos.pas,
+	  src/yacc/yacclook.pas, src/yacc/yacclr0.pas,
+	  src/yacc/yaccmsgs.pas, src/yacc/yaccpars.pas,
+	  src/yacc/yaccsem.pas, src/yacc/yacctabl.pas: Delphi Yacc
+
+2003-12-18 17:56  druid
+
+	* src/lex, src/lex/Makefile, src/lex/dlex.dpr, src/lex/lexbase.pas,
+	  src/lex/lexdfa.pas, src/lex/lexlist.pas, src/lex/lexmsgs.pas,
+	  src/lex/lexopt.pas, src/lex/lexpos.pas, src/lex/lexrules.pas,
+	  src/lex/lextable.pas: Delphi Lex
+
+2003-12-18 17:55  druid
+
+	* ., Makefile, src, src/Makefile, src/dlib.pas, src/lexlib.pas,
+	  src/yacclib.pas, src/yylex.cod, src/yyparse.cod: Makefiles and
+	  library units
+

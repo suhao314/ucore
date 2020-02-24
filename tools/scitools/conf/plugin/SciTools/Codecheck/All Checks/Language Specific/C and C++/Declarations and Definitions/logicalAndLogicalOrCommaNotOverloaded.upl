@@ -1,0 +1,125 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-15-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Comma, && or || has been overloaded';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "The comma operator, && operator and the || operator shall not be overloaded";}
+
+
+# This is the full description of the rule being tested
+sub description { return "( Required ) The comma operator, && operator and the || operator shall not be overloaded.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Overloaded versions of the comma and logical conjunction operators have the semantics of
+function calls whose sequence point and ordering semantics are different from those of the builtin
+versions. It may not be clear at the point of use that these operators are overloaded, and so
+developers may be unaware which semantics apply.</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  #include "util.h"
+  class A
+  {
+  public:
+    UtilType getValue ( );
+    UtilType setValue ( UtilType const & );
+  };
+
+  void f1 ( A & a1, A & a2 )
+  {
+    a1.getValue ( ) && a2.setValue ( 0 ); // Short circuiting may occur
+  }
+
+  bool operator && (  UtilType const &,
+                      UtilType const & ); // Non-compliant
+
+  void f2 ( A & a1, A & a2 )
+  {
+    a1.getValue ( ) && a2.setValue ( 0 ); // Both operands evaluated
+  }
+
+</pre>
+
+<p>
+If the type returned by getValue and setValue has an overloaded operator &&, then both getValue
+and setValue will be evaluated.</p>
+<br>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation( $ent, $file, $line, $column, $error, $name );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+  # Pull a reference for all functions that are defined
+  my @functionsDefined = $file->filerefs( 'Define, Declare', 'Function', 1 );
+  return unless @functionsDefined;
+
+  # Loop through each reference
+  foreach my $function ( @functionsDefined ) {
+
+    throwError( $check, $function->ent, $function->file, $function->line, $function->column, ERR1, $function->ent->name ) if $function->ent->name =~ /\,|\&\&|\|\|/;
+
+  }
+}

@@ -1,0 +1,55 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => '%2 declared %1 times';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "An external object or function shall be declared in one and only one file";}
+
+sub description { return "An external object or function shall be declared in one and only one file";}
+
+sub detailed_description { return <<"END_DESC"
+Normally this will mean declaring an external identifier in a header file, that will be included in
+any file where the identifier is defined or used. For example:
+  extern int16_t a;
+  in featureX.h, then to define a:
+  #include <featureX.h>
+  int16_t a = 0;
+There may be one or there may be many header files in a project, but each external object or
+function shall only be declared in one header file.
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 0;}
+
+sub test_global { return 1;}
+
+sub define_options{}
+
+sub check {
+  my $check = shift; 
+  my @files = $check->get_files();
+  my %objects;
+  
+  FILE:foreach my $file(@files){
+    my @objRefs = $file->filerefs("Declare","c",1);
+    next FILE unless @objRefs;
+    OBJ: foreach my $objRef (@objRefs){
+      my $obj = $objRef->ent;
+      my @declRefs = $obj->refs("declarein","c");
+      next OBJ unless @declRefs > 1;
+      $check->violation($obj,$objRef->file,$objRef->line,$objRef->column,ERR1,scalar @declRefs,$obj->name);       
+    }
+  }
+}

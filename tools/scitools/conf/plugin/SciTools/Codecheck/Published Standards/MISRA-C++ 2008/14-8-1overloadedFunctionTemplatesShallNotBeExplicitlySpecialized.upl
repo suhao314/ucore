@@ -1,0 +1,132 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Overloaded function template explicitly specialized: %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "14-8-1 Overloaded function templates shall not be explicitly specialized";}
+
+# This is the full description of the rule being tested
+sub description { return "14-8-1 (Required) Overloaded function templates shall not be explicitly specialized.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Explicit specializations will be considered only after overload resolution has chosen a best match
+from the set of primary function templates. This may be inconsistent with developer expectations.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  template <typename T> void f ( T );         // overload Example 1
+  template <typename T> void f ( T* );        // overload Example 2
+  template <> void f<int32_t*> ( int32_t* );  // explicit specialization of
+                                              // Example 1  
+
+  void b ( int32_t * i )
+  {
+    f ( i ); // Non-compliant
+             // - Calls Example 2, f<int32_t*>
+  }
+
+</pre>
+
+Where a template is not overloaded with other templates, or is overloaded with non-template
+functions then it can be explicitly specialized, as it is consistent with developer expectation that
+the explicit specializations will only be considered if that primary template is chosen.</p>
+<br>
+<pre style="margin-top:0;padding-top:0;">
+
+  template <typename T> void f ( T );         // Example 1
+  template <> void f<int32_t*> ( int32_t* );  // Example 2
+  void b ( int32_t * i )
+  {
+    f ( i ); // Compliant
+             // - Calls Example 2, f<int32_t*>
+  }
+
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Create a list of all functions that are declared or defined
+  my @functionsDefined = $file->filerefs("Define, Declare", "Function ~Template", 0);
+  return unless @functionsDefined;
+
+  # Create a list of all templates that are declared or defined and sort
+  my @templatesDefined = $file->filerefs("Define, Declare", "Template", 0);
+  return unless @templatesDefined;
+  my @sortedTemplatesDefined = sort { $a->ent->name cmp $b->ent->name } @templatesDefined;
+  
+  # Loop through each template
+  my $previous;
+  foreach my $template(@templatesDefined) {
+
+    # Check each element with the one before
+    if ( $previous ) {
+
+      if ( $previous->ent->name eq $template->ent->name ) {
+
+        # Loop through each function and check for a match
+        foreach my $function(@functionsDefined) {
+
+          # error if function name matches template
+          throwError($check, $function->ent,$file,$function->line,$function->column,ERR1,$function->ent->name) if $function->ent->name eq $template->ent->name;
+
+        }
+
+      }
+
+      $previous = $template;      
+
+    } else {
+
+      $previous = $template;
+
+    }
+  }
+}

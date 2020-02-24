@@ -1,0 +1,136 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Unmodified parameter not declared as const';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "7-1-2 A pointer or reference parameter in a function shall be declared as pointer to const or reference to const if the corresponding object is not modified";}
+
+# This is the full description of the rule being tested
+sub description { return "7-1-2 (Required) A pointer or reference parameter in a function shall be declared as pointer to const or reference to const if the corresponding object is not modified.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+This rule leads to greater precision in the definition of the function interface. The <i>const</i> qualification
+shall be applied to the object pointed to, not to the pointer, since it is the object itself that is being
+protected.</p>
+<br>
+<p><b>Exception</b><br>
+This rule does not apply if the parameter object is modified by any of the functions in a set of
+overriding functions.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  void myfunc(       int16_t *       param1,
+               const int16_t *       param2,
+                     int16_t *       param3,
+                     int16_t * const param4)
+  // param1: Addresses an object which is modified      - Compliant
+  // param2: Addresses an object which is not modified  – Compliant
+  // param3: Addresses an object which is not modified  – Non-compliant
+  // param4: Addresses an object which is not modified  – Non-compliant
+  {
+    *param1 = *param2 + *param3 + *param4;
+    // Data at address param3 and param4 have not been changed
+  }
+
+</pre>
+
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Pull a list of all functions that are defined within this file
+  my @objectsDefined = $file->filerefs("Define", "Parameter");
+  return unless @objectsDefined;
+
+  # Loop through each parameter that is defined
+  foreach my $object ( @objectsDefined ) {
+
+    my $flag = 1;
+
+    $flag = 0 if $object->ent->ref( 'Deref Setby, Set, Modifyby' );
+
+    my $const = 1;
+
+    $const = 0 if $object->ent->type =~ /^const/;
+
+    if ( $flag and $const ) {
+
+      # Get the parent and check if parent is overridden by anything
+      my $parent = $object->ent->parent;
+
+      my @overrides = $parent->refs( 'Overriddenby, Overrides' );
+      foreach my $over ( @overrides ) {
+
+        # Pull any define references from the overridding function
+        my @overridesDefines = $over->ent->refs( 'Define', 'Parameter' );
+
+        # Loop through each of the overriding parameters
+        foreach my $overridden ( @overridesDefines ) {
+
+          # Test of the variable is modified in the overriding function, if so, compliant by exception
+          if ( $object->ent->name eq $overridden->ent->name and $overridden ->ent->ref( 'Deref Setby, Set, Modifyby' ) ) {
+
+            $flag = 0;
+
+          }
+
+        }
+        
+      }
+
+    }
+
+    throwError($check, $object->ent, $file, $object->line, $object->column, ERR1 ) if $flag and $const;
+
+  }
+}

@@ -1,0 +1,42 @@
+ Hello, world.
+ gd_read opened.
+ file opened ok. T
+ filter opened ok. T
+ n_sources =  2  n_signals =  22
+ Source  1  code  1
+ source name: input.data                                                                                                                      
+ source dt =    4.0000000000000001E-02
+ source n_signals, offset =  20 0
+ alpha           q               v               theta           an              qdot            ax              de              phi             alt             mach            qbar            beta            p               r               ay              pdot            rdot            da              dr              
+ Source  2  code  2
+ source name: low3filt                                                                                                                        
+ source dt =    4.0000000000000001E-02
+ source n_signals, offset =  2 20
+ alpha-f         mach-f          
+ Requesting signals: alpha-f         mach-f          
+ Seeking.
+ Seek ok.
+ read_gd exit status =  2
+ ** Duplicate name alpha-f          from file changed to #2#alpha-f
+ ** Duplicate name mach-f           from file changed to #2#mach-f
+ file opened ok. T
+ Requesting signals: alpha           alpha-f         #2#alpha-f      mach            mach-f          
+ Seeking.
+ Seek ok.
+              alpha       alpha-f     #2#alpha-f  mach        mach-f     
+ 11.34.09.500  1.8988      1.9017      1.8889     0.39688     0.39679    
+ 11.34.10.000  1.8933      1.0898      1.9017     0.39640     0.39656    
+ 11.34.10.500 -.17091     -.53614      1.0898     0.39644     0.39611    
+ 11.34.11.000 0.98638E-01  1.1319     -.53614     0.39609     0.39615    
+ 11.34.11.500  1.6919      1.8269      1.1319     0.39639     0.39618    
+ 11.34.12.000  1.8947      1.8245      1.8269     0.39616     0.39691    
+ 11.34.12.500  1.7975      1.6963      1.8245     0.39716     0.39695    
+ 11.34.13.000  1.6822      1.7221      1.6963     0.39723     0.39702    
+ 11.34.13.500  1.7424      3.0003      1.7221     0.39709     0.39720    
+ 11.34.14.000  4.5813      4.4849      3.0003     0.39694     0.39723    
+ 11.34.14.500  3.5559      2.3969      4.4849     0.39702     0.39693    
+ 11.34.15.000  1.7492      1.6503      2.3969     0.39621     0.39576    
+ 11.34.15.500  1.7004      1.8506      1.6503     0.39545     0.39489    
+ 11.34.16.000  1.9317      1.8506      1.8506     0.39523     0.39489    
+ read_gd exit status =  2
+ Bye.

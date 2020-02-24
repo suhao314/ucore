@@ -1,0 +1,57 @@
+#This script is designed to run with Understand - CodeCheck
+#Rule 2-3-1 Source code shall not contain trigraphs.
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: trigraph found: ??%1';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '2-3-1 Trigraphs shall not be used' }
+
+sub description { '2-3-1 (Required) Trigraphs shall not be used..' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+Trigraphs are denoted by a sequence of 2 question marks followed by a specified third character 
+(e.g. ??- represents a "~" (tilde) character and ??) represents a "]"). They can cause accidental 
+confusion with other uses of two question marks.</p>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c file');
+	
+	my $con = $file->contents;
+	my $line = 1;
+	
+	while ($con =~ m! \G (.*?) \?\? (.) !sixg) {
+		my ($before, $specifier) = ($1, $2);
+		
+		while ($before =~ m/\r\n|\n|\r/g) {
+			$line++;
+		}
+		next unless $specifier =~ /[=\/'\(\)!<>-]/;
+		$check->violation(0, $file, $line, -1, ERR1, $specifier);
+	}
+	
+	return;
+}

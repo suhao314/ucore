@@ -1,0 +1,147 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 11-5-14
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Declaration or Definition of %1 is not compatible with another declaration or definition in file %2 on line %3';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name{
+  return '8.3 For each function parameter the type given in the declaration and definition shall be identical, and the return types shall also be identical.';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '8.3 ( Required ) For each function parameter the type given in the declaration and definition shall be identical, and the return types shall also be identical.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p>
+[Undefined 24; Koenig 59–62]
+</p>
+
+<p>
+The types of the parameters and return values in the prototype and the definition must match. This
+requires identical types including typedef names and qualifiers, and not just identical base types.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 0;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 1;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# Trim leading and trailing space
+sub trim {
+
+  my $string = shift;
+  $string =~ s/^\s+|\s+$|\r//g;
+  return $string;
+
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull all functions and objects, return if neither
+  my $check = shift;
+
+  my @functionsDefined = $check->db->ents( 'C Function ~Member' );
+
+  return unless @functionsDefined;
+
+  # Test all functions
+  foreach my $function ( @functionsDefined ) {
+
+    # Skip built in functions
+    next if $function->name =~ /^__/;
+
+    # Pull all define and declare references and set up error tracking
+    my @functionDeclares = $function->refs ( 'Declarein, Definein','c' );
+    my $originalSig = '';
+    my $originalFile = '';
+    my $originalLine = '';
+
+    # Loop through each declaration and definition
+    foreach my $declare ( @functionDeclares ) {
+
+      # Build the signature into a string
+      my $sig = '';
+      my $lexeme = $declare->lexeme;
+
+      while ( $lexeme->text ne ')' ) {
+
+        if ( $lexeme->token eq 'Keyword' ) {
+
+          $sig .= $lexeme->text;
+          $sig .= ' ';
+
+        } else {
+
+          $sig .= $lexeme->text;
+
+        }
+
+        $lexeme = $lexeme->nextUseful;
+
+      }
+
+      # Set reference if this is the first time through the loop
+      if ( $originalSig eq '' ) {
+
+        $originalSig = trim ( $sig );
+        $originalFile = $declare->file->name;
+        $originalLine = $declare->line;
+
+      # Otherwise compare the signatures to see if there is an error
+      } else {
+
+        next if trim ( $sig ) eq $originalSig;
+        $check->violation( $function, $declare->file, $declare->line, $declare->column, ERR1, $function->name, $originalFile, $originalLine );
+
+      }
+    }
+  }
+}

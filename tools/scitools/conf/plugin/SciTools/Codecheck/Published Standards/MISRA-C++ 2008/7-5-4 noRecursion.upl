@@ -1,0 +1,106 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: function "%1" is directly recursive, which is unsafe.';
+use constant ERR2 => 'Violation: function "%1" is indirectly recursive through "%2", which is unsafe.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+	$check->add_tr_text(ERR2);
+}
+
+sub name { '7-5-4 No direct or indirect recursion allowed.' }
+
+sub description { '7-5-4 (Advisory) Functions shall not call themselves, either directly or indirectly.' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+Unbounded	recursion	is	likely	to	lead	to	a	stack	over-flow	and	may	impact	system	timings.	This	
+is also the case for an iterative algorithm.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+int32_t fn ( int32_t x ) 
+{ 
+   if ( x > 0 ) 
+   { 
+      x = x * fn ( x – 1 );     // Non-compliant 
+   } 
+   return ( x ); 
+}
+// File1.cpp 
+int32_t fn_2 ( int32_t x ) 
+{ 
+   if ( x > 0 ) 
+   { 
+      x = x * fn_3 ( x – 1 );   // Non-compliant 
+   } 
+   return ( x ); 
+}
+// File2.cpp 
+int32_t fn_3 ( int32_t x ) 
+{ 
+   if ( x == 0 ) 
+   { 
+      x = x * fn_2 ( x – 1 );   // Non-compliant 
+   } 
+   return ( x ); 
+}</pre>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+sub discoverRecursion {
+	my $check = shift;
+	my $ent = shift;
+	my $firstTime   = do { @_ ? shift : 1 }; # to detect "directly recursive"
+	my $seen        = do { @_ ? shift : {} };
+	my $originalEnt = do { @_ ? shift : $ent };
+	
+	return unless $ent->kind->check('function');
+	
+	foreach my $callRef ($ent->refs('call', 'function', 1)) {
+		my $callEnt = $callRef->ent;
+		++$seen->{$callEnt->uniquename};
+		next if $seen->{$callEnt->uniquename} > 1;
+		
+		if ($callEnt->uniquename eq $originalEnt->uniquename) {
+      my $ref = $callRef->ent->ref;
+      if ($firstTime){
+        	$check->violation($originalEnt, $ref->file, $ref->line, $ref->column, ERR1, $originalEnt->longname);
+      }else{
+      	$check->violation($originalEnt, $ref->file, $ref->line, $ref->column, ERR2, $originalEnt->longname, $ent->longname);
+      }
+			return;
+		}
+		
+		discoverRecursion($check, $callEnt, 0, $seen, $originalEnt);
+	}
+	
+	return;
+}
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c file');
+	
+	foreach my $ref ($file->filerefs('define', 'function', 1)) {
+		my $ent = $ref->ent;
+		
+		discoverRecursion($check, $ent);
+	}
+	
+	return;
+}

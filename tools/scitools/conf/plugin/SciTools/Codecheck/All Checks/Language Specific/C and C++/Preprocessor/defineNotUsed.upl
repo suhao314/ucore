@@ -1,0 +1,45 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => '#define used';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "Do not use #define to specify types";}
+
+sub description { return "Prefer consts, enums and inlines to #defines.";}
+
+sub detailed_description { return <<"END_DESC"
+For simple constants, prefer const objects or enums to #defines.
+For function-like macros, prefer inline functions to #defines.
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  my @defineRefs = $file->filerefs("define","macro");
+  return unless @defineRefs;
+  
+  foreach my $ref (@defineRefs){
+    $check->violation($ref->ent,$file,$ref->line,$ref->column,ERR1) if $ref->ent->type;   
+  }
+
+}

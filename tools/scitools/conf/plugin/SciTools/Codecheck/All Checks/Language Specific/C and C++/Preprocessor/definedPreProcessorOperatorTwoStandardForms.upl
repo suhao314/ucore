@@ -1,0 +1,99 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Defined preprocessor operator not in one of the two standard forms in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "The defined preprocessor operator shall only be used in one of the two standard forms";}
+
+# This is the full description of the rule being tested
+sub description { return "The defined preprocessor operator shall only be used in one of the two standard forms.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The only two permissible forms for the defined preprocessor operator are:</p>
+  <i>defined</i> <i>(</i> identifier <i>)</i>
+  <i>defined</i> identifier
+<p>Any other form is a constraint violation, but this is not reported by all compliers.</p>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  #if defined ( X > Y ) // Non-compliant – constraint violation
+<p>Generation of the token defined during expansion of a #if or #elif preprocessing directive also
+leads to undefined behaviour and shall be avoided, for example:</p>
+  #define DEFINED defined
+  #if DEFINED(X) // Non-compliant - undefined behaviour
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+  # $building is flag to determine string completion and $builtString is the actual string
+  my $building = "0";
+  my $builtString = "";
+ 
+  # This check requires use of the Understand lexer. Initialize and check for failure 
+  my $lexer = $file->lexer(0,,0,0);
+  return unless $lexer;
+  
+  # $lexeme is intialized as the first element returned from the lexer
+  my $lexeme = $lexer->first();
+  
+  # While the lexer has lexemes ...
+  while ($lexeme) {
+    # Check if we are still building the string
+    if ($building eq "1" && $lexeme->token ne "Newline") {
+	  $builtString .= $lexeme->text unless $lexeme->token eq "Comment";
+	}
+	# Check if we have reached the end of the line, thus ending our string
+	elsif ($building eq "1" && $lexeme->token eq "Newline") { 
+	  $building = "0";
+	  # This regex is looking for "defined identifier"
+	  next if $builtString =~ /defined\s+\w{1,}\s*$/;
+	  # This regex is looking for "defined ( identifier )"
+	  next if $builtString =~ /defined\s+\(\s*\w{1,}\s*\)\s*$/;
+	  $check->violation($lexeme->ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$file->name);
+	}
+	# Check if we start building string
+	elsif ($lexeme->token eq "Preprocessor" && $lexeme->text eq "defined") {
+	  $building = "1";
+	  $builtString = "defined";
+	}
+  }
+  # Set $lexeme to the next value from $lexer
+  continue {
+    $lexeme = $lexeme->next;
+  }
+}

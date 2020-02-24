@@ -1,0 +1,57 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Octal Constants not allowed: %1';
+use constant ERR2 => 'Octal Escape Sequences not allowed: %1';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub name { return "Do not use Octal constants and Octal escape sequences";}
+
+sub description { return "Do not use Octal constants and Octal escape sequences";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+An integer constant starting with "0" is an octal. An octal escape sequence is a slash followed by 1 to 3 numbers. However if any of those numbers is 8 or 9 there can be confusion. 0 and \\0 are allowed.
+</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check('c file'); 
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  my $scope;
+  foreach my $lexeme ($lexer->lexemes){
+    $scope = $lexeme->ref->scope if $lexeme->ref;
+    $scope = $file unless $scope;
+    if($lexeme->token eq "Literal"  &&$lexeme->text =~ /^0\d+$/){
+        $check->violation($scope,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$lexeme->text);
+    }elsif($lexeme->token eq "String" && $lexeme->text =~ /(\\\d\d?\d?)/ && $lexeme->text !~ /\\0[\D]*/ && $lexeme->text !~ /\\\\\d\d?\d?/){
+        $check->violation($scope,$file,$lexeme->line_begin,$lexeme->column_begin,ERR2,$1);
+    }
+  }
+}
+
+

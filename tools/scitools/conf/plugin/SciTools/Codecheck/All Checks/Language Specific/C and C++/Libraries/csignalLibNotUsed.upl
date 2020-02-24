@@ -1,0 +1,99 @@
+#This script is designed to run with Understand - CodeCheck
+#Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => '<csignal> included in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "The signal handling facilities of <csignal> shall not be used.";}
+
+# This is the full description of the rule being tested
+sub description { return "The signal handling facilities of <csignal> shall not be used.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Signal handling contains <i>implementation-defined</i> and <i>undefined behaviour</i>.<br>
+</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+#include &lt;csignal&gt; 
+void my_handler ( int32_t );
+void f1 ( )
+{
+  signal ( 1, my_handler ); // Non-compliant
+}
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Global our %seen to be used to track checked files
+our %seen;
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  
+  # Loop through all functions and check if the signal function is being used
+  foreach my $libFuncs($file->filerefs(" ","Function")){
+    if($libFuncs->ent->name eq "signal" ){
+	  # Now we have to check to make sure the library actually being used and signal wasn't just overwritten
+ 	  my $libUsed = includeCheck($file);
+      if($libUsed){
+        $check->violation($libFuncs->ent,$file,$libFuncs->line,$libFuncs->column,ERR1,$file->name,$libFuncs->ent->name);
+      }
+    }
+  }
+}
+
+# This method is a helper to the above check method. This checks to see if csignal has been #include-d
+sub includeCheck {
+  # Pull the file from the calling method
+  my $file = shift;
+  
+  # If we have seen this file before, return false
+  if ($seen{$file->id}){
+    return 0;
+  }
+  
+  # Assign a value to this file withing $seen
+  $seen{$file->id}=1;
+  
+  # Check to see if this is the restricted library csignal
+  if($file->name eq "csignal" || $file->name eq "signal.h"){
+    return 1;
+  }
+  
+  # Check all files this file includes and descend recursively
+  my @refs = $file->refs("include","file",1);
+  foreach my $ref (@refs){
+    return 1 if includeCheck($ref->ent);
+  }
+}

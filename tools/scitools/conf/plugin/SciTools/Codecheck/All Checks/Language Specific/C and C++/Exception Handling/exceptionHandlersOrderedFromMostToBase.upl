@@ -1,0 +1,187 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Catch handlers for classes not ordered from most-derived to base in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "Where multiple handlers are provided in a single try-catch statement or function-try-block for a derived class and some or all of its bases, the handlers shall be ordered most-derived to base class";}
+
+# This is the full description of the rule being tested
+sub description { return "Where multiple handlers are provided in a single try-catch statement or function-try-block for a derived class and some or all of its bases, the handlers shall be ordered most-derived to base class.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+When testing to see if the type of an exception matches the type of a handler, a derived class
+exception will match with a handler for its base class. If the base class handler is found before
+the handler for the derived class, the base class handler will be used. The derived class handler is
+<I>unreachable code</I> and can never be executed.</p>
+<br>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  // classes used for exception handling
+  class B { };
+  class D: public B { };
+  int y() {
+    try
+    {
+      // ...
+    }
+    catch ( D &d ) // Compliant – Derived class caught before base class
+    {
+      // ...
+    }
+    catch ( B &b ) // Compliant – Base class caught after derived class
+    {
+      // ...
+    }
+  }
+
+  int z() {
+    // Using the classes from above ...
+    try
+    {
+      // ...
+    }
+    catch ( B &b ) // Non-compliant – will catch derived classes as well
+    {
+      // ...
+    }
+    catch ( D &d ) // Non-compliant – Derived class will be caught above
+    {
+                   // Any code here will be unreachable,
+    }
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Create a list of all functions that are defined and have a catch handler
+  my @functionsDefined = $file->filerefs("define catch exception end", "function", 1);
+  return unless @functionsDefined;
+  
+  # Loop through each function with catch handlers
+  foreach my $function(@functionsDefined) {
+    next unless $function->ent->ref("end");
+	
+	# We have found a function with a catch block; Initialize and check the lexer
+	my $lexer = $file->lexer(1,0,0);
+    return unless $lexer;
+	
+	# Set the first lexeme and counters needed to check entire function
+	my $counter = 1;
+	my $first = 0;
+	my $block = 0;
+	my %parents;
+    my $lexeme = $lexer->lexeme($function->line, $function->column);
+	
+	#While we are still inside the current function
+	while ($lexeme && $lexeme->line_begin <= $function->ent->ref("end")->line){
+	  # Unless we are looking at the catch block, we don't care
+	  $block = 1 if $lexeme->text eq "catch";
+	  next unless $block == 1;
+	  
+	  # These counters and flags for tracking the beginning and end of the function we are analysing
+	  $counter++ if $first == 1 and $lexeme->text eq "{";
+	  $counter-- if $first == 1 and $lexeme->text eq "}";
+	  $first = 1 if $first == 0 and $lexeme->text eq "{";
+	  # Protection against lexemes that don't have entities
+	  next unless $lexeme->ent;
+	  # Only catch handlers that watch for classes concern us
+	  if ($lexeme->ent->kindname =~ /Class/) {
+	    # If parents exists, that means we have encountered a catch block watching for a class
+	    if (%parents) {
+		  my $elt2 = $lexeme->ent->id;
+		  if( !(exists($parents{$elt2})) ) {
+		    throwError($check, $lexeme->ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$file->name);
+		  }
+		  # We clear parents for use by the current lexeme
+		  %parents = ();
+		}
+		# Build the parents, inheritance stack, for the current lexeme
+        my $elt = $lexeme->ent->id;
+        $parents{$elt} = 1; 
+        my $ref = $lexeme->ent->ref("Base");
+        while ($ref) {
+          my $elt1 = $ref->ent->id;
+          $parents{$elt1} = 1;
+          $ref = $ref->ent->ref("Base");
+        }
+	  }
+	  # If we have finished with this function, we reset our counters and flags
+	  if ($counter == 0) {
+	    $block = 0;
+		$first = 0;
+		$counter = 1;
+	  }
+	}
+	continue {
+      $lexeme = $lexeme->next;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

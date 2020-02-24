@@ -1,0 +1,81 @@
+# Unused local variables.
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => "Unused Variable";
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+
+}
+
+
+sub name{
+  return '0-1-3 A project shall not contain unused variables';
+}
+
+sub description {
+  return "0-1-3 (Required) A project shall not contain unused variables.";
+}
+
+sub detailed_description {
+  return  <<"END_DESC"
+<p><b>Rationale</b><br>
+Variables declared and never used in a project constitute noise and may indicate that the wrong variable name has been used somewhere. Removing these declarations reduces the possibility that they may later be used instead of the correct variable.
+If padding is used within bit-fields, then the padding member should be unnamed to avoid violation of this rule.</p>
+<p>Check ignores references inside inactive code (ie #if 0...#endif).</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  extern void usefn ( int16_t a, int16_t b );
+  class C 
+  { 
+     ... 
+  };
+  C c;                         // Non-compliant - unused
+  void withunusedvar ( void ) 
+  { 
+     int16_t unusedvar;        // Non-compliant - unused
+     struct s_tag 
+     { 
+        signed int a   : 3; 
+        signed int pad : 1;    // Non-compliant - should be unnamed 
+        signed int b   : 2; 
+     } s_var;
+     s_var.a = 0; 
+     s_var.b = 0; 
+     usefn ( s_var.a, s_var.b ); 
+  }</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+sub test_entity {
+  return 1;
+}
+
+sub test_global {
+  return 0;
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("c file");
+
+  
+  # loop through local variables
+  my @entrefs = $file->filerefs("define","object ~unknown ~unresolved",1);
+  ENT: foreach my $ref(@entrefs) {
+    next ENT if $ref->ent->refs("setby ~init,useby ~inactive,modifyby");
+    if($ref->ent->kind->check("object static global")){
+      my @doplegangers = $check->db->lookup($ref->ent->name,"object static global unresolved",1);
+      foreach my $evilTwin (@doplegangers){
+        next ENT if ($evilTwin->refs("setby ~init,useby ~inactive,modifyby"));
+      }
+    }
+    $check->violation($ref->ent,$ref->file,$ref->line,$ref->column,ERR1);
+  }
+}

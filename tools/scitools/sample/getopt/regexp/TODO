@@ -1,0 +1,70 @@
+gnu.regexp TODO
+---------------
+These are items that have yet to be implemented or are part of the
+general wish list for gnu.regexp.  You can contribute to this program
+and get your name permanently embedded in the distribution if you care 
+to take on any of these tasks.  See the contact info in the README.
+
+Bugs / Problems with the engine:
+
+ Using a ')' in a character class which is within a () grouping
+triggers an REException while parsing.  Workaround is to put a backslash
+in front of the literal ')'.
+ The leftmost longest rule is not strictly adhered to.  For example,
+the expression ".*?z?", given input "xyz", should match the whole string,
+not the empty string.
+
+Missing operators:
+
+ [.symbol.]  -- collating symbol (POSIX)
+ [=class=]  -- equivalence class (POSIX)
+
+I18n support:
+
+ Some POSIX char classes ([:alpha:]) are locale sensitive, others need work
+ Ranges (e.g. [a-z]) should be locale sensitive
+ Should use collation elements, not chars, for things like Spanish "ll"
+ REG_ICASE is not very friendly with Cyrillic and other locales.
+ Messages used for exceptions should be localizable.
+
+Performance:
+
+ Engine speed needs some major work.
+
+Miscellaneous/Requests for Enhancements:
+
+ "Free software needs free manuals" -- you heard the man...
+
+ Some features have been added to Perl between 5.0 and 5.6.  Should the
+PERL5 syntax support these, or should a new syntax be added?  Which should
+be the default?
+
+ There could be a flag to enforce strict POSIX leftmost-longest matching.
+
+ gnu.regexp.util.Tests should be fleshed out, or perhaps changed to use JUnit.
+
+ It might make sense for getMatchEnumeration() to optionally return matches
+in reverse order, so that the indices were valid all the way through,
+even if you were doing text replacement on the way.
+
+ Support J2ME CLDC limited APIs as optional target:
+Should be straightforward, but need to avoid use of
+REFilter(InputStream|Reader) classes, as well as all references to
+java.io.Serializable.  RESyntax needs to replace java.util.BitSet with
+a home-grown version.  Other than that, it should work.  May want to
+package separately (e.g. gnu.regexp-1.0.8-j2me-cldc.jar).
+
+ Add support for named subgroups: "(?P<name>...)" (match) and "(?P=name)"
+(recall, like \n).  Add the ability to get at an enumeration of names.
+
+ Support associative-array style interface that allows users to define
+their own substitution behavior on matches.  Perhaps a Substitutor interface
+with String substitute(REMatch match), and then RE.substituteAll(input,
+Substitutor) variations.
+
+ Support excluded subrange syntax as in Unicode recommendations, e.g. 
+"[a-z-[m-p]]" being a through z except for m through p.
+
+ Add a split() method.
+
+ Provide a build.xml file for Ant.

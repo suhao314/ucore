@@ -1,0 +1,74 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Octal Constants not allowed: %1';
+use constant ERR2 => 'Octal Escape Sequences not allowed: %1';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub name { return "7.1 Octal constants and octal escape sequences shall not be used";}
+
+sub description { return "7.1 (Required) Octal constants (other than zero) and octal escape sequences shall not be used.";}
+
+sub detailed_description { return <<"END_DESC"
+<p>Any integer constant beginning with a "0" (zero) is treated as octal. So there is a danger, for
+example, with writing fixed length constants. For example, the following array initialisation for
+3-digit bus messages would not do as expected (052 is octal, i.e. 42 decimal):<br>
+code[1] = 109;   /* equivalent to decimal 109 */ <br>
+code[2] = 100;   /* equivalent to decimal 100 */ <br>
+code[3] = 052;   /* equivalent to decimal 42  */ <br>
+code[4] = 071;   /* equivalent to decimal 57  */</p>
+<p>Octal escape sequences can be problematic because the inadvertent introduction of a decimal
+digit ends the octal escape and introduces another character. The value of the frst expression in
+the following example is implementation-defned because the character constant consists of two
+characters, "\\10" and "9". The second character constant expression below contains the single
+character "\\100". Its value will be implementation-defned if character 64 is not represented in the
+basic execution character set.<br>
+code[5] = '\\109';   /* implementation-defined, two character constant */ <br>
+code[6] = '\\100';   /* set to 64, or implementation-defined           */</p>
+<p>It is better not to use octal constants or escape sequences at all, and to check statically for any
+occurrences. The integer constant zero (written as a single numeric digit), is strictly speaking an
+octal constant, but is a permitted exception to this rule. Additionally "\\0" is the only permitted
+octal escape sequence.
+</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file"); 
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  my $scope;
+  foreach my $lexeme ($lexer->lexemes){
+    $scope = $lexeme->ref->scope if $lexeme->ref;
+    $scope = $file unless $scope;
+    if($lexeme->token eq "Literal"  &&$lexeme->text =~ /^0\d+$/){
+        $check->violation($scope,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$lexeme->text);
+    }elsif($lexeme->token eq "String" && $lexeme->text =~ /(\\\d\d?\d?)/ && $lexeme->text !~ /\\0[\D]*/ && $lexeme->text !~ /\\\\\d\d?\d?/){
+        $check->violation($scope,$file,$lexeme->line_begin,$lexeme->column_begin,ERR2,$1);
+    }
+  }
+}
+
+

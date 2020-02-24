@@ -1,0 +1,212 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 10/23/14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Loop or switch statement not enclosed in curly braces { } in %1.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "14.8 The statement forming the body of a switch, while, do ... while or for statement shall be a compound statement";}
+
+
+# This is the full description of the rule being tested
+sub description { return "14.8 (Required) The statement forming the body of a switch, while, do ... while or for statement shall be a compound statement.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+
+<p><b>Rationale</b><br>
+The statement that forms the body of a <i>switch</i> statement or a <i>while</i>, <i>do</i> … <i>while</i> or <i>for</i> loop, shall
+be a compound statement (enclosed within braces), even if that compound statement contains a
+single statement.</p>
+
+<br>
+<b>For example</b>
+<pre style="margin-top:0;padding-top:0;">
+
+  for (i = 0; i < N_ELEMENTS; ++i)
+  {
+    buffer[i] = 0; /* Even a single statement must be in braces */
+  }
+  while ( new_data_available )
+    process_data ();     /* Incorrectly not enclosed in braces */
+    service_watchdog (); /* Added later but, despite the appearance
+                            (from the indent) it is actually not part of
+                            the body of the while statement, and is
+                            executed only after the loop has terminated */
+</pre>
+
+<p>
+Note that the layout for compound statements and their enclosing braces should be determined
+from the style guidelines. The above is just an example.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs( "Define", "Function" );
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function( @functionsDefined ) {
+
+    # We have to special case do .. while loops because of their split nature
+    my $doWhileFlag = 0;
+
+    # Set end point
+    my $end = $function->ent->ref( "End" );
+
+    # Spin up a lexer
+    my $lexeme = $function->lexeme;
+    next unless $lexeme;
+
+    # Go through file looking for loops
+    while ( $lexeme->line_begin < $end->line ) {
+
+      # Continue unless we are looking at a switch, while, do while or for statement
+      next unless $lexeme->token eq 'Keyword';
+      next unless $lexeme->text eq "switch" || $lexeme->text eq "while" || $lexeme->text eq "do" || $lexeme->text eq "for";
+
+      # Increment our doWhile counter if we see the beginning of a do .. while loop
+      if ( $lexeme->text eq 'do' ) {
+
+        $doWhileFlag++;
+        next;
+        
+      }
+
+      # Create temporary lexeme for loop checking
+      my $tempLexeme = $lexeme;
+
+      #######
+      # Special case the for statement, have to move passed the ;s inside the for loop
+      if ( $tempLexeme->text eq 'for' ) {
+
+        $tempLexeme = consumeForLoop( $tempLexeme );
+
+      }
+      # End special case
+      #######
+
+      # Set a flag if we see a preprocessor directive, this will let us know if this is a nested for loop or not
+      my $preprocessor = 0;
+
+      # If we see a ; before we see a {, then we know the statement is not nested inside a compound statement
+      while ( $tempLexeme->text ne '{' and $tempLexeme->text ne ';' ) {
+
+        # Nested for loops vs preprocessor created for loops creates a problem, I use a preprocessor flag to let me know the difference
+        if ( $tempLexeme->text eq 'for' and $preprocessor ) {
+
+          $tempLexeme = consumeForLoop( $tempLexeme );
+
+        # Always test to see if we see a preprocessing directive, this changes what we are looking for
+        } elsif ( $tempLexeme->token eq 'Preprocessor' ) {
+
+          $preprocessor = 1;
+          $tempLexeme = $tempLexeme->nextUseful;
+
+        # All else, move along sir
+        } else {
+
+          $tempLexeme = $tempLexeme->nextUseful;
+
+        }
+      }
+
+      if ( $tempLexeme->text eq ';' ) {
+
+        if ( $doWhileFlag > 0 ) {
+
+          # Check to see if this is the tail end of a do .. while loop
+          my $isOk = 0;
+          $tempLexeme = $tempLexeme->prevUseful;
+
+          while ( $tempLexeme->text ne ';' ) {
+
+            if ( $tempLexeme->text eq 'while' and $tempLexeme->prevUseful->text eq '}' ) {
+
+              $doWhileFlag--;
+              $isOk = 1;
+
+            }
+
+            $tempLexeme = $tempLexeme->prevUseful;
+
+          }
+          $check->violation( $function->ent, $file, $tempLexeme->line_begin, $tempLexeme->column_begin, ERR1, $function->scope->name ) unless $isOk;
+
+        } else {
+          $check->violation( $function->ent, $file, $tempLexeme->line_begin, $tempLexeme->column_begin, ERR1, $function->scope->name );
+        }
+      }
+    }
+
+    # Standard continue statement 
+    continue {
+      $lexeme = $lexeme->next;
+    }
+  }
+}
+
+
+# This subroutine is designed for bypassing the ;s in for loop conditions
+sub consumeForLoop {
+
+  my $tempLexeme = shift;
+
+  while ( $tempLexeme->text ne ';' ) {
+    $tempLexeme = $tempLexeme->nextUseful;
+  }
+  $tempLexeme = $tempLexeme->nextUseful;
+  while ( $tempLexeme->text ne ';' ) {
+    $tempLexeme = $tempLexeme->nextUseful;
+  }
+  return $tempLexeme->nextUseful;
+
+}

@@ -1,0 +1,186 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-5-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Constructor %1 does not call all the constructor(s) for its base class(es)';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "All constructors of a class should explicitly call a constructor for all of its immediate base classes and all virtual base classes";}
+
+
+# This is the full description of the rule being tested
+sub description { return "( Advisory ) All constructors of a class should explicitly call a constructor for all of its immediate base classes and all virtual base classes.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+This rule reduces confusion over which constructor will be used, and with what parameters.</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  class A
+  {
+  public:
+    A ( )
+    {
+    }
+  };
+
+  class B : public A
+  {
+  public:
+    B ( ) // Non-compliant – benign, but should be B ( ) : A ( )
+    {
+    }
+  };
+
+  class V
+  {
+  public:
+    V ( )
+    {
+    }
+    V ( int32_t i )
+    {
+    }
+  };
+
+  class C1 : public virtual V
+  {
+  public:
+    C1 ( ) : V ( 21 )
+    {
+    }
+  };
+
+  class C2 : public virtual V
+  {
+  public:
+    C2 ( ) : V ( 42 )
+    {
+    }
+  };
+
+  class D: public C1, public C2
+  {
+  public:
+    D ( ) // Non-compliant
+    {
+    }
+  };
+
+</pre>
+
+<p>
+There would appear to be an ambiguity here, as D only includes one copy of V. Which version
+of V’s constructor is executed and with what parameter? In fact, V’s default constructor is always
+executed. This would be the case even if C1 and C2 constructed their bases with the same integer
+parameter.</p>
+<p>
+This is clarified by making the initialization explicit, as in:</p>
+<br>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  D ( ) : C1 ( ), C2 ( ), V ( )
+  {
+  }
+
+</pre>
+
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation( $ent, $file, $line, $column, $error, $name );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull all the classes that are defined in this file, return if non
+  my @classesDefined = $file->filerefs( 'Define', 'Class', 0 );
+  return unless @classesDefined;
+
+  # Loop through each class and find its constructors
+  CLS : foreach my $class ( @classesDefined ) {
+
+    # Pull all methods, move onto the next class if none
+    my @methodsDefined = $class->ent->refs( 'Define', 'Member Function' );
+    next CLS unless @methodsDefined;
+
+    # Loop through each method
+    METH : foreach my $method ( @methodsDefined ) {
+
+      # Check to see if we are looking at the constructor, move on otherwise
+      next METH unless $method->ent->longname eq $method->ent->name . '::' . $method->ent->name;
+
+      # At this point we know we are looking at a constructor
+      my @callImplicit = $method->ent->refs( 'Call Implicit' );
+      foreach my $call ( @callImplicit ) {
+
+        # If this method has implicit calls to another constructor, throw an error
+        if ( $method->line == $call->line and $call->ent->longname eq $call->ent->name . '::' . $call->ent->name ) {
+
+          throwError ( $check, $method->ent, $method->file, $method->line, $method->column, ERR1, $method->ent->name );
+          next METH;
+
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,143 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 10-16-14
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => '"U" or "u" suffix not applied to interger constant %1';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { 
+  return "2-13-3 A U suffix shall be applied to all octal or hexadecimal integer literals of unsigned type";
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return "2-13-3 (Required) A U suffix shall be applied to all octal or hexadecimal integer literals of unsigned type.";
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { 
+  return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+The type of an integer is dependent on a complex combination of factors including:</p><br>
+<p>• The magnitude of the constant;</p><br>
+<p>• The implemented sizes of the integer types;</p><br>
+<p>• The presence of any suffixes;</p><br>
+<p>• The number base in which the value is expressed (i.e. decimal, octal or hexadecimal).</p><br>
+
+For example, the value 0x8000 is of type <i>unsigned int</i> in a 16-bit environment, but of type (<i>signed</i>)
+<i>int</i> in a 32-bit environment. If an overload set includes candidates for an <i>unsigned int</i> and an <i>int</i>,
+then the overload that would be matched by 0x8000 is therefore dependent on the implemented
+integer size. Adding a "U" suffix to the value specifies that it is unsigned.</p>
+<br>
+<p>Note that the usage context may also require the use of suffixes, as shown in Section 6.5.0.</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  template <typename T>
+  void f ( T );
+  template <>
+  void f < unsigned int > ( unsigned int );
+  template <>
+  void f < int > ( int );
+  void b ( )
+  {
+    unsigned int u16a = 0U; // Compliant
+    f ( 0x8000 ); // Non-compliant on a 16-bit platform.
+    u16a = u16a + 0x8000; // Non-compliant as context is unsigned.
+  }
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+  my $check = shift;
+  $check->option->integer( 'int', 'Integer size in bits', 16 );
+  $check->option->integer( 'long', 'Long size in bits', 32 );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check( "c file");
+
+  my $int = 2 ** $check->option->lookup( 'int' );
+  my $long = 2 ** $check->option->lookup( 'long' );
+
+  my $twoToTheThirtyOne = 2 ** 31;
+  my $twoToTheFifteen = 2 ** 15;
+  
+  my $lexer = $file->lexer( 0 );
+  my @lexemes = $lexer->lexemes if $lexer;
+  
+  foreach my $lexeme ( @lexemes ) {
+
+    next unless $lexeme->token eq 'Literal';
+    next unless $lexeme->text =~ /(^0[0-8]+$)|(^0x[0-9a-fA-F]+$)/;
+
+    my $ok = 0;
+    my $val = oct ( $lexeme->text );
+
+    if ( $lexeme->text =~ /^0[0-8]+$/ ) {
+
+      $ok = 1 if $val < $int / 2;
+
+    } elsif ( $lexeme->text =~ /^0x[0-9a-fA-F]+$/ ) {
+
+      $ok = 1 if $val < $int / 2 or $val < $twoToTheFifteen;
+
+    } else {
+
+      # Should not happen
+      ######
+      $check->violation( 0, $file, $lexeme->line_begin, $lexeme->column_begin, 'Error reading ' . $lexeme->text );
+      ######
+
+    }
+
+    $check->violation( 0, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1, $lexeme->text ) unless $ok;
+
+  }
+}

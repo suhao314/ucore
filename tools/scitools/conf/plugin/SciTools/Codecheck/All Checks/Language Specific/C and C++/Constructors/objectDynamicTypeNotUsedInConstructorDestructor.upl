@@ -1,0 +1,232 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-4-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => '%1\'s dynamic type used in the call to typeid';
+use constant ERR2 => '%1 makes a call to a virtual function using its dynamic type';
+use constant ERR3 => '%1\'s dynamic type used in the call to dynamic_cast';
+use constant ERR4 => '%1 makes a call to a pure virtual function';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "An object’s dynamic type shall not be used from the body of its constructor or destructor";}
+
+
+# This is the full description of the rule being tested
+sub description { return "( Required ) An object’s dynamic type shall not be used from the body of its constructor or destructor.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+During construction and destruction of an object, its final type may be different to that of the
+completely constructed object. The result of using an object’s dynamic type in a constructor or
+destructor may not be consistent with developer expectations.<p>
+<p>
+The dynamic type of an object is used in the following constructs:</p>
+<p>
+• <i>typeid</i> on a class with a virtual function or a virtual function in a base class.</p>
+<p>
+• <i>dynamic_cast</i></p>
+<p>
+• A virtual call to a virtual function.</p>
+<p>
+This rule also prohibits a call being made to a <i>pure virtual</i> function from within a constructor or
+destructor. Such calls lead to <i>undefined behaviour</i>.</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+class B1
+{
+
+public:
+  B1 ( )
+  {
+    typeid ( B1 );                // Compliant, B1 not polymorphic
+  }
+
+};
+
+class B2
+{
+
+public:
+  virtual ~B2 ( );
+  virtual void foo ( );
+  B2 ( )
+  {
+    typeid ( B2 );                // Non-compliant
+    B2::foo ( );                  // Compliant – not a virtual call
+    foo ( );                      // Non-compliant
+    dynamic_cast< B2* > ( this ); // Non-compliant
+  }
+
+};
+
+</pre>
+
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation( $ent, $file, $line, $column, $error, $name );
+}
+
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull all the classes that are defined in this file, return if non
+  my @classesDefined = $file->filerefs( 'Define', 'Class', 0 );
+  return unless @classesDefined;
+
+  # Loop through all defined classes
+  foreach my $class ( @classesDefined ) {
+
+    # Pull all the methods defined in the class, move on if none
+    my @methodsDefined = $class->ent->refs( 'Define', 'Member Function' );
+    next unless @methodsDefined;
+
+    # Check to see if this class has virtual methods
+    my $hasVirtual = findVirtual( $class );
+
+    # Loop through each mothod
+    foreach my $method ( @methodsDefined ) {
+
+      # Check to see if we are looking at the constructor or destructor
+      if ( $method->ent->longname eq $class->ent->name . '::' . $class->ent->name or $method->ent->longname eq $class->ent->name . '::~' . $class->ent->name ) {
+
+        # Pull any call to virtual functions and any name references
+        my @virtualCalls = $method->ent->refs( 'Call Virtual' );
+        my @nameCalls = $method->ent->refs( 'Name' );
+
+
+        # Loop through each virtual calls, if they have a corresponding name reference than that call is ok, throw an error otherwise
+        VRT : foreach my $virtual ( @virtualCalls ) {
+
+          # Check the text arount the virtual call to ensure we are not using another object
+          my $tempLexeme = $virtual->lexeme;
+          # Calling a virtual function via a pointer or object
+          next VRT if $tempLexeme->prevUseful->text eq '->' or $tempLexeme->prevUseful->text eq '.';
+          next VRT if $tempLexeme->token eq 'Keyword';
+
+          # Test if this is a call to a pure virtual function, if so, throw error and move on
+          if ( $virtual->ent->kindname =~ /\bPure\b/ ) {
+            throwError( $check, $virtual->ent, $virtual->file, $virtual->line, $virtual->column, ERR4, $class->ent->name );
+            next VRT;
+          }
+
+          # If we see a corresponding name reference for this virtual call reference, we can move on
+          foreach my $name ( @nameCalls ) {
+            next VRT if $name->line == $virtual->line;
+          }
+
+          # If we reach this point, than we must have an error
+          throwError( $check, $virtual->ent, $virtual->file, $virtual->line, $virtual->column, ERR2, $class->ent->name );
+
+        }
+
+
+        # Pull the end line number and spin up a lexeme
+        my $end = $method->ent->ref( 'End' )->line;
+        my $lexeme = $method->lexeme;
+
+        # While we are still inside the constructor or destructor
+        while ( $lexeme->line_begin < $end ) {
+
+          # If we see a call to typeid, throw an error if the class is the arguement and this class has a virtual method
+          if ( $lexeme->text eq 'typeid' ) {
+
+            if ( $lexeme->nextUseful->nextUseful->text eq $class->ent->name and $hasVirtual ) {
+              throwError( $check, $class->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1, $class->ent->name );
+            }
+
+          # If we see a call to dynamic_cast, throw and error if the class is the arguement
+          } elsif ( $lexeme->text eq 'dynamic_cast' ) {
+
+            if ( $lexeme->nextUseful->nextUseful->text eq $class->ent->name ) {
+              throwError( $check, $class->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR3, $class->ent->name );
+            }
+
+          }
+          $lexeme = $lexeme->nextUseful;
+        }
+      }
+    }
+  }
+}
+
+
+# This function is used to find a virtual method, or to see if any ancestor has a virtual method
+sub findVirtual {
+
+  # Pull the class from the calling function and set flag; assume false
+  my $class = shift;
+  my $foundVirtual = 0;
+
+  # Test if this class has a virtual method
+  $foundVirtual = 1 if $class->ent->refs( 'Define, Declare', 'Member Function Virtual' );
+
+  # Find parent classes if they exist, test them
+  my @parentsDefined = $class->ent->refs( 'Base' );
+  foreach my $parent ( @parentsDefined ) {
+
+    # Recursively test each parent and set the flag if the parent has virtual, ignore otherwise
+    my $flag = findVirtual( $parent );
+    $foundVirtual = $flag if $flag;
+
+  }
+  return $foundVirtual;
+}

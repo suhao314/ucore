@@ -1,0 +1,203 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Goto statement for %1 references a label not in the same block or containing block';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "6-6-1 Any label referenced by a goto statement shall be declared in the same block, or in a block enclosing the goto statement";}
+
+# This is the full description of the rule being tested
+sub description { return "6-6-1 (Required) Any label referenced by a goto statement shall be declared in the same block, or in a block enclosing the goto statement.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Unconstrained use of <i>goto</i> can lead to programs that are extremely difficult to comprehend, analyse
+and, for C++, can also lead to the program exhibiting <i>unspecified behaviour</i>.</p>
+<p>
+However, in many cases a total ban on <i>goto</i> requires the introduction of flags to ensure correct
+control flow, and it is possible that these flags may themselves be less transparent than the <i>goto</i>
+they replace.</p>
+<p>
+Therefore, the restricted use of <i>goto</i> is allowed where that use will not lead to semantics contrary
+to developer expectations. Jumping in to nested blocks is prohibited as it may lead to complex
+flow graphs.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  void f1 ( )
+  {
+    int32_t j = 0;
+    goto L1;
+    for ( j = 0; j < 10 ; ++j )
+    {
+  L1: // Non-compliant
+      j;
+    }
+  }
+
+  void f2 ( )
+  {
+    for ( int32_t j = 0; j < 10 ; ++j )
+    {
+      for ( int32_t i = 0; i < 10; ++i )
+      {
+        goto L1;
+      }
+    }
+  L1: // Compliant
+    f1 ( );
+  }
+
+</pre>
+
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# Use this function to walk the funtion forward or backwards
+sub findLabel {
+
+  # Pull everything that was passed in
+  my $check = shift;
+  my $file = shift;
+  my $lexeme = shift;
+  my $switch = shift;
+  my $label = shift;
+  my $begin = shift;
+  my $end = shift;
+
+  # Variable needed for tracking where the label is in relationship to the goto
+  my $count = 0;
+  my $isGood = 1;
+  my $good = '';
+  my $bad = '';
+
+  if ( $switch eq 'prevUseful' ) {
+
+    $good = '{';
+    $bad = '}';
+
+  } else {
+
+    $good = '}';
+    $bad = '{';
+
+  }
+
+  while ( $lexeme->line_begin > $begin and $lexeme->line_begin < $end ) {
+
+    if ( $lexeme->text eq $bad ) {
+
+      $count++;
+      $isGood = 0;
+
+    } elsif ( $lexeme->text eq $good ) {
+
+      $count-- if $count > 0;
+      $isGood = 1 if $count == 0;
+
+    } elsif ( $lexeme->text eq $label and $lexeme->token eq 'Identifier' and $lexeme->prevUseful->text ne lc ( 'goto' ) ) {
+
+      if ( $isGood == 0 ) {
+
+        throwError($check, $lexeme->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1, $lexeme->text );
+        return;
+
+      }
+
+    }
+    #$check->violation( 0, $file, 0, 0, $lexeme->text );
+    $lexeme = $lexeme->$switch;
+
+  }
+
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function (@functionsDefined) {
+    
+    # Pull text of function
+    my $text = $function->ent->contents;
+    # Remove any // style comments
+    $text =~ s/\/\/.*\n/\n/g;
+    # Remove any /* */ style comments
+    $text =~ s/\/\*.*\*\//\n/gs;
+    # check if a goto statement exists
+    next unless $text =~/\s+goto\s+/;
+
+    # Spin up lexer to find goto statement
+    my $lexeme = $function->lexeme();
+
+    # Check entire function
+    my $begin = $lexeme->line_begin;
+    my $end = $function->ent->ref('end')->line;
+    while ( $lexeme->line_begin < $end ) {
+
+      # Found a goto statement, time to find the corresponding label
+      if ( lc ( $lexeme->text ) eq 'goto' and $lexeme->token eq 'Keyword' ) {
+
+        my $label = $lexeme->nextUseful->text;
+        findLabel ( $check, $file, $lexeme, 'prevUseful', $label, $begin, $end );
+        findLabel ( $check, $file, $lexeme, 'nextUseful', $label, $begin, $end );
+        $lexeme = $lexeme->nextUseful;
+
+      } else {
+
+        $lexeme = $lexeme->nextUseful;
+
+      }
+
+    }
+  }
+}

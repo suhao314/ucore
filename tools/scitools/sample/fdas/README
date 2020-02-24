@@ -1,0 +1,64 @@
+This package is an extract from my fdas (Flight Data Access System)
+project.  I've put this package together to provide a sample of "real"
+Fortran 90 code for compiler testing.  The fdas is intended for actual
+application - not as an artificial benchmark or compiler test suite.
+However, because the code makes substantial use of modules,
+structures, pointers, and other new Fortran 90 features, it may also
+be good for excercising compilers.
+
+This isn't all of the fdas.  In order to make this package
+self-contained, it omits a substantial portion that depends on
+interfacing with a separate database.  Much of the user interface
+depended on the database, so that is also omitted here.  Instead, this
+package has a main program (gdTest.f90) that is a pretty trivial stub
+that just calls some of the major subroutines with hard-coded
+arguments.
+
+I've excised a few of the system-dependent areas (notably network
+support).  The binary.f90 file is very system-dependent as it depends
+on internal binary data format.  It ought to compile on any system,
+but don't expect files in my unc3 and cmp3 formats to be read or
+written properly unless the binary.f90 file is appropriately ported
+(or unless the system happens to have the same data formats and byte
+order as a Sun).  I've left the binary.f90 file in this package
+because it does have a few "interesting" constructs that excercise
+compilers (mostly some of the usage of the TRANSFER intrinsic);
+besides, it was easier to leave in than to take out.
+
+Some parts of the code in this package can never be executed because
+of some of the omissions.  For instance, the thRead/thRNet1.f90 file
+depends on the omitted networking support.  It should compile anyway,
+but any attempt to actually use it will return an error from the open
+call because the dummy stub networking module always returns failure.
+
+The included Makefiles will probably need to be modified for compilers
+other than NAG's.  I'm not yet sure how other vendors handle module
+dependencies.  The intent of the Makefiles should be "obvious"
+(to someone fluent in "Makefile-speak").
+
+A "make all" in the source directory creates the executable gdTest in
+the source/test dir.  Sample input and output data files for a test
+run are in the testData dir.
+
+The gdTest program reads the input.data file.  It writes an
+output.data file.  The included output.sample is a copy of the
+output.data file from a run I did.  The screen.sample file is a copy
+of the redirected standard output.
+
+If the binary.f90 file is ported, you can test some other substantial
+portions of the code by changing a single 'asc2' to 'cmp3' in the
+gdTest.f90 main program as indicated by the comment in the code.  This
+should produce an almost identical screen output, with differences
+only in the last digit of some of the numbers; the screen.cmp3 file is
+a copy of the redirected standard output from such a run.  The
+output.data file is binary when the 'cmp3' format is used, and thus
+isn't as easy to compare; I didn't include a sample of it.
+
+See the modules.doc file for a brief description of the purpose
+of each of the modules in the package.  That may help you find
+your way around the code.
+
+--
+Richard Maine
+maine@altair.dfrf.nasa.gov
+

@@ -1,0 +1,135 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'If statement not enclosed in curly braces { } in %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "14.9 An if ( condition ) construct shall be followed by a compound statement. The else keyword shall be followed by either a compound statement, or another if statement";}
+
+# This is the full description of the rule being tested
+sub description { return "14.9 ( Required ) An if ( condition ) construct shall be followed by a compound statement. The else keyword shall be followed by either a compound statement, or another if statement.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<b>For example</b><pre style="margin-top:0;padding-top:0;">
+  if ( test1 )
+  {
+    x = 1; /* Even a single statement must be in braces */
+  }
+  else if ( test2 ) /* No need for braces in else if */
+  {
+    x = 0; /* Single statement must be in braces */
+  }
+  else
+    x = 3; /* This was (incorrectly) not enclosed in braces */
+    y = 2; /* This line was added later but, despite the
+              appearance (from the indent), it is actually
+              not part of the else, and is executed
+              unconditionally */
+</pre>
+<p>
+Note that the layout for compound statements and their enclosing braces should be
+determined from the style guidelines. The above is just an example.
+</p>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function(@functionsDefined) {
+    my $end = $function->ent->ref("End");
+    # Spin up a lexer
+    my $lexeme = $function->lexeme;
+    next unless $lexeme;
+  
+    #While I am still within the function
+    while ( $lexeme->line_begin < $end->line ) {
+    
+      # Continue unless we are looking at an if statement
+      next unless $lexeme->text eq "if" || $lexeme->text eq "else";
+      
+      # Check syntax for if statement
+      if ( $lexeme->text eq "if" and $lexeme->token ne "Preprocessor" ) {
+
+        # Move onto the next lexeme
+        my $tempLexeme = $lexeme;
+
+        while ( $tempLexeme->text ne '{' and $tempLexeme->text ne ';' ) {
+          $tempLexeme = $tempLexeme->nextUseful;
+        }
+
+        throwError($check, $function->ent,$file,$tempLexeme->line_begin,$tempLexeme->column_begin,ERR1,$function->scope->name) if $tempLexeme->text eq ';';
+
+      # Check syntax for an else statement
+      } elsif ( $lexeme->text eq "else" and $lexeme->token ne "Preprocessor" ) {
+
+        # Move onto the next lexeme
+        my $tempLexeme = $lexeme->nextUseful;
+
+        #######
+        # This next segment of code is special casing for if-else chains that are built with preprocessor directives
+        while ( $tempLexeme->token eq "Preprocessor" ) {
+          $tempLexeme = $tempLexeme->nextUseful;
+        }
+        # End special case
+        #######
+
+        throwError($check, $function->ent,$file,$tempLexeme->line_begin,$tempLexeme->column_begin,ERR1,$function->scope->name) unless $tempLexeme->text eq "{" || $tempLexeme->text eq "if";
+      }
+    }
+    
+    # Standard continue statement 
+    continue {
+        $lexeme = $lexeme->next;
+      }
+  }
+}

@@ -1,0 +1,72 @@
+#This script is designed to run with Understand - CodeCheck
+#Rule 0-1-10 Every defined function shall be called at least once.
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: %1 defined but not called.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { 'Unused Methods' }
+
+sub description { 'Defined methods shall be called at least once.' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+Functions or procedures that are not called may be symptomatic of a serious problem, such as missing paths.
+Note that unused prototypes, function pointers, destructors and main are not violations of this rule. </p>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'Java';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('file');
+	
+	my @refsDefined = $file->filerefs('define', 'method ~constructor', 1);
+	foreach my $defRef(@refsDefined){
+	next if $defRef->ent->parent->ref('derive');
+    $check->violation($defRef->ent, $file, $defRef->line, $defRef->column, ERR1, $defRef->ent->name) unless isUsed($defRef->ent);
+  }
+	return;
+}
+
+sub isUsed{
+  my $ent = shift;
+#  return 1 if $ent->name =~ /^~/; #skip destructors
+  return 1 if $ent->name =~ /\.[gs]et[A-Z]/; #skip bean getter/setter
+  return 1 if $ent->name =~ /\.main$/; #skip main
+  return 1 if $ent->name =~ /\.init$/; #skip init
+  return 1 if $ent->name =~ /\.doGet$/; #skip doGet
+  return 1 if $ent->name =~ /\.doPost$/; #skip doPost
+  return 1 if $ent->name =~ /\.destroy$/; #skip destroy
+  return 1 if $ent->name =~ /Bean\.ejb[A-Z]/; #skip ServiceBeans operational
+  return 1 if $ent->name =~ /Bean\.onMessage/; #skip ServiceBeans operational
+  return 1 if $ent->name =~ /\.serialVersionUID$/; #skip serialization
+#  return 1 if $ent->name eq 'main';
+  return 1 if $ent->ref('useby ptr'); #skip function pointers
+  return 1 if $ent->ref('callby'); #find anywhere that $ent is calledby something else
+  return 1 if $ent->ref('Override'); #skip overrides
+  if($ent->kind->check("virtual")){
+    my @subRefs = $ent->refs("overriddenby");
+    foreach my $sub (@subRefs){
+      return 1 if isUsed($sub->ent);
+    }
+  }
+  return 0;
+}

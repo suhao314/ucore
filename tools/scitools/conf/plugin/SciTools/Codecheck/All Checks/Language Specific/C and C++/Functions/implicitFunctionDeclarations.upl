@@ -1,0 +1,171 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 1/6/2015
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Function %1 has an implicit declaration';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { 
+  return 'Functions shall not be declared implicitly';
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return '( Advisory ) Functions shall not be declared implicitly.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p>
+<b>Rationale</b><br>
+In C89, when calling a function, foo, that has not been declared, the function call is also considered an
+implicit declaration. While this is technically acceptable when another translation unit has a globally visable definition
+of foo, this situation could imply a more serious issue.
+</p>
+
+<p>
+Typically, when a function from another translation unit is used, the declaration is placed in a header file and
+then included in all code files where that function is used. An implicit declaration is usually a result of the
+declaration present in the header file being misspelled. Enforcing that this declaration exist in a header file allows
+the compiler to perform type checking, which can make debugging easier.
+</p>
+
+<p>
+<b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* Header file foo.h  */
+  int fop();          // Misspelled declaration, fop is not defined
+  int bar();
+
+
+  /* Code file foo.c    */
+  #include "foo.h"
+
+  int foo() {
+    return 0;         // foo is defined in the global scope, and so this program will still compile
+  }
+
+
+  /* Code file bar.c    */
+  #include "foo.h"
+
+  int bar() {
+    return foo();     // Violation: foo is not declared 
+                      // This function call will now become an implicit declaration
+  }
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+  my $check = shift;
+  $check->option->checkbox( 'isStrict', 'Check this box if using the strict parser', 0 );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull functions declared and functions called into two different lists
+  my @functionsDeclared = $file->filerefs( 'Declare ~Inactive', 'C Function ~Member ~Template ~Unresolved' );
+  my @functionsCalled = $file->filerefs( 'Call ~Inactive', 'C Function ~Member ~Template ~Unresolved' );
+  return unless @functionsDeclared or @functionsCalled;
+
+  # Loop through all functions declared
+  DEC : foreach my $declare ( @functionsDeclared ) {  
+
+    # Pull all the callby reference for this declaration and loop
+    my @callByReferences = $declare->ent->refs( 'Callby' );
+    foreach my $callBy ( @callByReferences ) {
+
+      # Throw an error if any callby reference matches our declaration reference ( Signifies inplicit declaration in strict )
+      if ( $callBy->line == $declare->line and $callBy->column == $declare->column ) {
+
+        $check->violation( $declare->ent, $declare->file, $declare->line, $declare->column, ERR1, $declare->ent->name );
+        next DEC;
+
+      }
+    }
+  }
+
+  # Loop through all function calls
+  CLL : foreach my $call ( @functionsCalled ) {
+
+    # Pull my define referece, make sure it exists, is not in a header file and that it is in a different file than it is used
+    my $defineRef = $call->ent->ref( 'Definein' );
+    my @declareReferences = $call->ent->refs( 'Declarein' );
+    next CLL unless $defineRef;
+
+    # Check if the call reference and the define reference are in the same file but there is no declare reference
+    if ( $defineRef->file->longname eq $call->file->longname and ! @declareReferences ) {
+
+      # Throw a violation if the call reference is before the define reference
+      if ( $defineRef->line > $call->line ) {
+
+        $check->violation( $call->ent, $call->file, $call->line, $call->column, ERR1, $call->ent->name );
+
+      }
+      next CLL;
+
+    # Skip this iteration if the definition is in a header file
+    } elsif ( $defineRef->file->kind->longname =~ /\bHeader\b/ ) {
+      next CLL;
+    }
+    
+    unless ( @declareReferences ) {
+
+      $check->violation( $call->ent, $call->file, $call->line, $call->column, ERR1, $call->ent->name );
+      next CLL;
+
+    }
+  }
+}

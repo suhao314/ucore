@@ -1,0 +1,2221 @@
+
+ Start         Length     Name                   Class
+ 0001:00000000 00013350H .text                   CODE
+ 0002:00000000 000009F8H .data                   DATA
+ 0002:000009F8 00002DD0H .bss                    BSS
+
+
+Detailed map of segments
+
+ 0001:00000000 00007AD6 C=CODE     S=.text    G=(none)   M=System   ACBP=A9
+ 0001:00007AD8 000004FF C=CODE     S=.text    G=(none)   M=SysInit  ACBP=A9
+ 0001:00007FD8 0000003F C=CODE     S=.text    G=(none)   M=Types    ACBP=A9
+ 0001:00008018 0000003F C=CODE     S=.text    G=(none)   M=KernelDefs ACBP=A9
+ 0001:00008058 0000003F C=CODE     S=.text    G=(none)   M=KernelIoctl ACBP=A9
+ 0001:00008098 00000067 C=CODE     S=.text    G=(none)   M=Libc     ACBP=A9
+ 0001:00008100 0000003F C=CODE     S=.text    G=(none)   M=SysConst ACBP=A9
+ 0001:00008140 00003A3B C=CODE     S=.text    G=(none)   M=SysUtils ACBP=A9
+ 0001:0000BB7C 000002CD C=CODE     S=.text    G=(none)   M=lexmsgs  ACBP=A9
+ 0001:0000BE4C 000014FF C=CODE     S=.text    G=(none)   M=lexbase  ACBP=A9
+ 0001:0000D34C 00000AC7 C=CODE     S=.text    G=(none)   M=lextable ACBP=A9
+ 0001:0000DE14 000003F7 C=CODE     S=.text    G=(none)   M=lexpos   ACBP=A9
+ 0001:0000E20C 000001B3 C=CODE     S=.text    G=(none)   M=lexdfa   ACBP=A9
+ 0001:0000E3C0 0000057F C=CODE     S=.text    G=(none)   M=lexopt   ACBP=A9
+ 0001:0000E940 0000024B C=CODE     S=.text    G=(none)   M=lexlist  ACBP=A9
+ 0001:0000EB8C 000010FB C=CODE     S=.text    G=(none)   M=lexrules ACBP=A9
+ 0001:0000FC88 00002611 C=CODE     S=.text    G=(none)   M=dlex     ACBP=A9
+ 0002:00000000 000000F8 C=DATA     S=.data    G=DGROUP   M=System   ACBP=A9
+ 0002:000000F8 00000030 C=DATA     S=.data    G=DGROUP   M=SysInit  ACBP=A9
+ 0002:00000128 00000290 C=DATA     S=.data    G=DGROUP   M=SysConst ACBP=A9
+ 0002:000003B8 0000059C C=DATA     S=.data    G=DGROUP   M=SysUtils ACBP=A9
+ 0002:00000954 00000084 C=DATA     S=.data    G=DGROUP   M=lexbase  ACBP=A9
+ 0002:000009D8 00000020 C=DATA     S=.data    G=DGROUP   M=lexrules ACBP=A9
+ 0002:00001FD0 00000AE0 C=BSS      S=.bss     G=DGROUP   M=System   ACBP=A9
+ 0002:00002AB0 0000001C C=BSS      S=.bss     G=DGROUP   M=SysInit  ACBP=A9
+ 0002:00002ACC 00000004 C=BSS      S=.bss     G=DGROUP   M=Types    ACBP=A9
+ 0002:00002AD0 00000004 C=BSS      S=.bss     G=DGROUP   M=KernelDefs ACBP=A9
+ 0002:00002AD4 00000004 C=BSS      S=.bss     G=DGROUP   M=KernelIoctl ACBP=A9
+ 0002:00002AD8 00000004 C=BSS      S=.bss     G=DGROUP   M=Libc     ACBP=A9
+ 0002:00002ADC 00000004 C=BSS      S=.bss     G=DGROUP   M=SysConst ACBP=A9
+ 0002:00002AE0 0000017C C=BSS      S=.bss     G=DGROUP   M=SysUtils ACBP=A9
+ 0002:00002C5C 0000000C C=BSS      S=.bss     G=DGROUP   M=lexmsgs  ACBP=A9
+ 0002:00002C68 00000750 C=BSS      S=.bss     G=DGROUP   M=lexbase  ACBP=A9
+ 0002:000033B8 00000030 C=BSS      S=.bss     G=DGROUP   M=lextable ACBP=A9
+ 0002:000033E8 00000004 C=BSS      S=.bss     G=DGROUP   M=lexpos   ACBP=A9
+ 0002:000033EC 00000004 C=BSS      S=.bss     G=DGROUP   M=lexdfa   ACBP=A9
+ 0002:000033F0 00000020 C=BSS      S=.bss     G=DGROUP   M=lexopt   ACBP=A9
+ 0002:00003410 00000004 C=BSS      S=.bss     G=DGROUP   M=lexlist  ACBP=A9
+ 0002:00003414 00001188 C=BSS      S=.bss     G=DGROUP   M=lexrules ACBP=A9
+ 0002:0000459C 00000804 C=BSS      S=.bss     G=DGROUP   M=dlex     ACBP=A9
+
+
+  Address         Publics by Name
+
+ 0001:00004CB4       .
+ 0002:0000008C       .
+ 0001:00004F0C       .
+ 0002:00000A98       .
+ 0002:000000DC       .
+ 0002:00002668       .
+ 0001:00005358       .
+ 0002:00000ADC       .
+ 0002:000000EC       .
+ 0002:00002A6C       .
+ 0001:00006CBC       .
+ 0002:0000100C       .
+ 0002:000000F4       .
+ 0002:00002A70       .
+ 0001:00004CB4       ..
+ 0002:0000008C       ..
+ 0001:00004F0C       ..
+ 0002:00000A98       ..
+ 0002:000000DC       ..
+ 0002:00002668       ..
+ 0001:00005358       ..
+ 0002:00000ADC       ..
+ 0002:000000EC       ..
+ 0002:00002A6C       ..
+ 0001:00006CBC       ..
+ 0002:0000100C       ..
+ 0002:000000F4       ..
+ 0002:00002A70       ..
+ 0002:00002AC0       .1
+ 0002:00002ACC       .1
+ 0002:00002AD4       .1
+ 0002:00002ADC       .1
+ 0002:00002C64       .1
+ 0002:000033B4       .1
+ 0002:000033E8       .1
+ 0002:000033EC       .1
+ 0002:000033F0       .1
+ 0002:00003410       .1
+ 0002:00003D88       .1
+ 0002:00002AD0       .2
+ 0002:00002AD8       .3
+ 0002:000033E4       .4
+ 0002:00002580       .5
+ 0002:00002C4C       .74
+ 0001:000078BC       ._BorUnwind_AddressIsInPCMap
+ 0001:000066B0       ._BorUnwind_BCBLookup
+ 0001:00006CD8       ._BorUnwind_ClearForeignUnwindHook
+ 0001:00006B64       ._BorUnwind_DumpUnwindInfo
+ 0001:00007940       ._BorUnwind_GetFuncUnwindInfo
+ 0001:00007408       ._BorUnwind_Resume
+ 0001:00006164       ._BorUnwind_SetCPPHandler
+ 0001:00006CBC       ._BorUnwind_SetForeignUnwindHook
+ 0001:00007974       ._BorUnwind_SetUnhandledExceptionFilter
+ 0002:00002A7C       ._BorUnwind_UEFOuterProc
+ 0002:00002A80       ._BorUnwind_UnhandledExceptionFilter
+ 0002:000000DC       ._dbfp
+ 0002:00002A68       ._dbinits
+ 0002:000000EC       ._debug_class.24
+ 0002:000000F0       ._debug_class.25
+ 0001:00004D68       .Arith_WrSigned
+ 0001:00004CB4       .Arith_WrUnsigned
+ 0001:00006214       .BCBPersonalityFn
+ 0001:00005740       .BitCount
+ 0001:00006F28       .CheckAlternatives
+ 0002:000000E8       .class_count.8
+ 0001:00006174       .CopyArg
+ 0002:00002A6C       .CPPhandler
+ 0002:000000E0       .current_class
+ 0001:00005184       .debug_file
+ 0001:00005258       .debug_shutdown
+ 0001:00005358       .DecodeFrameInfo
+ 0001:00005494       .DecodeReversedFrameInfo
+ 0001:00005638       .DecodeTo
+ 0001:00005DB8       .DelphiPersonalityFn
+ 0002:00002668       .enabled_classes.7
+ 0001:00007164       .FindPersonality
+ 0001:000054F4       .FindRange
+ 0001:0000557C       .FindRangeCPP
+ 0002:00002A70       .ForeignUnwindHooks
+ 0001:00004CB4       .gcc2_compiled.
+ 0001:00004F0C       .gcc2_compiled.
+ 0001:00005358       .gcc2_compiled.
+ 0001:00006CBC       .gcc2_compiled.
+ 0001:000072A4       .GetContext
+ 0001:00007410       .GetFSChain
+ 0001:00005120       .getSTDOUT
+ 0001:00004F0C       .glob_match
+ 0001:000055EC       .InitDelphiDecoder
+ 0002:000000F4       .initialized.9
+ 0001:000073E0       .InstallAndResume
+ 0002:0000008C       .lenTab
+ 0002:00002A78       .LookList
+ 0001:000061D4       .PushArg
+ 0002:00002A84       .RunningCodeSizeTotal
+ 0002:00002A98       .RunningExcProcTotal
+ 0002:00002A88       .RunningExcSizeTotal
+ 0002:00002A9C       .RunningFramedProcTotal
+ 0002:00002AA4       .RunningNonFramedProcUSize
+ 0002:00002AA0       .RunningPotentialSavings
+ 0002:00002A94       .RunningProcCountTotal
+ 0002:00002A90       .RunningRangeSizeTotal
+ 0002:00002AA8       .RunningSmallProcCount
+ 0002:00002AAC       .RunningSmallProcRanges
+ 0002:00002A8C       .RunningUnwindSizeTotal
+ 0002:000000CC       .shiftTab
+ 0002:000000E4       .state.6
+ 0001:00005774       .UnwindDelphiFrame
+ 0001:000017F4       @_CLenToPasStr
+ 0001:FFFFFB30       @_close
+ 0001:000017E4       @_CToPasStr
+ 0001:FFFFFC00       @_errno_location
+ 0001:FFFFFBA0       @_free
+ 0001:FFFFFB60       @_getenv
+ 0001:00000684       @_IOTest
+ 0001:FFFFFEB0       @_libc_start_main
+ 0001:00003AC4       @_lludiv
+ 0001:00003B28       @_llumod
+ 0001:FFFFFB90       @_malloc
+ 0001:FFFFFB20       @_open
+ 0001:FFFFFC80       @_raise
+ 0001:FFFFFB40       @_read
+ 0001:FFFFFBB0       @_realloc
+ 0001:FFFFFB70       @_remove
+ 0001:FFFFFB50       @_write
+ 0001:FFFFFCA0       @_xstat
+ 0001:00001E04       @AfterConstruction
+ 0001:00002730       @Assert
+ 0001:00000C60       @Assign
+ 0001:00000E28       @AStrCmp
+ 0001:00001E1C       @BeforeDestruction
+ 0001:0000741C       @BorUnwind_ClosestDelphiHandler
+ 0001:00006A64       @BorUnwind_DelphiForeignUnwindHook
+ 0001:00006854       @BorUnwind_DelphiLookup
+ 0001:00006E98       @BorUnwind_FindGOT
+ 0001:000072E4       @BorUnwind_GetGR
+ 0001:000072C4       @BorUnwind_GetIP
+ 0001:0000798C       @BorUnwind_GetUEFOuterProc
+ 0001:000079A0       @BorUnwind_GetUnhandledExceptionFilter
+ 0001:000075C8       @BorUnwind_RaiseException
+ 0001:00006CEC       @BorUnwind_RegisterIPLookup
+ 0001:00007354       @BorUnwind_SetGR
+ 0001:000072D4       @BorUnwind_SetIP
+ 0001:00006DF8       @BorUnwind_UnregisterIPLookup
+ 0001:00001DD4       @ClassCreate
+ 0001:00001DF8       @ClassDestroy
+ 0001:0000214C       @ClassHandleException
+ 0001:00000D48       @Close
+ 0001:00001220       @CloseFile
+ 0001:000038F4       @CopyArray
+ 0001:000037AC       @CopyRecord
+ 0001:00001E54       @DbgEvalEnd
+ 0001:00001E4C       @DbgEvalExcept
+ 0001:00001E5C       @DbgEvalFrame
+ 0001:00001E44       @DbgEvalMarker
+ 0001:00001E3C       @DbgExcNotify
+ 0001:000021F0       @DestroyException
+ 0001:00003AB4       @DispCallByIDError
+ 0001:00002260       @DoneExcept
+ 0001:00003DB8       @DynArrayAsg
+ 0001:00003D74       @DynArrayClear
+ 0001:00003B90       @DynArrayLength
+ 0001:00003D60       @DynArraySetLength
+ 0001:00000EAC       @EofText
+ 0001:00000EEC       @Erase
+ 0001:00000F4C       @FileSize
+ 0001:00000FD4       @FillChar
+ 0001:0000369C       @FinalizeArray
+ 0001:00003658       @FinalizeRecord
+ 0001:00000D38       @Flush
+ 0001:00001BA8       @FpuInit
+ 0001:00000128       @FreeMem
+ 0001:FFFFFBE0       @ftruncate
+ 0001:FFFFFC90       @fxstat
+ 0001:000000FC       @GetMem
+ 0001:00007D20       @GetTls
+ 0001:000026C4       @Halt
+ 0001:00002544       @Halt0
+ 0001:00001FA8       @HandleAnyException
+ 0001:000020C8       @HandleFinally
+ 0001:0000206C       @HandleOnException
+ 0001:00007E30       @InitExe
+ 0001:00003648       @Initialize
+ 0001:00003594       @InitializeArray
+ 0001:00003554       @InitializeRecord
+ 0001:000023EC       @InitResStrings
+ 0001:00004580       @IntfClear
+ 0001:000045A0       @IntfCopy
+ 0001:00001CF0       @IsClass
+ 0001:FFFFFBD0       @lseek
+ 0001:00003118       @LStrAddRef
+ 0001:00002788       @LStrArrayClr
+ 0001:000027C4       @LStrAsg
+ 0001:00002EC4       @LStrCat
+ 0001:00002F1C       @LStrCat3
+ 0001:00002FB0       @LStrCatN
+ 0001:0000275C       @LStrClr
+ 0001:0000305C       @LStrCmp
+ 0001:000031B4       @LStrCopy
+ 0001:00003200       @LStrDelete
+ 0001:00002DF8       @LStrFromChar
+ 0001:00002E10       @LStrFromPChar
+ 0001:00002884       @LStrFromPCharLen
+ 0001:00002E48       @LStrFromPWChar
+ 0001:00002D40       @LStrFromPWCharLen
+ 0001:00002E8C       @LStrFromString
+ 0001:00002E9C       @LStrFromWStr
+ 0001:00002818       @LStrLAsg
+ 0001:00002EB4       @LStrLen
+ 0001:0000325C       @LStrPos
+ 0001:000032C0       @LStrSetLength
+ 0001:0000312C       @LStrToPChar
+ 0001:00007EA4       @main
+ 0001:00003A0C       @New
+ 0001:00002848       @NewAnsiString
+ 0001:00003378       @NewWideString
+ 0001:000018B4       @Pow10
+ 0001:00000DEC       @PStrCpy
+ 0001:00000DAC       @PStrNCat
+ 0001:00000E00       @PStrNCpy
+ 0001:00002180       @RaiseAgain
+ 0001:00002110       @RaiseAtExcept
+ 0001:0000213C       @RaiseExcept
+ 0001:00001040       @ReadChar
+ 0001:FFFFFCC0       @readlink
+ 0001:000011E8       @ReadLn
+ 0001:00001164       @ReadLString
+ 0001:00001150       @ReadString
+ 0001:00000154       @ReallocMem
+ 0001:0000137C       @ResetFile
+ 0001:00000854       @ResetText
+ 0001:00000864       @RewritText
+ 0001:000026D4       @Run0Error
+ 0001:000026E4       @RunError
+ 0001:00001824       @SetElem
+ 0001:00001854       @SetEq
+ 0001:00001874       @SetIntersect
+ 0001:FFFFFE00       @setlocale
+ 0001:00001894       @SetSub
+ 0001:00001884       @SetUnion
+ 0001:00007F38       @start
+ 0001:000023AC       @StartExe
+ 0001:00001418       @Str0Long
+ 0001:FFFFFCB0       @strlen
+ 0001:000013A0       @StrLong
+ 0001:000007BC       @TRUNC
+ 0001:000026F8       @UnhandledException
+ 0001:0000319C       @UniqueStringA
+ 0001:000031A8       @UniqueStringW
+ 0001:00001428       @ValLong
+ 0001:00003A7C       @VarClear
+ 0001:00003AA0       @VarClr
+ 0001:00003A88       @VarCopy
+ 0001:00003A94       @VarToLStr
+ 0001:00001664       @Write0Char
+ 0001:00001744       @Write0Long
+ 0001:00003338       @Write0LString
+ 0001:00001560       @WriteBytes
+ 0001:000016BC       @WriteChar
+ 0001:00001788       @WriteLn
+ 0001:000016EC       @WriteLong
+ 0001:00003348       @WriteLString
+ 0001:000015D8       @WriteSpaces
+ 0001:00001754       @WriteString
+ 0001:000033B0       @WStrArrayClr
+ 0001:000033BC       @WStrAsg
+ 0001:000033A4       @WStrClr
+ 0001:000034DC       @WStrFromLStr
+ 0001:000033C8       @WStrFromPCharLen
+ 0001:0000347C       @WStrFromPWCharLen
+ 0001:000034F0       @WStrLen
+ 0001:00003500       @WStrSetLength
+ 0001:FFFFFF40       __ctype_get_mb_cur_max
+ 0001:FFFFFEF0       __write
+ 0002:00001E04       _GLOBAL_OFFSET_TABLE_
+ 0001:0000EF8C       act_char
+ 0002:00003D8C       act_pos
+ 0002:000033E0       act_state
+ 0001:0000FFA4       add_rule
+ 0001:0000F0CC       add_start_state
+ 0001:0000D48C       addCClassPos
+ 0001:0000D3FC       addCharPos
+ 0001:0000E1A4       addExpr
+ 0001:0000CB48       addExt
+ 0001:0000D51C       addMarkPos
+ 0001:0000D62C       addState
+ 0001:0000D6D8       addTrans
+ 0001:00000568       AllocateException
+ 0001:00007AD8       AllocTlsBuffer
+ 0001:00007B6C       AllocTlsIndex
+ 0002:00000994       alphanums
+ 0001:0000C3C8       altExpr
+ 0001:00008248       AnsiCompareText
+ 0001:0000A9B4       AnsiPos
+ 0001:0000AA04       AnsiStrPos
+ 0001:0000AAD0       AnsiStrRScan
+ 0001:0000AB08       AnsiStrScan
+ 0001:000004B4       AreOSExceptionsBlocked
+ 0002:0000200C       ArgCount
+ 0002:00002010       ArgValues
+ 0001:00004EAC       Arith_RdSigned
+ 0001:00004E48       Arith_RdUnsigned
+ 0001:0000A0D0       AssertErrorHandler
+ 0002:00001FEC       AssertErrorProc
+ 0001:000116FC       auxiliary_procs
+ 0001:0000C988       blankStr
+ 0001:00000478       BlockOSExceptions
+ 0002:00003D94       buf
+ 0001:000029C8       BufConvert
+ 0002:00003D90       bufptr
+ 0001:0000A904       ByteType
+ 0001:0000A898       ByteTypeTest
+ 0001:00002298       CallProc
+ 0001:0000F2BC       caret
+ 0001:0000C39C       catExpr
+ 0002:00004595       cclass_state
+ 0001:0000C270       cclassExpr
+ 0001:0000D220       cclassOrCharStr
+ 0001:0000CFC0       cclassStr
+ 0002:0000341C       cf
+ 0001:000028E0       CharacterSizeLocaleChar
+ 0001:000028D4       CharacterSizeWideChar
+ 0001:0000C230       charExpr
+ 0001:00002B5C       CharFromWChar
+ 0001:0000CD14       charStr
+ 0001:000101DC       charStr
+ 0001:0001122C       check_id
+ 0001:0000B588       CheckLocale
+ 0001:000111A8       code
+ 0002:F7EB3E30       CodeSegSize
+ 0002:00002C74       codfilename
+ 0002:00002C78       codfilepath
+ 0001:000081A8       ConvertError
+ 0001:000081CC       ConvertErrorFmt
+ 0001:00003BA0       CopyArray
+ 0001:00007F90       Copyright
+ 0002:00000010       CoreDumpEnabled
+ 0001:00010090       counters
+ 0001:0000A010       CreateAssertException
+ 0001:00009F34       CreateInOutError
+ 0002:0000041C       cSimpleBoolStrs
+ 0001:FFFFFDA0       ctime
+ 0002:00002AEC       CurrencyDecimals
+ 0002:00002AE8       CurrencyFormat
+ 0002:00000938       CurrencyFormats
+ 0002:00002AE4       CurrencyString
+ 0001:000004C8       CurrentException
+ 0001:000004F8       CurrentPrivateException
+ 0002:00002AED       DateSeparator
+ 0002:00000438       DCon10
+ 0001:00004FF0       debug_class_enabled
+ 0001:00005310       debug_continue
+ 0001:00005198       debug_init
+ 0001:000052A0       debug_print
+ 0002:00002AEB       DecimalSeparator
+ 0002:0000000C       Default8087CW
+ 0002:00000014       DefaultTextLineBreakStyle
+ 0002:00002AE0       DeferUserInterrupts
+ 0001:0000FE9C       define_macro
+ 0001:0000FD34       define_start_state
+ 0001:000112BC       definition
+ 0001:0001143C       definitions
+ 0002:000004B8       DefLongDayNames
+ 0002:0000046C       DefLongMonthNames
+ 0002:0000049C       DefShortDayNames
+ 0002:0000043C       DefShortMonthNames
+ 0001:00004160       DelayLoadResourceModule
+ 0002:0000006C       dig
+ 0002:00000974       digits
+ 0002:00001FD0       DispCallByIDProc
+ 0001:FFFFFCD0       dladdr
+ 0001:FFFFFE60       dladdr
+ 0001:FFFFFFB0       dladdr
+ 0001:FFFFFCF0       dlclose
+ 0001:FFFFFE50       dlclose
+ 0001:FFFFFFA0       dlclose
+ 0001:FFFFFD10       dlerror
+ 0001:00011968       dlex
+ 0001:FFFFFCE0       dlopen
+ 0001:FFFFFE30       dlopen
+ 0001:FFFFFD00       dlsym
+ 0001:FFFFFE40       dlsym
+ 0001:0000F9EC       DoExpr
+ 0001:0000A814       DoneExceptions
+ 0001:FFFFFDF0       dup
+ 0001:00003BC0       DynArrayClear
+ 0001:00003BCC       DynArraySetLength
+ 0001:00009F20       EHeapException.FreeInstance
+ 0001:000047AC       ElfHashLowercase
+ 0001:0000BED8       empty
+ 0002:000003B8       EmptyStr
+ 0002:000003C0       EmptyWideStr
+ 0001:000092A0       EncodeDate
+ 0001:0000D69C       endStateTrans
+ 0001:0000D3A0       entry
+ 0002:0000257C       envp
+ 0002:000009B4       epsExpr
+ 0001:0000C19C       equal
+ 0001:0000E3C0       equivStates
+ 0002:00002C40       EraCount
+ 0002:00002BB4       EraNames
+ 0002:00002BEC       EraRanges
+ 0002:00002C24       EraYearFormats
+ 0002:00002BD0       EraYearOffsets
+ 0001:00000670       Error
+ 0001:0000BC8C       error
+ 0002:00000004       ErrorAddr
+ 0001:00000618       ErrorAt
+ 0001:00009FAC       ErrorHandler
+ 0002:000004D4       ErrorMap
+ 0002:00001FD8       ErrorProc
+ 0002:00002C5C       errors
+ 0002:000023B0       ErrOutput
+ 0001:0000DE14       eval
+ 0001:000005EC       ExceptAddr
+ 0001:0000A358       ExceptHandler
+ 0001:00009D04       Exception.Create
+ 0001:00009D64       Exception.CreateFmt
+ 0001:00009E08       Exception.CreateRes
+ 0001:00009E68       Exception.CreateResFmt
+ 0002:00001FE4       ExceptionClass
+ 0001:00009ADC       ExceptionErrorMessage
+ 0002:0000050C       ExceptMap
+ 0001:000005D4       ExceptObject
+ 0002:00001FD4       ExceptProc
+ 0002:00000000       ExitCode
+ 0001:00002488       ExitDll
+ 0002:00002000       ExitProc
+ 0001:FFFFFBC0       ExitProcess
+ 0002:00001FF0       ExitProcessProc
+ 0002:00003414       expr
+ 0002:00001FDC       ExternalExceptProc
+ 0001:000084C4       ExtractFilePath
+ 0001:0000F750       factor
+ 0002:00002C48       FalseBoolStrs
+ 0001:0000BD54       fatal
+ 0001:FFFFFDB0       fclose
+ 0002:0000042C       FCon1E18
+ 0001:FFFFFD80       fdopen
+ 0001:FFFFFDE0       fflush
+ 0001:0000CBF0       file_size
+ 0002:00002008       FileAccessRights
+ 0002:00000008       FileMode
+ 0001:000008DC       FileNOPProc
+ 0001:000079B4       Finalization
+ 0001:00007F98       Finalization
+ 0001:00007FD8       Finalization
+ 0001:00008018       Finalization
+ 0001:00008058       Finalization
+ 0001:000080C0       Finalization
+ 0001:00008100       Finalization
+ 0001:0000B95C       Finalization
+ 0001:0000BDFC       Finalization
+ 0001:0000D2CC       Finalization
+ 0001:0000DD30       Finalization
+ 0001:0000E1CC       Finalization
+ 0001:0000E380       Finalization
+ 0001:0000E8C4       Finalization
+ 0001:0000EB4C       Finalization
+ 0001:0000FC30       Finalization
+ 0001:000118AC       Finalization
+ 0001:00003BB4       FinalizeArray
+ 0001:000022AC       FinalizeUnits
+ 0001:00002000       FindOnExceptionDescEntry
+ 0001:00004940       FindResource
+ 0001:000041BC       FindResourceHInstance
+ 0002:000033D4       first_pos_table
+ 0001:00008F54       FloatToDecimal
+ 0001:00008C78       FloatToText
+ 0001:00000D28       Flush
+ 0001:00008B64       FmtStr
+ 0001:FFFFFD70       fopen
+ 0001:00008B4C       Format
+ 0001:000086E0       FormatBuf
+ 0001:000086C8       FormatClearStr
+ 0001:00008638       FormatError
+ 0002:00000424       FormatErrorStrs
+ 0001:000086A8       FormatVarToStr
+ 0001:000018A8       FPower10
+ 0001:FFFFFDC0       fprintf
+ 0001:FFFFFBA0       free
+ 0001:FFFFFE20       free
+ 0001:0000051C       FreeException
+ 0001:FFFFFCF0       FreeLibrary
+ 0001:0000B55C       FreeTerminateProcs
+ 0001:00007B38       FreeTLSBuffer
+ 0001:00010FA0       generate_table
+ 0001:0000EFEC       get_char
+ 0001:0000FC88       get_line
+ 0001:000046F4       GetCPUType
+ 0001:FFFFFD20       GetCurrentThreadID
+ 0001:00001D20       GetDynaMethod
+ 0001:FFFFFB60       getenv
+ 0001:FFFFFF50       getenv
+ 0001:0000A254       GetExceptionObject
+ 0001:0000A704       GetExternalException
+ 0001:0000B110       GetFirstCharacter
+ 0001:0000B198       GetFormatSettings
+ 0001:00000000       GetLastError
+ 0001:000094F8       GetLocaleStr
+ 0001:00003DF0       GetModuleFileName
+ 0001:00009554       GetMonthDayNames
+ 0001:FFFFFF00       getpid
+ 0001:000047F4       GetResourceCache
+ 0001:00008194       GetSafeCallExceptionAddr
+ 0001:00008170       GetSafeCallExceptionMsg
+ 0001:00007D94       GetTextEnd
+ 0001:00007D80       GetTextStart
+ 0001:00007BCC       GetThisModuleHandle
+ 0001:00007C78       GetTlsSize
+ 0001:FFFFFFE0       gnu_get_libc_version
+ 0001:0000C668       hash
+ 0002:00000418       HexDisplayPrefix
+ 0002:00002AB4       HInstance
+ 0001:0000A6E4       HookOSExceptions
+ 0002:000003F4       HookOSExceptionsProc
+ 0001:0000A500       HookSignal
+ 0001:FFFFFC30       iconv
+ 0001:FFFFFC40       iconv_close
+ 0001:FFFFFC20       iconv_open
+ 0001:0000F18C       ident
+ 0001:0000BEF4       include
+ 0001:0000ECE8       init_scanner
+ 0002:00002AC8       InitAddr
+ 0002:00002598       InitContext
+ 0001:0000965C       InitEras
+ 0001:0000A798       InitExceptions
+ 0001:00007DA4       InitializeModule
+ 0002:00002AC4       InitOnceSemaphore
+ 0001:0000AB58       InitSysLocale
+ 0001:00007C84       InitThreadTLS
+ 0001:00002328       InitUnits
+ 0001:00000198       InitUnwinder
+ 0001:00003A58       InitVariantManager
+ 0001:00007DE4       InitVmtImports
+ 0001:000006D0       InOutError
+ 0002:00002018       Input
+ 0001:0000A468       InquireSignal
+ 0001:00000058       InterlockedIncrement
+ 0001:00000948       InternalClose
+ 0001:00000CD8       InternalFlush
+ 0001:00003140       InternalUniqueString
+ 0001:0000CA04       intStr
+ 0001:0000006C       InvalidateModuleCache
+ 0002:00002C58       InvalidPointer
+ 0001:000006E0       IOResult
+ 0001:0000C564       is_altExpr
+ 0001:0000C52C       is_catExpr
+ 0001:0000C48C       is_cclassExpr
+ 0001:0000C43C       is_charExpr
+ 0001:0000C3F4       is_epsExpr
+ 0001:0000C404       is_markExpr
+ 0001:0000C504       is_optExpr
+ 0001:0000C4DC       is_plusExpr
+ 0001:0000C4B4       is_starExpr
+ 0001:0000C464       is_strExpr
+ 0002:00002004       IsConsole
+ 0001:0000CA6C       isInt
+ 0001:00009188       IsLeapYear
+ 0002:00001FFC       IsLibrary
+ 0002:000045A4       itemc
+ 0002:000049A4       itemlen
+ 0002:000045A8       itempos
+ 0002:000045A0       itemstr
+ 0001:00011148       itemv
+ 0001:00008040       KernelDefs
+ 0001:00008080       KernelIoctl
+ 0001:0000C700       key
+ 0001:FFFFFED0       kill
+ 0001:00008450       LastDelimiter
+ 0002:000003F8       LeadBytes
+ 0002:00000954       letters
+ 0001:0000D334       lexbase
+ 0001:0000E3A8       lexdfa
+ 0001:0000EB74       lexlist
+ 0001:0000BE24       lexmsgs
+ 0001:0000E8EC       lexopt
+ 0001:0000E1F4       lexpos
+ 0001:0000FC70       lexrules
+ 0001:0000DD58       lextable
+ 0002:00002C68       lfilename
+ 0001:000080E8       Libc
+ 0002:00000018       LibModuleList
+ 0002:00002C50       libuuidHandle
+ 0002:000033AC       line
+ 0001:00001F64       LinkException
+ 0001:0000E9C4       listDFATable
+ 0002:00002BB2       ListSeparator
+ 0001:0000E940       listTrans
+ 0002:000033B0       lno
+ 0001:00004AA8       LoadResource
+ 0001:000041EC       LoadResourceModule
+ 0001:00004AD0       LoadResString
+ 0001:FFFFFF80       localeconv
+ 0001:000028C4       LocaleConversionError
+ 0002:00002AF4       LongDateFormat
+ 0002:00002B88       LongDayNames
+ 0002:00002B3C       LongMonthNames
+ 0002:00002B08       LongTimeFormat
+ 0001:0000D34C       lookup
+ 0002:00002C70       lstfilename
+ 0002:00001FF4       MainInstance
+ 0002:00001FF8       MainThreadID
+ 0001:0000E20C       makeDFATable
+ 0001:0000241C       MakeErrorMessage
+ 0001:FFFFFB90       malloc
+ 0001:FFFFFE10       malloc
+ 0001:0000A178       MapFault
+ 0001:0000A148       MapFPE
+ 0001:0000A0EC       MapFPUStatus
+ 0001:0000A1D0       MapSignal
+ 0001:0000EB8C       mark_error
+ 0001:0000C204       markExpr
+ 0001:00001F54       MaybeCooptException
+ 0001:00008098       MB_CUR_MAX
+ 0001:FFFFFC50       mblen
+ 0001:FFFFFF60       mblen
+ 0001:FFFFFB80       memcpy
+ 0002:00000024       MemoryManager
+ 0001:FFFFFD30       memset
+ 0001:0000DB80       mergeTrans
+ 0001:FFFFFC60       mmap
+ 0001:0000C2F0       mnExpr
+ 0002:000000FC       Module
+ 0002:00000020       ModuleCacheVersion
+ 0002:00002AB0       ModuleIsCpp
+ 0002:0000001C       ModuleUnloadList
+ 0002:000003C4       MonthDays
+ 0001:00000708       Move
+ 0001:FFFFFC70       munmap
+ 0002:00004598       n_macros
+ 0002:00003400       n_opt_states
+ 0002:00003404       n_opt_trans
+ 0002:000033F4       n_parts
+ 0002:000033B8       n_pos
+ 0002:0000459C       n_rules
+ 0002:00003420       n_st
+ 0002:000033C4       n_start_states
+ 0001:0000D6BC       n_state_trans
+ 0002:000033BC       n_states
+ 0002:000033C0       n_trans
+ 0001:0000475C       NameToId
+ 0001:0000C800       nchars
+ 0002:00002AE9       NegCurrFormat
+ 0002:0000093C       NegCurrFormats
+ 0001:0000BE98       newCClass
+ 0001:0000C1E8       newExpr
+ 0001:0000C1D4       newIntSet
+ 0001:0000C6D4       newPos
+ 0001:0000D5BC       newState
+ 0001:00008208       NewStr
+ 0001:0000BE4C       newStr
+ 0001:0000FCB0       next_section
+ 0001:FFFFFC10       nl_langinfo
+ 0001:FFFFFF90       nl_langinfo
+ 0001:00001ED8       NotifyExcept
+ 0001:00001F30       NotifyExceptFinally
+ 0001:00004490       NotifyModuleUnload
+ 0001:00001F08       NotifyOnExcept
+ 0001:00001EB0       NotifyReRaise
+ 0002:00000084       Null
+ 0002:000003BC       NullStr
+ 0001:0000CC88       octStr
+ 0001:00011758       openCodFile
+ 0001:00001254       OpenFile
+ 0001:000007EC       OpenText
+ 0002:00003408       opt_state_table
+ 0002:0000340C       opt_trans_table
+ 0001:0000C2D0       optExpr
+ 0002:000033C9       optimize
+ 0001:0000E590       optimizeDFATable
+ 0002:00002C54       OutOfMemory
+ 0002:000021E4       Output
+ 0001:00000758       ParamCount
+ 0001:00000770       ParamStr
+ 0001:0000FBA0       parse_rule
+ 0002:000033F8       part_table
+ 0002:00002C6C       pasfilename
+ 0001:0000C2B0       plusExpr
+ 0002:00000088       PNull
+ 0001:0000EF3C       pop_macro
+ 0002:000033D0       pos_table
+ 0001:0000BB7C       position
+ 0001:FFFFFD40       printf
+ 0001:0000B774       PropagateSignals
+ 0001:FFFFFE80       pthread_key_create
+ 0001:FFFFFE70       pthread_once
+ 0001:00004C24       PUCS4Chars
+ 0001:0000EE60       push_macro
+ 0001:0000EC38       put_str
+ 0001:00008C28       PutExponent
+ 0001:0000C648       quicksort
+ 0002:00004596       quote_state
+ 0002:00003D84       r
+ 0001:0000A0BC       RaiseAssertException
+ 0001:0000B4C0       RaiseLastOSError
+ 0001:0000A370       RaiseSignalException
+ 0001:000010B8       ReadLine
+ 0002:000033CA       readonlyflag
+ 0001:00004500       RegisterModule
+ 0001:00007DB4       RegisterPCMap
+ 0001:0000055C       ReleaseDelphiException
+ 0001:00004BE4       ReleaseZeroPage
+ 0002:00000030       reMap
+ 0002:000009B8       reserved
+ 0001:00004B54       ReserveZeroPage
+ 0001:0000CAC4       root
+ 0002:0000007C       RTLInitFailed
+ 0001:0000FA40       rule
+ 0001:000114E0       rules
+ 0002:0000004C       runErrMsg
+ 0001:00000604       RunErrorAt
+ 0001:0000B7E4       SafeCallError
+ 0002:00001FE8       SafeCallErrorProc
+ 0001:00010FD4       scan
+ 0001:0000F490       scan_cclass
+ 0001:0000F2E4       scan_char
+ 0001:0000ED28       scan_macro
+ 0001:0000F6A0       scan_num
+ 0001:0000F3F4       scan_str
+ 0001:000092EC       ScanBlanks
+ 0001:00009444       ScanChar
+ 0001:00009324       ScanNumber
+ 0001:000093BC       ScanString
+ 0001:000006B4       SetInOutRes
+ 0001:00000028       SetLastError
+ 0001:FFFFFF70       setlocale
+ 0001:0000C110       setminus
+ 0001:0000814C       SetSafeCallExceptionMsg
+ 0001:0000BFC8       setunion
+ 0002:00002AF0       ShortDateFormat
+ 0002:00002B6C       ShortDayNames
+ 0002:00002B0C       ShortMonthNames
+ 0002:00002B04       ShortTimeFormat
+ 0001:00009C88       ShowException
+ 0001:FFFFFEC0       sigaction
+ 0001:FFFFFEE0       sigaddset
+ 0002:00002AE1       SIGINTIssued
+ 0001:0000A3A0       SignalConverter
+ 0001:0000A3C0       SignalDispatcher
+ 0002:000005CC       Signals
+ 0002:00002AE2       SIGQUITIssued
+ 0001:0000CEE8       singleQuoteStr
+ 0001:0000BEE4       singleton
+ 0001:0000C194       size
+ 0001:0000C59C       sort
+ 0001:0000DD00       sortTrans
+ 0001:00011094       split
+ 0002:00003424       st
+ 0001:0000C290       starExpr
+ 0001:0000F238       start_state_list
+ 0001:0000F270       start_state_prefix
+ 0001:0000D67C       startStateTrans
+ 0002:000033FC       state_part
+ 0002:000033D8       state_table
+ 0002:00003418       stmt
+ 0002:00004594       str_state
+ 0001:0000A938       StrByteType
+ 0001:FFFFFBF0       strcasecmp
+ 0001:0000A954       StrCharLength
+ 0001:00008588       StrComp
+ 0001:FFFFFD60       strdup
+ 0001:FFFFFF10       strerror_r
+ 0001:0000C250       strExpr
+ 0001:0000C8C4       strip
+ 0001:00008544       StrLCopy
+ 0001:00008510       StrLen
+ 0001:00008B08       StrLFmt
+ 0001:0000852C       StrMove
+ 0001:FFFFFF20       strncmp
+ 0001:000085D0       StrPos
+ 0001:000085B8       StrScan
+ 0001:FFFFFD50       strtok
+ 0001:FFFFFF30       strverscmp
+ 0002:000033CC       sym_table
+ 0001:00008128       SysConst
+ 0001:00009494       SysErrorMessage
+ 0001:000000A4       SysFreeMem
+ 0001:0000007C       SysGetMem
+ 0001:00007FC0       SysInit
+ 0002:00002BA4       SysLocale
+ 0001:00000434       SysRaiseCPPException
+ 0001:000003EC       SysRaiseException
+ 0001:000000D0       SysReallocMem
+ 0001:00000378       SysRegisterIPLookup
+ 0001:00007A00       System
+ 0001:000003C0       SysUnregisterIPLookup
+ 0001:0000BAFC       SysUtils
+ 0001:00010494       tables
+ 0001:0000F974       term
+ 0002:000009D8       term_delim
+ 0002:00000950       TerminateProcList
+ 0002:00002014       Test8086
+ 0001:00000980       TextClose
+ 0001:00000874       TextIn
+ 0001:000009D0       TextOpen
+ 0001:000009AC       TextOpenCleanup
+ 0001:000008E4       TextOut
+ 0002:F7EA9914       TextStartAdj
+ 0002:00002AEA       ThousandSeparator
+ 0001:FFFFFD90       time
+ 0002:00002AFC       TimeAMString
+ 0002:00002B00       TimePMString
+ 0002:00002AF8       TimeSeparator
+ 0001:FFFFFE90       TlsGetValue
+ 0001:FFFFFFF0       TlsGetValue
+ 0002:000000F8       TlsIndex
+ 0002:F7EA1DC4       TlsLast
+ 0001:FFFFFEA0       TlsSetValue
+ 0001:00001D8C       TObject.AfterConstruction
+ 0001:00001D94       TObject.BeforeDestruction
+ 0001:00001BB8       TObject.ClassName
+ 0001:00001CC0       TObject.CleanupInstance
+ 0001:00001D84       TObject.DefaultHandler
+ 0001:00001C28       TObject.Destroy
+ 0001:00001D9C       TObject.Dispatch
+ 0001:00001C3C       TObject.Free
+ 0001:00001BFC       TObject.FreeInstance
+ 0001:00001D60       TObject.InheritsFrom
+ 0001:00001C50       TObject.InitInstance
+ 0001:00001C1C       TObject.InstanceSize
+ 0001:00001BD8       TObject.NewInstance
+ 0001:00001D78       TObject.SafeCallException
+ 0001:FFFFFFC0       towupper
+ 0002:000033DC       trans_table
+ 0001:0000AC00       TranslateFormat
+ 0001:0000DA7C       transLess
+ 0001:0000DA58       transLessNextState
+ 0001:0000DAF8       transSwap
+ 0002:00002C44       TrueBoolStrs
+ 0001:000091D0       TryEncodeDate
+ 0001:00000FFC       TryOpenForInput
+ 0001:00001514       TryOpenForOutput
+ 0002:F7EA1B94       TypeImportsTable
+ 0001:00008000       Types
+ 0001:0000049C       UnblockOSExceptions
+ 0001:0000A6C8       UnhookOSExceptions
+ 0001:0000A614       UnhookSignal
+ 0001:000045E4       UnicodeToUtf8
+ 0001:00004610       UnicodeToUtf8
+ 0001:00003190       UniqueString
+ 0001:00001F8C       UnlinkException
+ 0001:0000A750       UnpackExternalException
+ 0002:00001FE0       UnpackExternalExceptProc
+ 0001:00004514       UnregisterModule
+ 0002:00002584       Unwinder
+ 0001:000007AC       UpCase
+ 0001:0000C844       upper
+ 0002:000025BC       VariantManager
+ 0001:00003A3C       VariantSystemDefaultVarClear
+ 0001:00003A2C       VariantSystemUndefinedError
+ 0002:000033C8       verbose
+ 0001:FFFFFDD0       vfprintf
+ 0002:00002C60       warnings
+ 0001:00002C44       WCharFromChar
+ 0001:FFFFFFD0       wcscoll
+ 0001:00008330       WideCompareStr
+ 0001:000083D0       WideCompareText
+ 0001:00004C48       WideStringToUCS4String
+ 0001:000082B0       WideUpperCase
+ 0001:000102C4       writecc
+ 0001:000024B8       WriteErrorMessage
+ 0001:00003388       WStrSet
+ 0002:000031E0       yycod
+ 0002:00002C7C       yyin
+ 0002:00002E48       yylst
+ 0002:00003014       yyout
+ 0002:00000080       ZeroPageReserved
+
+
+  Address         Publics by Value
+
+ 0002:F7EA1B94       TypeImportsTable
+ 0002:F7EA1DC4       TlsLast
+ 0002:F7EA9914       TextStartAdj
+ 0002:F7EB3E30       CodeSegSize
+ 0001:FFFFFB20       @_open
+ 0001:FFFFFB30       @_close
+ 0001:FFFFFB40       @_read
+ 0001:FFFFFB50       @_write
+ 0001:FFFFFB60       @_getenv
+ 0001:FFFFFB60       getenv
+ 0001:FFFFFB70       @_remove
+ 0001:FFFFFB80       memcpy
+ 0001:FFFFFB90       @_malloc
+ 0001:FFFFFB90       malloc
+ 0001:FFFFFBA0       @_free
+ 0001:FFFFFBA0       free
+ 0001:FFFFFBB0       @_realloc
+ 0001:FFFFFBC0       ExitProcess
+ 0001:FFFFFBD0       @lseek
+ 0001:FFFFFBE0       @ftruncate
+ 0001:FFFFFBF0       strcasecmp
+ 0001:FFFFFC00       @_errno_location
+ 0001:FFFFFC10       nl_langinfo
+ 0001:FFFFFC20       iconv_open
+ 0001:FFFFFC30       iconv
+ 0001:FFFFFC40       iconv_close
+ 0001:FFFFFC50       mblen
+ 0001:FFFFFC60       mmap
+ 0001:FFFFFC70       munmap
+ 0001:FFFFFC80       @_raise
+ 0001:FFFFFC90       @fxstat
+ 0001:FFFFFCA0       @_xstat
+ 0001:FFFFFCB0       @strlen
+ 0001:FFFFFCC0       @readlink
+ 0001:FFFFFCD0       dladdr
+ 0001:FFFFFCE0       dlopen
+ 0001:FFFFFCF0       dlclose
+ 0001:FFFFFCF0       FreeLibrary
+ 0001:FFFFFD00       dlsym
+ 0001:FFFFFD10       dlerror
+ 0001:FFFFFD20       GetCurrentThreadID
+ 0001:FFFFFD30       memset
+ 0001:FFFFFD40       printf
+ 0001:FFFFFD50       strtok
+ 0001:FFFFFD60       strdup
+ 0001:FFFFFD70       fopen
+ 0001:FFFFFD80       fdopen
+ 0001:FFFFFD90       time
+ 0001:FFFFFDA0       ctime
+ 0001:FFFFFDB0       fclose
+ 0001:FFFFFDC0       fprintf
+ 0001:FFFFFDD0       vfprintf
+ 0001:FFFFFDE0       fflush
+ 0001:FFFFFDF0       dup
+ 0001:FFFFFE00       @setlocale
+ 0001:FFFFFE10       malloc
+ 0001:FFFFFE20       free
+ 0001:FFFFFE30       dlopen
+ 0001:FFFFFE40       dlsym
+ 0001:FFFFFE50       dlclose
+ 0001:FFFFFE60       dladdr
+ 0001:FFFFFE70       pthread_once
+ 0001:FFFFFE80       pthread_key_create
+ 0001:FFFFFE90       TlsGetValue
+ 0001:FFFFFEA0       TlsSetValue
+ 0001:FFFFFEB0       @_libc_start_main
+ 0001:FFFFFEC0       sigaction
+ 0001:FFFFFED0       kill
+ 0001:FFFFFEE0       sigaddset
+ 0001:FFFFFEF0       __write
+ 0001:FFFFFF00       getpid
+ 0001:FFFFFF10       strerror_r
+ 0001:FFFFFF20       strncmp
+ 0001:FFFFFF30       strverscmp
+ 0001:FFFFFF40       __ctype_get_mb_cur_max
+ 0001:FFFFFF50       getenv
+ 0001:FFFFFF60       mblen
+ 0001:FFFFFF70       setlocale
+ 0001:FFFFFF80       localeconv
+ 0001:FFFFFF90       nl_langinfo
+ 0001:FFFFFFA0       dlclose
+ 0001:FFFFFFB0       dladdr
+ 0001:FFFFFFC0       towupper
+ 0001:FFFFFFD0       wcscoll
+ 0001:FFFFFFE0       gnu_get_libc_version
+ 0001:FFFFFFF0       TlsGetValue
+ 0001:00000000       GetLastError
+ 0001:00000028       SetLastError
+ 0001:00000058       InterlockedIncrement
+ 0001:0000006C       InvalidateModuleCache
+ 0001:0000007C       SysGetMem
+ 0001:000000A4       SysFreeMem
+ 0001:000000D0       SysReallocMem
+ 0001:000000FC       @GetMem
+ 0001:00000128       @FreeMem
+ 0001:00000154       @ReallocMem
+ 0001:00000198       InitUnwinder
+ 0001:00000378       SysRegisterIPLookup
+ 0001:000003C0       SysUnregisterIPLookup
+ 0001:000003EC       SysRaiseException
+ 0001:00000434       SysRaiseCPPException
+ 0001:00000478       BlockOSExceptions
+ 0001:0000049C       UnblockOSExceptions
+ 0001:000004B4       AreOSExceptionsBlocked
+ 0001:000004C8       CurrentException
+ 0001:000004F8       CurrentPrivateException
+ 0001:0000051C       FreeException
+ 0001:0000055C       ReleaseDelphiException
+ 0001:00000568       AllocateException
+ 0001:000005D4       ExceptObject
+ 0001:000005EC       ExceptAddr
+ 0001:00000604       RunErrorAt
+ 0001:00000618       ErrorAt
+ 0001:00000670       Error
+ 0001:00000684       @_IOTest
+ 0001:000006B4       SetInOutRes
+ 0001:000006D0       InOutError
+ 0001:000006E0       IOResult
+ 0001:00000708       Move
+ 0001:00000758       ParamCount
+ 0001:00000770       ParamStr
+ 0001:000007AC       UpCase
+ 0001:000007BC       @TRUNC
+ 0001:000007EC       OpenText
+ 0001:00000854       @ResetText
+ 0001:00000864       @RewritText
+ 0001:00000874       TextIn
+ 0001:000008DC       FileNOPProc
+ 0001:000008E4       TextOut
+ 0001:00000948       InternalClose
+ 0001:00000980       TextClose
+ 0001:000009AC       TextOpenCleanup
+ 0001:000009D0       TextOpen
+ 0001:00000C60       @Assign
+ 0001:00000CD8       InternalFlush
+ 0001:00000D28       Flush
+ 0001:00000D38       @Flush
+ 0001:00000D48       @Close
+ 0001:00000DAC       @PStrNCat
+ 0001:00000DEC       @PStrCpy
+ 0001:00000E00       @PStrNCpy
+ 0001:00000E28       @AStrCmp
+ 0001:00000EAC       @EofText
+ 0001:00000EEC       @Erase
+ 0001:00000F4C       @FileSize
+ 0001:00000FD4       @FillChar
+ 0001:00000FFC       TryOpenForInput
+ 0001:00001040       @ReadChar
+ 0001:000010B8       ReadLine
+ 0001:00001150       @ReadString
+ 0001:00001164       @ReadLString
+ 0001:000011E8       @ReadLn
+ 0001:00001220       @CloseFile
+ 0001:00001254       OpenFile
+ 0001:0000137C       @ResetFile
+ 0001:000013A0       @StrLong
+ 0001:00001418       @Str0Long
+ 0001:00001428       @ValLong
+ 0001:00001514       TryOpenForOutput
+ 0001:00001560       @WriteBytes
+ 0001:000015D8       @WriteSpaces
+ 0001:00001664       @Write0Char
+ 0001:000016BC       @WriteChar
+ 0001:000016EC       @WriteLong
+ 0001:00001744       @Write0Long
+ 0001:00001754       @WriteString
+ 0001:00001788       @WriteLn
+ 0001:000017E4       @_CToPasStr
+ 0001:000017F4       @_CLenToPasStr
+ 0001:00001824       @SetElem
+ 0001:00001854       @SetEq
+ 0001:00001874       @SetIntersect
+ 0001:00001884       @SetUnion
+ 0001:00001894       @SetSub
+ 0001:000018A8       FPower10
+ 0001:000018B4       @Pow10
+ 0001:00001BA8       @FpuInit
+ 0001:00001BB8       TObject.ClassName
+ 0001:00001BD8       TObject.NewInstance
+ 0001:00001BFC       TObject.FreeInstance
+ 0001:00001C1C       TObject.InstanceSize
+ 0001:00001C28       TObject.Destroy
+ 0001:00001C3C       TObject.Free
+ 0001:00001C50       TObject.InitInstance
+ 0001:00001CC0       TObject.CleanupInstance
+ 0001:00001CF0       @IsClass
+ 0001:00001D20       GetDynaMethod
+ 0001:00001D60       TObject.InheritsFrom
+ 0001:00001D78       TObject.SafeCallException
+ 0001:00001D84       TObject.DefaultHandler
+ 0001:00001D8C       TObject.AfterConstruction
+ 0001:00001D94       TObject.BeforeDestruction
+ 0001:00001D9C       TObject.Dispatch
+ 0001:00001DD4       @ClassCreate
+ 0001:00001DF8       @ClassDestroy
+ 0001:00001E04       @AfterConstruction
+ 0001:00001E1C       @BeforeDestruction
+ 0001:00001E3C       @DbgExcNotify
+ 0001:00001E44       @DbgEvalMarker
+ 0001:00001E4C       @DbgEvalExcept
+ 0001:00001E54       @DbgEvalEnd
+ 0001:00001E5C       @DbgEvalFrame
+ 0001:00001EB0       NotifyReRaise
+ 0001:00001ED8       NotifyExcept
+ 0001:00001F08       NotifyOnExcept
+ 0001:00001F30       NotifyExceptFinally
+ 0001:00001F54       MaybeCooptException
+ 0001:00001F64       LinkException
+ 0001:00001F8C       UnlinkException
+ 0001:00001FA8       @HandleAnyException
+ 0001:00002000       FindOnExceptionDescEntry
+ 0001:0000206C       @HandleOnException
+ 0001:000020C8       @HandleFinally
+ 0001:00002110       @RaiseAtExcept
+ 0001:0000213C       @RaiseExcept
+ 0001:0000214C       @ClassHandleException
+ 0001:00002180       @RaiseAgain
+ 0001:000021F0       @DestroyException
+ 0001:00002260       @DoneExcept
+ 0001:00002298       CallProc
+ 0001:000022AC       FinalizeUnits
+ 0001:00002328       InitUnits
+ 0001:000023AC       @StartExe
+ 0001:000023EC       @InitResStrings
+ 0001:0000241C       MakeErrorMessage
+ 0001:00002488       ExitDll
+ 0001:000024B8       WriteErrorMessage
+ 0001:00002544       @Halt0
+ 0001:000026C4       @Halt
+ 0001:000026D4       @Run0Error
+ 0001:000026E4       @RunError
+ 0001:000026F8       @UnhandledException
+ 0001:00002730       @Assert
+ 0001:0000275C       @LStrClr
+ 0001:00002788       @LStrArrayClr
+ 0001:000027C4       @LStrAsg
+ 0001:00002818       @LStrLAsg
+ 0001:00002848       @NewAnsiString
+ 0001:00002884       @LStrFromPCharLen
+ 0001:000028C4       LocaleConversionError
+ 0001:000028D4       CharacterSizeWideChar
+ 0001:000028E0       CharacterSizeLocaleChar
+ 0001:000029C8       BufConvert
+ 0001:00002B5C       CharFromWChar
+ 0001:00002C44       WCharFromChar
+ 0001:00002D40       @LStrFromPWCharLen
+ 0001:00002DF8       @LStrFromChar
+ 0001:00002E10       @LStrFromPChar
+ 0001:00002E48       @LStrFromPWChar
+ 0001:00002E8C       @LStrFromString
+ 0001:00002E9C       @LStrFromWStr
+ 0001:00002EB4       @LStrLen
+ 0001:00002EC4       @LStrCat
+ 0001:00002F1C       @LStrCat3
+ 0001:00002FB0       @LStrCatN
+ 0001:0000305C       @LStrCmp
+ 0001:00003118       @LStrAddRef
+ 0001:0000312C       @LStrToPChar
+ 0001:00003140       InternalUniqueString
+ 0001:00003190       UniqueString
+ 0001:0000319C       @UniqueStringA
+ 0001:000031A8       @UniqueStringW
+ 0001:000031B4       @LStrCopy
+ 0001:00003200       @LStrDelete
+ 0001:0000325C       @LStrPos
+ 0001:000032C0       @LStrSetLength
+ 0001:00003338       @Write0LString
+ 0001:00003348       @WriteLString
+ 0001:00003378       @NewWideString
+ 0001:00003388       WStrSet
+ 0001:000033A4       @WStrClr
+ 0001:000033B0       @WStrArrayClr
+ 0001:000033BC       @WStrAsg
+ 0001:000033C8       @WStrFromPCharLen
+ 0001:0000347C       @WStrFromPWCharLen
+ 0001:000034DC       @WStrFromLStr
+ 0001:000034F0       @WStrLen
+ 0001:00003500       @WStrSetLength
+ 0001:00003554       @InitializeRecord
+ 0001:00003594       @InitializeArray
+ 0001:00003648       @Initialize
+ 0001:00003658       @FinalizeRecord
+ 0001:0000369C       @FinalizeArray
+ 0001:000037AC       @CopyRecord
+ 0001:000038F4       @CopyArray
+ 0001:00003A0C       @New
+ 0001:00003A2C       VariantSystemUndefinedError
+ 0001:00003A3C       VariantSystemDefaultVarClear
+ 0001:00003A58       InitVariantManager
+ 0001:00003A7C       @VarClear
+ 0001:00003A88       @VarCopy
+ 0001:00003A94       @VarToLStr
+ 0001:00003AA0       @VarClr
+ 0001:00003AB4       @DispCallByIDError
+ 0001:00003AC4       @_lludiv
+ 0001:00003B28       @_llumod
+ 0001:00003B90       @DynArrayLength
+ 0001:00003BA0       CopyArray
+ 0001:00003BB4       FinalizeArray
+ 0001:00003BC0       DynArrayClear
+ 0001:00003BCC       DynArraySetLength
+ 0001:00003D60       @DynArraySetLength
+ 0001:00003D74       @DynArrayClear
+ 0001:00003DB8       @DynArrayAsg
+ 0001:00003DF0       GetModuleFileName
+ 0001:00004160       DelayLoadResourceModule
+ 0001:000041BC       FindResourceHInstance
+ 0001:000041EC       LoadResourceModule
+ 0001:00004490       NotifyModuleUnload
+ 0001:00004500       RegisterModule
+ 0001:00004514       UnregisterModule
+ 0001:00004580       @IntfClear
+ 0001:000045A0       @IntfCopy
+ 0001:000045E4       UnicodeToUtf8
+ 0001:00004610       UnicodeToUtf8
+ 0001:000046F4       GetCPUType
+ 0001:0000475C       NameToId
+ 0001:000047AC       ElfHashLowercase
+ 0001:000047F4       GetResourceCache
+ 0001:00004940       FindResource
+ 0001:00004AA8       LoadResource
+ 0001:00004AD0       LoadResString
+ 0001:00004B54       ReserveZeroPage
+ 0001:00004BE4       ReleaseZeroPage
+ 0001:00004C24       PUCS4Chars
+ 0001:00004C48       WideStringToUCS4String
+ 0001:00004CB4       .
+ 0001:00004CB4       ..
+ 0001:00004CB4       .Arith_WrUnsigned
+ 0001:00004CB4       .gcc2_compiled.
+ 0001:00004D68       .Arith_WrSigned
+ 0001:00004E48       Arith_RdUnsigned
+ 0001:00004EAC       Arith_RdSigned
+ 0001:00004F0C       .
+ 0001:00004F0C       ..
+ 0001:00004F0C       .gcc2_compiled.
+ 0001:00004F0C       .glob_match
+ 0001:00004FF0       debug_class_enabled
+ 0001:00005120       .getSTDOUT
+ 0001:00005184       .debug_file
+ 0001:00005198       debug_init
+ 0001:00005258       .debug_shutdown
+ 0001:000052A0       debug_print
+ 0001:00005310       debug_continue
+ 0001:00005358       .
+ 0001:00005358       ..
+ 0001:00005358       .DecodeFrameInfo
+ 0001:00005358       .gcc2_compiled.
+ 0001:00005494       .DecodeReversedFrameInfo
+ 0001:000054F4       .FindRange
+ 0001:0000557C       .FindRangeCPP
+ 0001:000055EC       .InitDelphiDecoder
+ 0001:00005638       .DecodeTo
+ 0001:00005740       .BitCount
+ 0001:00005774       .UnwindDelphiFrame
+ 0001:00005DB8       .DelphiPersonalityFn
+ 0001:00006164       ._BorUnwind_SetCPPHandler
+ 0001:00006174       .CopyArg
+ 0001:000061D4       .PushArg
+ 0001:00006214       .BCBPersonalityFn
+ 0001:000066B0       ._BorUnwind_BCBLookup
+ 0001:00006854       @BorUnwind_DelphiLookup
+ 0001:00006A64       @BorUnwind_DelphiForeignUnwindHook
+ 0001:00006B64       ._BorUnwind_DumpUnwindInfo
+ 0001:00006CBC       .
+ 0001:00006CBC       ..
+ 0001:00006CBC       ._BorUnwind_SetForeignUnwindHook
+ 0001:00006CBC       .gcc2_compiled.
+ 0001:00006CD8       ._BorUnwind_ClearForeignUnwindHook
+ 0001:00006CEC       @BorUnwind_RegisterIPLookup
+ 0001:00006DF8       @BorUnwind_UnregisterIPLookup
+ 0001:00006E98       @BorUnwind_FindGOT
+ 0001:00006F28       .CheckAlternatives
+ 0001:00007164       .FindPersonality
+ 0001:000072A4       .GetContext
+ 0001:000072C4       @BorUnwind_GetIP
+ 0001:000072D4       @BorUnwind_SetIP
+ 0001:000072E4       @BorUnwind_GetGR
+ 0001:00007354       @BorUnwind_SetGR
+ 0001:000073E0       .InstallAndResume
+ 0001:00007408       ._BorUnwind_Resume
+ 0001:00007410       .GetFSChain
+ 0001:0000741C       @BorUnwind_ClosestDelphiHandler
+ 0001:000075C8       @BorUnwind_RaiseException
+ 0001:000078BC       ._BorUnwind_AddressIsInPCMap
+ 0001:00007940       ._BorUnwind_GetFuncUnwindInfo
+ 0001:00007974       ._BorUnwind_SetUnhandledExceptionFilter
+ 0001:0000798C       @BorUnwind_GetUEFOuterProc
+ 0001:000079A0       @BorUnwind_GetUnhandledExceptionFilter
+ 0001:000079B4       Finalization
+ 0001:00007A00       System
+ 0001:00007AD8       AllocTlsBuffer
+ 0001:00007B38       FreeTLSBuffer
+ 0001:00007B6C       AllocTlsIndex
+ 0001:00007BCC       GetThisModuleHandle
+ 0001:00007C78       GetTlsSize
+ 0001:00007C84       InitThreadTLS
+ 0001:00007D20       @GetTls
+ 0001:00007D80       GetTextStart
+ 0001:00007D94       GetTextEnd
+ 0001:00007DA4       InitializeModule
+ 0001:00007DB4       RegisterPCMap
+ 0001:00007DE4       InitVmtImports
+ 0001:00007E30       @InitExe
+ 0001:00007EA4       @main
+ 0001:00007F38       @start
+ 0001:00007F90       Copyright
+ 0001:00007F98       Finalization
+ 0001:00007FC0       SysInit
+ 0001:00007FD8       Finalization
+ 0001:00008000       Types
+ 0001:00008018       Finalization
+ 0001:00008040       KernelDefs
+ 0001:00008058       Finalization
+ 0001:00008080       KernelIoctl
+ 0001:00008098       MB_CUR_MAX
+ 0001:000080C0       Finalization
+ 0001:000080E8       Libc
+ 0001:00008100       Finalization
+ 0001:00008128       SysConst
+ 0001:0000814C       SetSafeCallExceptionMsg
+ 0001:00008170       GetSafeCallExceptionMsg
+ 0001:00008194       GetSafeCallExceptionAddr
+ 0001:000081A8       ConvertError
+ 0001:000081CC       ConvertErrorFmt
+ 0001:00008208       NewStr
+ 0001:00008248       AnsiCompareText
+ 0001:000082B0       WideUpperCase
+ 0001:00008330       WideCompareStr
+ 0001:000083D0       WideCompareText
+ 0001:00008450       LastDelimiter
+ 0001:000084C4       ExtractFilePath
+ 0001:00008510       StrLen
+ 0001:0000852C       StrMove
+ 0001:00008544       StrLCopy
+ 0001:00008588       StrComp
+ 0001:000085B8       StrScan
+ 0001:000085D0       StrPos
+ 0001:00008638       FormatError
+ 0001:000086A8       FormatVarToStr
+ 0001:000086C8       FormatClearStr
+ 0001:000086E0       FormatBuf
+ 0001:00008B08       StrLFmt
+ 0001:00008B4C       Format
+ 0001:00008B64       FmtStr
+ 0001:00008C28       PutExponent
+ 0001:00008C78       FloatToText
+ 0001:00008F54       FloatToDecimal
+ 0001:00009188       IsLeapYear
+ 0001:000091D0       TryEncodeDate
+ 0001:000092A0       EncodeDate
+ 0001:000092EC       ScanBlanks
+ 0001:00009324       ScanNumber
+ 0001:000093BC       ScanString
+ 0001:00009444       ScanChar
+ 0001:00009494       SysErrorMessage
+ 0001:000094F8       GetLocaleStr
+ 0001:00009554       GetMonthDayNames
+ 0001:0000965C       InitEras
+ 0001:00009ADC       ExceptionErrorMessage
+ 0001:00009C88       ShowException
+ 0001:00009D04       Exception.Create
+ 0001:00009D64       Exception.CreateFmt
+ 0001:00009E08       Exception.CreateRes
+ 0001:00009E68       Exception.CreateResFmt
+ 0001:00009F20       EHeapException.FreeInstance
+ 0001:00009F34       CreateInOutError
+ 0001:00009FAC       ErrorHandler
+ 0001:0000A010       CreateAssertException
+ 0001:0000A0BC       RaiseAssertException
+ 0001:0000A0D0       AssertErrorHandler
+ 0001:0000A0EC       MapFPUStatus
+ 0001:0000A148       MapFPE
+ 0001:0000A178       MapFault
+ 0001:0000A1D0       MapSignal
+ 0001:0000A254       GetExceptionObject
+ 0001:0000A358       ExceptHandler
+ 0001:0000A370       RaiseSignalException
+ 0001:0000A3A0       SignalConverter
+ 0001:0000A3C0       SignalDispatcher
+ 0001:0000A468       InquireSignal
+ 0001:0000A500       HookSignal
+ 0001:0000A614       UnhookSignal
+ 0001:0000A6C8       UnhookOSExceptions
+ 0001:0000A6E4       HookOSExceptions
+ 0001:0000A704       GetExternalException
+ 0001:0000A750       UnpackExternalException
+ 0001:0000A798       InitExceptions
+ 0001:0000A814       DoneExceptions
+ 0001:0000A898       ByteTypeTest
+ 0001:0000A904       ByteType
+ 0001:0000A938       StrByteType
+ 0001:0000A954       StrCharLength
+ 0001:0000A9B4       AnsiPos
+ 0001:0000AA04       AnsiStrPos
+ 0001:0000AAD0       AnsiStrRScan
+ 0001:0000AB08       AnsiStrScan
+ 0001:0000AB58       InitSysLocale
+ 0001:0000AC00       TranslateFormat
+ 0001:0000B110       GetFirstCharacter
+ 0001:0000B198       GetFormatSettings
+ 0001:0000B4C0       RaiseLastOSError
+ 0001:0000B55C       FreeTerminateProcs
+ 0001:0000B588       CheckLocale
+ 0001:0000B774       PropagateSignals
+ 0001:0000B7E4       SafeCallError
+ 0001:0000B95C       Finalization
+ 0001:0000BAFC       SysUtils
+ 0001:0000BB7C       position
+ 0001:0000BC8C       error
+ 0001:0000BD54       fatal
+ 0001:0000BDFC       Finalization
+ 0001:0000BE24       lexmsgs
+ 0001:0000BE4C       newStr
+ 0001:0000BE98       newCClass
+ 0001:0000BED8       empty
+ 0001:0000BEE4       singleton
+ 0001:0000BEF4       include
+ 0001:0000BFC8       setunion
+ 0001:0000C110       setminus
+ 0001:0000C194       size
+ 0001:0000C19C       equal
+ 0001:0000C1D4       newIntSet
+ 0001:0000C1E8       newExpr
+ 0001:0000C204       markExpr
+ 0001:0000C230       charExpr
+ 0001:0000C250       strExpr
+ 0001:0000C270       cclassExpr
+ 0001:0000C290       starExpr
+ 0001:0000C2B0       plusExpr
+ 0001:0000C2D0       optExpr
+ 0001:0000C2F0       mnExpr
+ 0001:0000C39C       catExpr
+ 0001:0000C3C8       altExpr
+ 0001:0000C3F4       is_epsExpr
+ 0001:0000C404       is_markExpr
+ 0001:0000C43C       is_charExpr
+ 0001:0000C464       is_strExpr
+ 0001:0000C48C       is_cclassExpr
+ 0001:0000C4B4       is_starExpr
+ 0001:0000C4DC       is_plusExpr
+ 0001:0000C504       is_optExpr
+ 0001:0000C52C       is_catExpr
+ 0001:0000C564       is_altExpr
+ 0001:0000C59C       sort
+ 0001:0000C648       quicksort
+ 0001:0000C668       hash
+ 0001:0000C6D4       newPos
+ 0001:0000C700       key
+ 0001:0000C800       nchars
+ 0001:0000C844       upper
+ 0001:0000C8C4       strip
+ 0001:0000C988       blankStr
+ 0001:0000CA04       intStr
+ 0001:0000CA6C       isInt
+ 0001:0000CAC4       root
+ 0001:0000CB48       addExt
+ 0001:0000CBF0       file_size
+ 0001:0000CC88       octStr
+ 0001:0000CD14       charStr
+ 0001:0000CEE8       singleQuoteStr
+ 0001:0000CFC0       cclassStr
+ 0001:0000D220       cclassOrCharStr
+ 0001:0000D2CC       Finalization
+ 0001:0000D334       lexbase
+ 0001:0000D34C       lookup
+ 0001:0000D3A0       entry
+ 0001:0000D3FC       addCharPos
+ 0001:0000D48C       addCClassPos
+ 0001:0000D51C       addMarkPos
+ 0001:0000D5BC       newState
+ 0001:0000D62C       addState
+ 0001:0000D67C       startStateTrans
+ 0001:0000D69C       endStateTrans
+ 0001:0000D6BC       n_state_trans
+ 0001:0000D6D8       addTrans
+ 0001:0000DA58       transLessNextState
+ 0001:0000DA7C       transLess
+ 0001:0000DAF8       transSwap
+ 0001:0000DB80       mergeTrans
+ 0001:0000DD00       sortTrans
+ 0001:0000DD30       Finalization
+ 0001:0000DD58       lextable
+ 0001:0000DE14       eval
+ 0001:0000E1A4       addExpr
+ 0001:0000E1CC       Finalization
+ 0001:0000E1F4       lexpos
+ 0001:0000E20C       makeDFATable
+ 0001:0000E380       Finalization
+ 0001:0000E3A8       lexdfa
+ 0001:0000E3C0       equivStates
+ 0001:0000E590       optimizeDFATable
+ 0001:0000E8C4       Finalization
+ 0001:0000E8EC       lexopt
+ 0001:0000E940       listTrans
+ 0001:0000E9C4       listDFATable
+ 0001:0000EB4C       Finalization
+ 0001:0000EB74       lexlist
+ 0001:0000EB8C       mark_error
+ 0001:0000EC38       put_str
+ 0001:0000ECE8       init_scanner
+ 0001:0000ED28       scan_macro
+ 0001:0000EE60       push_macro
+ 0001:0000EF3C       pop_macro
+ 0001:0000EF8C       act_char
+ 0001:0000EFEC       get_char
+ 0001:0000F0CC       add_start_state
+ 0001:0000F18C       ident
+ 0001:0000F238       start_state_list
+ 0001:0000F270       start_state_prefix
+ 0001:0000F2BC       caret
+ 0001:0000F2E4       scan_char
+ 0001:0000F3F4       scan_str
+ 0001:0000F490       scan_cclass
+ 0001:0000F6A0       scan_num
+ 0001:0000F750       factor
+ 0001:0000F974       term
+ 0001:0000F9EC       DoExpr
+ 0001:0000FA40       rule
+ 0001:0000FBA0       parse_rule
+ 0001:0000FC30       Finalization
+ 0001:0000FC70       lexrules
+ 0001:0000FC88       get_line
+ 0001:0000FCB0       next_section
+ 0001:0000FD34       define_start_state
+ 0001:0000FE9C       define_macro
+ 0001:0000FFA4       add_rule
+ 0001:00010090       counters
+ 0001:000101DC       charStr
+ 0001:000102C4       writecc
+ 0001:00010494       tables
+ 0001:00010FA0       generate_table
+ 0001:00010FD4       scan
+ 0001:00011094       split
+ 0001:00011148       itemv
+ 0001:000111A8       code
+ 0001:0001122C       check_id
+ 0001:000112BC       definition
+ 0001:0001143C       definitions
+ 0001:000114E0       rules
+ 0001:000116FC       auxiliary_procs
+ 0001:00011758       openCodFile
+ 0001:000118AC       Finalization
+ 0001:00011968       dlex
+ 0002:00000000       ExitCode
+ 0002:00000004       ErrorAddr
+ 0002:00000008       FileMode
+ 0002:0000000C       Default8087CW
+ 0002:00000010       CoreDumpEnabled
+ 0002:00000014       DefaultTextLineBreakStyle
+ 0002:00000018       LibModuleList
+ 0002:0000001C       ModuleUnloadList
+ 0002:00000020       ModuleCacheVersion
+ 0002:00000024       MemoryManager
+ 0002:00000030       reMap
+ 0002:0000004C       runErrMsg
+ 0002:0000006C       dig
+ 0002:0000007C       RTLInitFailed
+ 0002:00000080       ZeroPageReserved
+ 0002:00000084       Null
+ 0002:00000088       PNull
+ 0002:0000008C       .
+ 0002:0000008C       ..
+ 0002:0000008C       .lenTab
+ 0002:000000CC       .shiftTab
+ 0002:000000DC       .
+ 0002:000000DC       ..
+ 0002:000000DC       ._dbfp
+ 0002:000000E0       .current_class
+ 0002:000000E4       .state.6
+ 0002:000000E8       .class_count.8
+ 0002:000000EC       .
+ 0002:000000EC       ..
+ 0002:000000EC       ._debug_class.24
+ 0002:000000F0       ._debug_class.25
+ 0002:000000F4       .
+ 0002:000000F4       ..
+ 0002:000000F4       .initialized.9
+ 0002:000000F8       TlsIndex
+ 0002:000000FC       Module
+ 0002:000003B8       EmptyStr
+ 0002:000003BC       NullStr
+ 0002:000003C0       EmptyWideStr
+ 0002:000003C4       MonthDays
+ 0002:000003F4       HookOSExceptionsProc
+ 0002:000003F8       LeadBytes
+ 0002:00000418       HexDisplayPrefix
+ 0002:0000041C       cSimpleBoolStrs
+ 0002:00000424       FormatErrorStrs
+ 0002:0000042C       FCon1E18
+ 0002:00000438       DCon10
+ 0002:0000043C       DefShortMonthNames
+ 0002:0000046C       DefLongMonthNames
+ 0002:0000049C       DefShortDayNames
+ 0002:000004B8       DefLongDayNames
+ 0002:000004D4       ErrorMap
+ 0002:0000050C       ExceptMap
+ 0002:000005CC       Signals
+ 0002:00000938       CurrencyFormats
+ 0002:0000093C       NegCurrFormats
+ 0002:00000950       TerminateProcList
+ 0002:00000954       letters
+ 0002:00000974       digits
+ 0002:00000994       alphanums
+ 0002:000009B4       epsExpr
+ 0002:000009B8       reserved
+ 0002:000009D8       term_delim
+ 0002:00000A98       .
+ 0002:00000A98       ..
+ 0002:00000ADC       .
+ 0002:00000ADC       ..
+ 0002:0000100C       .
+ 0002:0000100C       ..
+ 0002:00001E04       _GLOBAL_OFFSET_TABLE_
+ 0002:00001FD0       DispCallByIDProc
+ 0002:00001FD4       ExceptProc
+ 0002:00001FD8       ErrorProc
+ 0002:00001FDC       ExternalExceptProc
+ 0002:00001FE0       UnpackExternalExceptProc
+ 0002:00001FE4       ExceptionClass
+ 0002:00001FE8       SafeCallErrorProc
+ 0002:00001FEC       AssertErrorProc
+ 0002:00001FF0       ExitProcessProc
+ 0002:00001FF4       MainInstance
+ 0002:00001FF8       MainThreadID
+ 0002:00001FFC       IsLibrary
+ 0002:00002000       ExitProc
+ 0002:00002004       IsConsole
+ 0002:00002008       FileAccessRights
+ 0002:0000200C       ArgCount
+ 0002:00002010       ArgValues
+ 0002:00002014       Test8086
+ 0002:00002018       Input
+ 0002:000021E4       Output
+ 0002:000023B0       ErrOutput
+ 0002:0000257C       envp
+ 0002:00002580       .5
+ 0002:00002584       Unwinder
+ 0002:00002598       InitContext
+ 0002:000025BC       VariantManager
+ 0002:00002668       .
+ 0002:00002668       ..
+ 0002:00002668       .enabled_classes.7
+ 0002:00002A68       ._dbinits
+ 0002:00002A6C       .
+ 0002:00002A6C       ..
+ 0002:00002A6C       .CPPhandler
+ 0002:00002A70       .
+ 0002:00002A70       ..
+ 0002:00002A70       .ForeignUnwindHooks
+ 0002:00002A78       .LookList
+ 0002:00002A7C       ._BorUnwind_UEFOuterProc
+ 0002:00002A80       ._BorUnwind_UnhandledExceptionFilter
+ 0002:00002A84       .RunningCodeSizeTotal
+ 0002:00002A88       .RunningExcSizeTotal
+ 0002:00002A8C       .RunningUnwindSizeTotal
+ 0002:00002A90       .RunningRangeSizeTotal
+ 0002:00002A94       .RunningProcCountTotal
+ 0002:00002A98       .RunningExcProcTotal
+ 0002:00002A9C       .RunningFramedProcTotal
+ 0002:00002AA0       .RunningPotentialSavings
+ 0002:00002AA4       .RunningNonFramedProcUSize
+ 0002:00002AA8       .RunningSmallProcCount
+ 0002:00002AAC       .RunningSmallProcRanges
+ 0002:00002AB0       ModuleIsCpp
+ 0002:00002AB4       HInstance
+ 0002:00002AC0       .1
+ 0002:00002AC4       InitOnceSemaphore
+ 0002:00002AC8       InitAddr
+ 0002:00002ACC       .1
+ 0002:00002AD0       .2
+ 0002:00002AD4       .1
+ 0002:00002AD8       .3
+ 0002:00002ADC       .1
+ 0002:00002AE0       DeferUserInterrupts
+ 0002:00002AE1       SIGINTIssued
+ 0002:00002AE2       SIGQUITIssued
+ 0002:00002AE4       CurrencyString
+ 0002:00002AE8       CurrencyFormat
+ 0002:00002AE9       NegCurrFormat
+ 0002:00002AEA       ThousandSeparator
+ 0002:00002AEB       DecimalSeparator
+ 0002:00002AEC       CurrencyDecimals
+ 0002:00002AED       DateSeparator
+ 0002:00002AF0       ShortDateFormat
+ 0002:00002AF4       LongDateFormat
+ 0002:00002AF8       TimeSeparator
+ 0002:00002AFC       TimeAMString
+ 0002:00002B00       TimePMString
+ 0002:00002B04       ShortTimeFormat
+ 0002:00002B08       LongTimeFormat
+ 0002:00002B0C       ShortMonthNames
+ 0002:00002B3C       LongMonthNames
+ 0002:00002B6C       ShortDayNames
+ 0002:00002B88       LongDayNames
+ 0002:00002BA4       SysLocale
+ 0002:00002BB2       ListSeparator
+ 0002:00002BB4       EraNames
+ 0002:00002BD0       EraYearOffsets
+ 0002:00002BEC       EraRanges
+ 0002:00002C24       EraYearFormats
+ 0002:00002C40       EraCount
+ 0002:00002C44       TrueBoolStrs
+ 0002:00002C48       FalseBoolStrs
+ 0002:00002C4C       .74
+ 0002:00002C50       libuuidHandle
+ 0002:00002C54       OutOfMemory
+ 0002:00002C58       InvalidPointer
+ 0002:00002C5C       errors
+ 0002:00002C60       warnings
+ 0002:00002C64       .1
+ 0002:00002C68       lfilename
+ 0002:00002C6C       pasfilename
+ 0002:00002C70       lstfilename
+ 0002:00002C74       codfilename
+ 0002:00002C78       codfilepath
+ 0002:00002C7C       yyin
+ 0002:00002E48       yylst
+ 0002:00003014       yyout
+ 0002:000031E0       yycod
+ 0002:000033AC       line
+ 0002:000033B0       lno
+ 0002:000033B4       .1
+ 0002:000033B8       n_pos
+ 0002:000033BC       n_states
+ 0002:000033C0       n_trans
+ 0002:000033C4       n_start_states
+ 0002:000033C8       verbose
+ 0002:000033C9       optimize
+ 0002:000033CA       readonlyflag
+ 0002:000033CC       sym_table
+ 0002:000033D0       pos_table
+ 0002:000033D4       first_pos_table
+ 0002:000033D8       state_table
+ 0002:000033DC       trans_table
+ 0002:000033E0       act_state
+ 0002:000033E4       .4
+ 0002:000033E8       .1
+ 0002:000033EC       .1
+ 0002:000033F0       .1
+ 0002:000033F4       n_parts
+ 0002:000033F8       part_table
+ 0002:000033FC       state_part
+ 0002:00003400       n_opt_states
+ 0002:00003404       n_opt_trans
+ 0002:00003408       opt_state_table
+ 0002:0000340C       opt_trans_table
+ 0002:00003410       .1
+ 0002:00003414       expr
+ 0002:00003418       stmt
+ 0002:0000341C       cf
+ 0002:00003420       n_st
+ 0002:00003424       st
+ 0002:00003D84       r
+ 0002:00003D88       .1
+ 0002:00003D8C       act_pos
+ 0002:00003D90       bufptr
+ 0002:00003D94       buf
+ 0002:00004594       str_state
+ 0002:00004595       cclass_state
+ 0002:00004596       quote_state
+ 0002:00004598       n_macros
+ 0002:0000459C       n_rules
+ 0002:000045A0       itemstr
+ 0002:000045A4       itemc
+ 0002:000045A8       itempos
+ 0002:000049A4       itemlen
+
+
+Line numbers for lexmsgs(lexmsgs.pas) segment .text
+
+    97 0001:0000BB7C    99 0001:0000BB9E   100 0001:0000BBC0   101 0001:0000BC02
+   102 0001:0000BC16   103 0001:0000BC31   104 0001:0000BC5E   107 0001:0000BC8C
+   108 0001:0000BC9E   109 0001:0000BCA4   110 0001:0000BCB3   111 0001:0000BCCA
+   112 0001:0000BCE1   113 0001:0000BCF0   114 0001:0000BD07   115 0001:0000BD1E
+   117 0001:0000BD3A   133 0001:0000BD54   134 0001:0000BD63   135 0001:0000BD72
+   136 0001:0000BD89   137 0001:0000BD98   138 0001:0000BDA7   139 0001:0000BDB6
+   140 0001:0000BDC5   141 0001:0000BDE4   143 0001:0000BE24   144 0001:0000BE31
+   145 0001:0000BE38   146 0001:0000BE3F
+
+Line numbers for lexbase(lexbase.pas) segment .text
+
+   302 0001:0000BE4C   303 0001:0000BE5C   304 0001:0000BE7D   309 0001:0000BE98
+   310 0001:0000BEA9   311 0001:0000BEB3   313 0001:0000BEBE   319 0001:0000BED8
+   320 0001:0000BEDC   324 0001:0000BEE4   325 0001:0000BEEA   326 0001:0000BEED
+   331 0001:0000BEF4   333 0001:0000BEFB   334 0001:0000BF00   335 0001:0000BF02
+   338 0001:0000BF11   339 0001:0000BF16   341 0001:0000BF1B   342 0001:0000BF1E
+   336 0001:0000BF2B   344 0001:0000BF34   346 0001:0000BF3F   347 0001:0000BF44
+   348 0001:0000BF4E   350 0001:0000BF59   351 0001:0000BF6D   354 0001:0000BF73
+   355 0001:0000BF87   357 0001:0000BF8A   359 0001:0000BF8C   388 0001:0000BFC8
+   390 0001:0000BFD7   391 0001:0000BFD9   392 0001:0000BFDE   395 0001:0000BFE8
+   396 0001:0000BFE9   397 0001:0000BFEE   398 0001:0000BFF8   400 0001:0000C007
+   401 0001:0000C00E   403 0001:0000C011   405 0001:0000C020   406 0001:0000C02E
+   409 0001:0000C034   410 0001:0000C03B   411 0001:0000C03C   393 0001:0000C040
+   414 0001:0000C04F   416 0001:0000C05B   417 0001:0000C05C   418 0001:0000C061
+   419 0001:0000C06B   420 0001:0000C072   414 0001:0000C075   421 0001:0000C078
+   423 0001:0000C08C   424 0001:0000C08D   425 0001:0000C092   426 0001:0000C09C
+   427 0001:0000C0A3   421 0001:0000C0A6   428 0001:0000C0A9   429 0001:0000C0AD
+   430 0001:0000C0BE   436 0001:0000C110   437 0001:0000C11C   438 0001:0000C11E
+   439 0001:0000C123   442 0001:0000C134   441 0001:0000C135   443 0001:0000C140
+   445 0001:0000C14B   446 0001:0000C14C   449 0001:0000C154   450 0001:0000C155
+   439 0001:0000C158   451 0001:0000C15B   452 0001:0000C15F   453 0001:0000C171
+   479 0001:0000C194   480 0001:0000C196   509 0001:0000C19C   510 0001:0000C19D
+   511 0001:0000C1A3   513 0001:0000C1A7   514 0001:0000C1B1   516 0001:0000C1B7
+   517 0001:0000C1B9   518 0001:0000C1BB   513 0001:0000C1C1   519 0001:0000C1C4
+   521 0001:0000C1C6   551 0001:0000C1D4   552 0001:0000C1DE   554 0001:0000C1E2
+   562 0001:0000C1E8   563 0001:0000C1EB   564 0001:0000C1F3   566 0001:0000C1F5
+   571 0001:0000C204   572 0001:0000C20A   573 0001:0000C216   574 0001:0000C219
+   576 0001:0000C21C   581 0001:0000C230   582 0001:0000C233   583 0001:0000C23F
+   585 0001:0000C242   590 0001:0000C250   591 0001:0000C253   592 0001:0000C25F
+   594 0001:0000C262   599 0001:0000C270   600 0001:0000C273   601 0001:0000C27F
+   603 0001:0000C282   608 0001:0000C290   609 0001:0000C293   610 0001:0000C29F
+   612 0001:0000C2A2   617 0001:0000C2B0   618 0001:0000C2B3   619 0001:0000C2BF
+   621 0001:0000C2C2   626 0001:0000C2D0   627 0001:0000C2D3   628 0001:0000C2DF
+   630 0001:0000C2E2   636 0001:0000C2F0   637 0001:0000C300   638 0001:0000C310
+   641 0001:0000C317   642 0001:0000C31D   644 0001:0000C325   645 0001:0000C327
+   646 0001:0000C330   645 0001:0000C33B   649 0001:0000C33E   650 0001:0000C340
+   652 0001:0000C34D   653 0001:0000C358   655 0001:0000C35C   656 0001:0000C367
+   650 0001:0000C372   659 0001:0000C375   661 0001:0000C377   666 0001:0000C39C
+   667 0001:0000C3A2   668 0001:0000C3AE   669 0001:0000C3B1   671 0001:0000C3B4
+   676 0001:0000C3C8   677 0001:0000C3CE   678 0001:0000C3DA   679 0001:0000C3DD
+   681 0001:0000C3E0   687 0001:0000C3F4   688 0001:0000C3FD   691 0001:0000C404
+   692 0001:0000C406   693 0001:0000C40E   694 0001:0000C412   696 0001:0000C417
+   697 0001:0000C419   698 0001:0000C41E   701 0001:0000C425   702 0001:0000C429
+   706 0001:0000C43C   707 0001:0000C444   708 0001:0000C449   710 0001:0000C44E
+   711 0001:0000C450   714 0001:0000C457   715 0001:0000C45B   719 0001:0000C464
+   720 0001:0000C46C   721 0001:0000C471   723 0001:0000C476   724 0001:0000C478
+   727 0001:0000C47F   728 0001:0000C483   732 0001:0000C48C   733 0001:0000C494
+   734 0001:0000C499   736 0001:0000C49E   737 0001:0000C4A0   740 0001:0000C4A7
+   741 0001:0000C4AB   745 0001:0000C4B4   746 0001:0000C4BC   747 0001:0000C4C1
+   749 0001:0000C4C6   750 0001:0000C4C8   753 0001:0000C4CF   754 0001:0000C4D3
+   758 0001:0000C4DC   759 0001:0000C4E4   760 0001:0000C4E9   762 0001:0000C4EE
+   763 0001:0000C4F0   766 0001:0000C4F7   767 0001:0000C4FB   771 0001:0000C504
+   772 0001:0000C50C   773 0001:0000C511   775 0001:0000C516   776 0001:0000C518
+   779 0001:0000C51F   780 0001:0000C523   783 0001:0000C52C   784 0001:0000C52E
+   785 0001:0000C536   786 0001:0000C53A   788 0001:0000C53F   789 0001:0000C541
+   790 0001:0000C546   793 0001:0000C54D   794 0001:0000C551   797 0001:0000C564
+   798 0001:0000C566   799 0001:0000C56E   800 0001:0000C572   802 0001:0000C577
+   803 0001:0000C579   804 0001:0000C57E   807 0001:0000C585   808 0001:0000C589
+   819 0001:0000C59C   820 0001:0000C5AB   821 0001:0000C5AE   822 0001:0000C5B1
+   825 0001:0000C5C3   824 0001:0000C5C4   827 0001:0000C5D7   826 0001:0000C5D8
+   828 0001:0000C5E9   830 0001:0000C5ED   831 0001:0000C5F9   832 0001:0000C5FE
+   833 0001:0000C603   834 0001:0000C608   835 0001:0000C60B   836 0001:0000C60C
+   838 0001:0000C60D   839 0001:0000C611   840 0001:0000C616   841 0001:0000C625
+   842 0001:0000C62A   843 0001:0000C639   844 0001:0000C648   845 0001:0000C64F
+   846 0001:0000C653   847 0001:0000C65A   855 0001:0000C668   856 0001:0000C67B
+   857 0001:0000C67D   858 0001:0000C68E   857 0001:0000C699   859 0001:0000C69C
+   860 0001:0000C6BB   871 0001:0000C6D4   872 0001:0000C6E1   873 0001:0000C6E3
+   874 0001:0000C6E7   875 0001:0000C6EB   876 0001:0000C6F3   877 0001:0000C6F6
+   883 0001:0000C700   884 0001:0000C720   885 0001:0000C72D   886 0001:0000C734
+   887 0001:0000C739   888 0001:0000C73E   890 0001:0000C74C   891 0001:0000C755
+   892 0001:0000C758   894 0001:0000C75A   896 0001:0000C76F   897 0001:0000C772
+   900 0001:0000C774   887 0001:0000C783   901 0001:0000C788   902 0001:0000C7B6
+   950 0001:0000C800   951 0001:0000C811   952 0001:0000C813   953 0001:0000C815
+   954 0001:0000C823   952 0001:0000C825   955 0001:0000C829   956 0001:0000C82B
+   961 0001:0000C844   962 0001:0000C858   963 0001:0000C86B   962 0001:0000C886
+   964 0001:0000C889   965 0001:0000C8A8   968 0001:0000C8C4   970 0001:0000C8D9
+   969 0001:0000C8EB   974 0001:0000C908   971 0001:0000C91F   975 0001:0000C94F
+   976 0001:0000C96E   981 0001:0000C988   982 0001:0000C99C   983 0001:0000C9AF
+   984 0001:0000C9B9   982 0001:0000C9C7   985 0001:0000C9CA   986 0001:0000C9E9
+   991 0001:0000CA04   992 0001:0000CA18   993 0001:0000CA33   994 0001:0000CA52
+   999 0001:0000CA6C  1000 0001:0000CA80  1001 0001:0000CA8D  1002 0001:0000CAAB
+  1017 0001:0000CAC4  1018 0001:0000CAD7  1019 0001:0000CAE1  1020 0001:0000CAF0
+  1023 0001:0000CB01  1024 0001:0000CB12  1028 0001:0000CB14  1019 0001:0000CB15
+  1029 0001:0000CB2E  1037 0001:0000CB48  1038 0001:0000CB67  1039 0001:0000CB71
+  1040 0001:0000CB7E  1044 0001:0000CB8F  1039 0001:0000CB90  1046 0001:0000CB94
+  1047 0001:0000CBC5  1052 0001:0000CBF0  1053 0001:0000CC05  1054 0001:0000CC13
+  1055 0001:0000CC28  1056 0001:0000CC31  1058 0001:0000CC45  1059 0001:0000CC47
+  1060 0001:0000CC6E  1068 0001:0000CC88  1069 0001:0000CC98  1071 0001:0000CCF9
+  1072 0001:0000CD14  1073 0001:0000CD34  1076 0001:0000CD9D  1077 0001:0000CDBB
+  1078 0001:0000CDCC  1079 0001:0000CDDA  1080 0001:0000CDE8  1081 0001:0000CDF6
+  1082 0001:0000CE04  1083 0001:0000CE12  1084 0001:0000CE1F  1086 0001:0000CE50
+  1088 0001:0000CE6E  1094 0001:0000CEE8  1095 0001:0000CF01  1096 0001:0000CF09
+  1097 0001:0000CF1C  1096 0001:0000CF3C  1098 0001:0000CF3F  1099 0001:0000CF72
+  1120 0001:0000CFC0  1121 0001:0000CFEB  1122 0001:0000CFFC  1124 0001:0000D00D
+  1125 0001:0000D015  1127 0001:0000D024  1128 0001:0000D031  1130 0001:0000D05E
+  1131 0001:0000D062  1134 0001:0000D069  1136 0001:0000D07B  1138 0001:0000D080
+  1137 0001:0000D081  1139 0001:0000D094  1140 0001:0000D099  1141 0001:0000D0B6
+  1142 0001:0000D0BE  1144 0001:0000D0F5  1145 0001:0000D12F  1147 0001:0000D132
+  1148 0001:0000D139  1149 0001:0000D13D  1132 0001:0000D140  1151 0001:0000D148
+  1153 0001:0000D183  1159 0001:0000D220  1160 0001:0000D23C  1161 0001:0000D23E
+  1162 0001:0000D240  1164 0001:0000D24E  1165 0001:0000D250  1166 0001:0000D251
+  1168 0001:0000D256  1169 0001:0000D260  1171 0001:0000D262  1161 0001:0000D263
+  1172 0001:0000D267  1173 0001:0000D26A  1175 0001:0000D280  1176 0001:0000D2A1
+  1216 0001:0000D334  1216 0001:0000D341
+
+Line numbers for lextable(lextable.pas) segment .text
+
+   194 0001:0000D34C   195 0001:0000D351   196 0001:0000D35E   197 0001:0000D364
+   199 0001:0000D36D   200 0001:0000D385   202 0001:0000D3A0   203 0001:0000D3B2
+   205 0001:0000D3C1   206 0001:0000D3CB   208 0001:0000D3E4   213 0001:0000D3FC
+   214 0001:0000D3FF   215 0001:0000D405   216 0001:0000D41B   217 0001:0000D432
+   218 0001:0000D444   219 0001:0000D455   222 0001:0000D48C   223 0001:0000D48F
+   224 0001:0000D495   225 0001:0000D4AB   226 0001:0000D4C2   227 0001:0000D4D4
+   228 0001:0000D4E5   231 0001:0000D51C   232 0001:0000D528   233 0001:0000D52A
+   234 0001:0000D53C   235 0001:0000D54F   236 0001:0000D55E   237 0001:0000D56C
+   238 0001:0000D57A   243 0001:0000D5BC   244 0001:0000D5BF   245 0001:0000D5D5
+   246 0001:0000D5DB   248 0001:0000D5EB   249 0001:0000D5ED   251 0001:0000D5F1
+   252 0001:0000D5F9   256 0001:0000D62C   257 0001:0000D631   258 0001:0000D63F
+   260 0001:0000D657   261 0001:0000D659   262 0001:0000D65B   257 0001:0000D65C
+   263 0001:0000D65F   264 0001:0000D666   268 0001:0000D67C   269 0001:0000D694
+   273 0001:0000D69C   274 0001:0000D6B3   278 0001:0000D6BC   279 0001:0000D6C7
+   280 0001:0000D6D0   307 0001:0000D6D8   308 0001:0000D6F7   309 0001:0000D717
+   311 0001:0000D72D   312 0001:0000D73B   316 0001:0000D740   317 0001:0000D783
+   319 0001:0000D799   320 0001:0000D7DE   321 0001:0000D821   323 0001:0000D837
+   324 0001:0000D851   325 0001:0000D857   326 0001:0000D86D   327 0001:0000D885
+   328 0001:0000D899   330 0001:0000D8BD   334 0001:0000D8D5   335 0001:0000D8EF
+   337 0001:0000D8FD   338 0001:0000D910   340 0001:0000D922   308 0001:0000D923
+   341 0001:0000D92A   342 0001:0000D930   343 0001:0000D946   344 0001:0000D95E
+   345 0001:0000D972   346 0001:0000D98E   354 0001:0000DA58   356 0001:0000DA75
+   362 0001:0000DA7C   363 0001:0000DA8A   365 0001:0000DA8C   366 0001:0000DAA4
+   367 0001:0000DABF   369 0001:0000DAC4   370 0001:0000DACC   372 0001:0000DACE
+   363 0001:0000DACF   373 0001:0000DAD3   374 0001:0000DAD5   380 0001:0000DAF8
+   381 0001:0000DAFE   382 0001:0000DB1E   383 0001:0000DB44   384 0001:0000DB60
+   389 0001:0000DB80   391 0001:0000DB8C   396 0001:0000DBB2   397 0001:0000DBB7
+   398 0001:0000DBD7   400 0001:0000DBE3   407 0001:0000DBE8   409 0001:0000DC30
+   410 0001:0000DC3B   411 0001:0000DC3E   401 0001:0000DC3F   413 0001:0000DC5B
+   397 0001:0000DC5C   415 0001:0000DC63   416 0001:0000DC76   417 0001:0000DC83
+   418 0001:0000DC8F   420 0001:0000DC93   421 0001:0000DCB5   424 0001:0000DCB8
+   416 0001:0000DCBA   426 0001:0000DCBD   427 0001:0000DCC6   431 0001:0000DD00
+   435 0001:0000DD26   439 0001:0000DD58   441 0001:0000DD6A   442 0001:0000DD71
+   443 0001:0000DD78   445 0001:0000DD7F   446 0001:0000DD86   447 0001:0000DD8D
+   448 0001:0000DD94   452 0001:0000DD9B   453 0001:0000DDAA   454 0001:0000DDB9
+   455 0001:0000DDC8   456 0001:0000DDD7   460 0001:0000DDE6   462 0001:0000DE02
+
+Line numbers for lexpos(lexpos.pas) segment .text
+
+    61 0001:0000DE14    62 0001:0000DE26    64 0001:0000DE31    65 0001:0000DE38
+    66 0001:0000DE3F    68 0001:0000DE4A    70 0001:0000DE5B    71 0001:0000DE66
+    72 0001:0000DE73    73 0001:0000DE80    75 0001:0000DE8B    77 0001:0000DE99
+    78 0001:0000DEA1    79 0001:0000DEAE    80 0001:0000DEBB    82 0001:0000DEC6
+    83 0001:0000DED8    86 0001:0000DEE6    87 0001:0000DEED    88 0001:0000DEF4
+    91 0001:0000DEFF    92 0001:0000DF0B    93 0001:0000DF18    95 0001:0000DF2F
+    96 0001:0000DF3D    97 0001:0000DF59    93 0001:0000DF5A    98 0001:0000DF5D
+    99 0001:0000DF6A   101 0001:0000DF75   103 0001:0000DF83   104 0001:0000DF8B
+   105 0001:0000DF98   106 0001:0000DFA5   108 0001:0000DFB0   110 0001:0000DFBE
+   111 0001:0000DFCE   112 0001:0000DFE0   111 0001:0000DFF8   113 0001:0000DFFB
+   115 0001:0000E006   117 0001:0000E014   118 0001:0000E024   119 0001:0000E03A
+   118 0001:0000E052   121 0001:0000E05A   123 0001:0000E068   124 0001:0000E078
+   126 0001:0000E083   128 0001:0000E098   129 0001:0000E0AC   130 0001:0000E0C0
+   131 0001:0000E0DA   130 0001:0000E0FA   132 0001:0000E0FD   133 0001:0000E105
+   134 0001:0000E112   135 0001:0000E118   136 0001:0000E125   138 0001:0000E134
+   140 0001:0000E145   141 0001:0000E155   142 0001:0000E16D   143 0001:0000E17A
+   144 0001:0000E187   146 0001:0000E194   152 0001:0000E1A4   153 0001:0000E1AA
+   154 0001:0000E1B4   156 0001:0000E1F4   156 0001:0000E201
+
+Line numbers for lexdfa(lexdfa.pas) segment .text
+
+    45 0001:0000E20C    47 0001:0000E21D    48 0001:0000E231    47 0001:0000E24F
+    49 0001:0000E252    50 0001:0000E262    49 0001:0000E270    51 0001:0000E273
+    54 0001:0000E27F    56 0001:0000E282    57 0001:0000E287    58 0001:0000E2A5
+    59 0001:0000E2C2    60 0001:0000E2C9    61 0001:0000E2E0    62 0001:0000E2E5
+    63 0001:0000E2F1    64 0001:0000E2F7    57 0001:0000E303    66 0001:0000E306
+    67 0001:0000E320    68 0001:0000E32D    66 0001:0000E339    70 0001:0000E33C
+    72 0001:0000E341    73 0001:0000E346    52 0001:0000E34B    75 0001:0000E35B
+    77 0001:0000E3A8    77 0001:0000E3B5
+
+Line numbers for lexopt(lexopt.pas) segment .text
+
+    86 0001:0000E3C0    88 0001:0000E3CF    91 0001:0000E3E5    92 0001:0000E3E7
+    95 0001:0000E3EC    96 0001:0000E3F5    97 0001:0000E402    98 0001:0000E414
+    99 0001:0000E42A    97 0001:0000E436   100 0001:0000E439   101 0001:0000E445
+   102 0001:0000E453   103 0001:0000E465   104 0001:0000E47B   102 0001:0000E48A
+   105 0001:0000E48D   107 0001:0000E4A1   108 0001:0000E4A3   111 0001:0000E4A8
+   112 0001:0000E4BD   114 0001:0000E4C4   115 0001:0000E4D2   116 0001:0000E4E5
+   117 0001:0000E4F6   119 0001:0000E522   120 0001:0000E524   122 0001:0000E526
+   125 0001:0000E55D   126 0001:0000E55F   127 0001:0000E561   116 0001:0000E562
+   128 0001:0000E565   130 0001:0000E567   138 0001:0000E590   140 0001:0000E59C
+   144 0001:0000E5A3   145 0001:0000E5AD   146 0001:0000E5B7   148 0001:0000E5C5
+   149 0001:0000E5D1   150 0001:0000E5DB   146 0001:0000E5DC   157 0001:0000E5DF
+   158 0001:0000E5E5   159 0001:0000E5E7   160 0001:0000E5F0   163 0001:0000E604
+   164 0001:0000E61C   167 0001:0000E637   163 0001:0000E650   168 0001:0000E653
+   171 0001:0000E666   172 0001:0000E66C   174 0001:0000E670   176 0001:0000E685
+   177 0001:0000E69F   176 0001:0000E6BA   178 0001:0000E6BD   179 0001:0000E6C1
+   181 0001:0000E6D0   161 0001:0000E6D1   183 0001:0000E6EA   187 0001:0000E6F5
+   188 0001:0000E6FF   189 0001:0000E706   191 0001:0000E718   192 0001:0000E724
+   193 0001:0000E745   195 0001:0000E756   196 0001:0000E764   198 0001:0000E788
+   199 0001:0000E7A3   200 0001:0000E7C6   198 0001:0000E7CA   202 0001:0000E7CD
+   204 0001:0000E7EF   205 0001:0000E7F5   206 0001:0000E828   207 0001:0000E83A
+   208 0001:0000E849   202 0001:0000E84D   209 0001:0000E850   189 0001:0000E851
+   213 0001:0000E858   214 0001:0000E862   215 0001:0000E86C   216 0001:0000E882
+   218 0001:0000E898   220 0001:0000E8EC   221 0001:0000E8F9   222 0001:0000E908
+   223 0001:0000E917   224 0001:0000E926   225 0001:0000E935
+
+Line numbers for lexlist(lexlist.pas) segment .text
+
+    45 0001:0000E940    46 0001:0000E94B    47 0001:0000E99C    84 0001:0000E9C4
+    94 0001:0000E9CB    95 0001:0000E9DA    97 0001:0000E9F4    98 0001:0000EA03
+    99 0001:0000EA1A   101 0001:0000EA28   102 0001:0000EA2E   104 0001:0000EA49
+   109 0001:0000EA62   110 0001:0000EA75   111 0001:0000EA87   112 0001:0000EA93
+   109 0001:0000EAB7   114 0001:0000EABA   115 0001:0000EAC9   116 0001:0000EAD4
+   118 0001:0000EAE1   119 0001:0000EAEB   120 0001:0000EAFA   115 0001:0000EAFB
+   122 0001:0000EAFE    95 0001:0000EB01   123 0001:0000EB0B   125 0001:0000EB74
+   125 0001:0000EB81
+
+Line numbers for lexrules(lexrules.pas) segment .text
+
+    98 0001:0000EB8C    99 0001:0000EBA5   100 0001:0000EBAE   102 0001:0000EBC0
+   103 0001:0000EBF8   109 0001:0000EC38   110 0001:0000EC4E   111 0001:0000EC58
+   112 0001:0000EC60   113 0001:0000EC6A   114 0001:0000EC7D   113 0001:0000EC8F
+   115 0001:0000ECA7   120 0001:0000ECE8   121 0001:0000ECF2   122 0001:0000ECF9
+   123 0001:0000ED00   124 0001:0000ED07   125 0001:0000ED0E   126 0001:0000ED15
+   127 0001:0000ED1F   136 0001:0000ED28   137 0001:0000ED37   140 0001:0000ED6F
+   141 0001:0000ED7B   144 0001:0000ED84   145 0001:0000ED9A   142 0001:0000ED9B
+   147 0001:0000EDB1   149 0001:0000EDBC   150 0001:0000EDBE   151 0001:0000EDCA
+   154 0001:0000EDD3   155 0001:0000EDD5   156 0001:0000EDEA   160 0001:0000EDF2
+   161 0001:0000EE0B   164 0001:0000EE60   165 0001:0000EE69   167 0001:0000EE75
+   171 0001:0000EE77   173 0001:0000EE9B   175 0001:0000EEA1   176 0001:0000EEBB
+   179 0001:0000EEC3   182 0001:0000EED2   183 0001:0000EEF0   188 0001:0000EF3C
+   190 0001:0000EF53   191 0001:0000EF59   192 0001:0000EF5F   193 0001:0000EF68
+   194 0001:0000EF7E   197 0001:0000EF81   198 0001:0000EF83   200 0001:0000EF8C
+   202 0001:0000EFA4   201 0001:0000EFAD   203 0001:0000EFB6   204 0001:0000EFBF
+   206 0001:0000EFC2   207 0001:0000EFCB   208 0001:0000EFD4   210 0001:0000EFE1
+   212 0001:0000EFE3   217 0001:0000EFEC   219 0001:0000EFF9   220 0001:0000F016
+   221 0001:0000F024   222 0001:0000F02D   223 0001:0000F036   224 0001:0000F03F
+   225 0001:0000F04D   226 0001:0000F056   227 0001:0000F05F   228 0001:0000F068
+   229 0001:0000F071   230 0001:0000F07A   231 0001:0000F083   232 0001:0000F08C
+   233 0001:0000F095   235 0001:0000F09C   236 0001:0000F0A2   237 0001:0000F0AB
+   239 0001:0000F0C1   245 0001:0000F0CC   249 0001:0000F0DB   251 0001:0000F0FF
+   253 0001:0000F105   255 0001:0000F10E   256 0001:0000F114   259 0001:0000F126
+   260 0001:0000F14F   310 0001:0000F18C   311 0001:0000F196   312 0001:0000F1AC
+   314 0001:0000F1B1   315 0001:0000F1C0   318 0001:0000F1C7   319 0001:0000F1E1
+   316 0001:0000F1E6   321 0001:0000F1F9   322 0001:0000F21B   323 0001:0000F238
+   324 0001:0000F23B   325 0001:0000F242   326 0001:0000F247   329 0001:0000F249
+   330 0001:0000F24E   331 0001:0000F255   327 0001:0000F25A   334 0001:0000F263
+   335 0001:0000F270   336 0001:0000F273   337 0001:0000F27A   339 0001:0000F283
+   340 0001:0000F288   341 0001:0000F28F   343 0001:0000F294   345 0001:0000F29D
+   346 0001:0000F2A0   349 0001:0000F2A7   352 0001:0000F2AC   353 0001:0000F2AF
+   357 0001:0000F2BC   358 0001:0000F2BF   359 0001:0000F2CD   360 0001:0000F2D6
+   361 0001:0000F2DB   367 0001:0000F2E4   368 0001:0000F2EB   369 0001:0000F2EE
+   371 0001:0000F2FB   372 0001:0000F300   373 0001:0000F33C   376 0001:0000F344
+   377 0001:0000F347   381 0001:0000F351   382 0001:0000F354   386 0001:0000F35B
+   387 0001:0000F35E   391 0001:0000F365   392 0001:0000F368   396 0001:0000F36F
+   397 0001:0000F372   401 0001:0000F379   402 0001:0000F383   403 0001:0000F388
+   408 0001:0000F38F   409 0001:0000F390   410 0001:0000F3A0   404 0001:0000F3A5
+   412 0001:0000F3BC   416 0001:0000F3C0   417 0001:0000F3C7   422 0001:0000F3CE
+   423 0001:0000F3D5   425 0001:0000F3DA   430 0001:0000F3F4   431 0001:0000F405
+   432 0001:0000F40C   435 0001:0000F413   436 0001:0000F41D   438 0001:0000F422
+   433 0001:0000F437   440 0001:0000F449   441 0001:0000F452   443 0001:0000F457
+   444 0001:0000F45C   446 0001:0000F474   453 0001:0000F490   454 0001:0000F49D
+   455 0001:0000F4AD   456 0001:0000F4B2   458 0001:0000F4BB   459 0001:0000F4BF
+   462 0001:0000F4C9   465 0001:0000F4D2   466 0001:0000F4DC   468 0001:0000F4E5
+   470 0001:0000F4F2   471 0001:0000F4F7   473 0001:0000F509   474 0001:0000F513
+   476 0001:0000F51C   477 0001:0000F52E   476 0001:0000F55B   481 0001:0000F561
+   484 0001:0000F5AD   463 0001:0000F5D7   486 0001:0000F5ED   487 0001:0000F5F6
+   489 0001:0000F5FB   490 0001:0000F600   492 0001:0000F603   493 0001:0000F609
+   494 0001:0000F630   499 0001:0000F6A0   500 0001:0000F6AD   502 0001:0000F6C0
+   503 0001:0000F6CF   506 0001:0000F6D6   507 0001:0000F6F0   504 0001:0000F6F5
+   509 0001:0000F708   512 0001:0000F716   513 0001:0000F733   525 0001:0000F750
+   526 0001:0000F761   529 0001:0000F77B   530 0001:0000F785   532 0001:0000F78E
+   536 0001:0000F7A2   537 0001:0000F7AC   539 0001:0000F7B5   543 0001:0000F7C9
+   544 0001:0000F7CE   545 0001:0000F7DF   549 0001:0000F7E7   550 0001:0000F7EC
+   551 0001:0000F800   553 0001:0000F809   555 0001:0000F812   556 0001:0000F817
+   559 0001:0000F81F   563 0001:0000F827   564 0001:0000F831   566 0001:0000F83A
+   570 0001:0000F849   573 0001:0000F863   574 0001:0000F868   578 0001:0000F876
+   579 0001:0000F87B   583 0001:0000F886   584 0001:0000F88B   588 0001:0000F896
+   589 0001:0000F89B   590 0001:0000F8A5   592 0001:0000F8AA   594 0001:0000F8B3
+   595 0001:0000F8B8   596 0001:0000F8C2   598 0001:0000F8C7   601 0001:0000F8D8
+   602 0001:0000F8E7   604 0001:0000F8F0   605 0001:0000F8F5   608 0001:0000F8FA
+   569 0001:0000F8FD   611 0001:0000F936   616 0001:0000F974   617 0001:0000F97E
+   619 0001:0000F991   620 0001:0000F99C   621 0001:0000F9A1   624 0001:0000F9A3
+   625 0001:0000F9AF   627 0001:0000F9B4   622 0001:0000F9C0   631 0001:0000F9D5
+   632 0001:0000F9DC   634 0001:0000F9DF   637 0001:0000F9EC   638 0001:0000F9F6
+   639 0001:0000FA01   640 0001:0000FA06   643 0001:0000FA08   644 0001:0000FA0D
+   645 0001:0000FA19   647 0001:0000FA1E   641 0001:0000FA2A   649 0001:0000FA33
+   654 0001:0000FA40   655 0001:0000FA49   656 0001:0000FA50   658 0001:0000FA59
+   659 0001:0000FA60   661 0001:0000FA69   662 0001:0000FA75   664 0001:0000FA7E
+   666 0001:0000FA87   669 0001:0000FABE   671 0001:0000FAC5   673 0001:0000FACE
+   674 0001:0000FAD3   675 0001:0000FADF   677 0001:0000FAE8   681 0001:0000FB11
+   682 0001:0000FB30   683 0001:0000FB4E   684 0001:0000FB71   689 0001:0000FBA0
+   690 0001:0000FBA9   691 0001:0000FBAE   692 0001:0000FBB8   694 0001:0000FBBE
+   695 0001:0000FBD9   698 0001:0000FBFC   699 0001:0000FC08   701 0001:0000FC70
+   701 0001:0000FC7D
+
+Line numbers for dlex(dlex.dpr) segment .text
+
+    48 0001:0000FC88    49 0001:0000FCA1    50 0001:0000FCA7    56 0001:0000FCB0
+    59 0001:0000FCBD    60 0001:0000FCCE    62 0001:0000FCDD    57 0001:0000FCEF
+    64 0001:0000FD0F    73 0001:0000FD34    77 0001:0000FD47    79 0001:0000FD6B
+    81 0001:0000FD75    82 0001:0000FD7B    83 0001:0000FD84    84 0001:0000FD8E
+    85 0001:0000FD92    86 0001:0000FD9A    87 0001:0000FDD1    88 0001:0000FDE4
+    91 0001:0000FDFA    92 0001:0000FE1B    96 0001:0000FE9C   100 0001:0000FEC1
+   102 0001:0000FEFF   104 0001:0000FF05   105 0001:0000FF09   108 0001:0000FF21
+   109 0001:0000FF4A   116 0001:0000FFA4   117 0001:0000FFAC   118 0001:0000FFB8
+   119 0001:0000FFC1   120 0001:0000FFCA   122 0001:0000FFDE   123 0001:0000FFEC
+   125 0001:0000FFFD   126 0001:00010006   127 0001:00010015   128 0001:0001002A
+   126 0001:0001002D   129 0001:00010032   131 0001:00010041   132 0001:00010055
+   134 0001:0001006A   129 0001:0001006D   134 0001:00010070   184 0001:00010090
+   185 0001:00010098   186 0001:000100A4   187 0001:000100B0   188 0001:000100B8
+   189 0001:000100C0   190 0001:0001011B   192 0001:00010129   193 0001:00010131
+   194 0001:00010139   195 0001:00010145   196 0001:00010151   197 0001:00010163
+   198 0001:00010174   199 0001:0001017A   200 0001:00010181   201 0001:00010189
+   202 0001:0001018C   196 0001:00010193   203 0001:00010196   204 0001:000101A1
+   205 0001:000101AC   189 0001:000101C7   206 0001:000101D0   211 0001:000101DC
+   212 0001:000101ED   214 0001:000101FD   215 0001:0001021A   216 0001:00010228
+   218 0001:00010286   226 0001:000102C4   227 0001:000102EC   228 0001:000102FD
+   229 0001:000102FF   230 0001:00010303   233 0001:0001030A   235 0001:0001031C
+   237 0001:00010320   238 0001:0001032E   240 0001:0001032F   243 0001:00010334
+   244 0001:0001033B   245 0001:0001034E   247 0001:00010350   249 0001:00010355
+   248 0001:00010356   250 0001:00010369   251 0001:0001036E   252 0001:0001037B
+   253 0001:00010383   255 0001:000103B2   256 0001:000103DF   257 0001:000103EE
+   258 0001:000103F8   260 0001:000103FB   261 0001:00010402   262 0001:00010406
+   231 0001:00010409   264 0001:00010411   265 0001:00010444   271 0001:00010494
+   272 0001:000104A2   273 0001:000104A9   274 0001:000104BA   275 0001:000104CB
+   276 0001:000104DC   277 0001:000104ED   278 0001:000104F4   280 0001:00010505
+   281 0001:0001050C   282 0001:0001052F   283 0001:00010552   284 0001:00010575
+   286 0001:00010598   287 0001:0001059F   288 0001:000105B0   289 0001:000105B5
+   290 0001:000105C9   292 0001:000105D9   293 0001:000105FB   294 0001:00010612
+   295 0001:0001062C   297 0001:0001063E   298 0001:0001065A   299 0001:0001065D
+   300 0001:00010668   301 0001:00010676   302 0001:0001067D   293 0001:00010680
+   303 0001:00010683   289 0001:00010684   304 0001:0001068D   306 0001:0001069E
+   307 0001:000106A5   308 0001:000106B6   309 0001:000106BB   310 0001:000106CF
+   312 0001:000106DF   313 0001:00010701   314 0001:00010718   315 0001:00010732
+   317 0001:00010744   318 0001:00010760   319 0001:00010763   320 0001:0001076E
+   321 0001:0001077C   322 0001:00010783   313 0001:00010786   323 0001:00010789
+   309 0001:0001078A   324 0001:00010793   326 0001:000107A4   327 0001:000107AB
+   328 0001:000107BC   329 0001:000107C1   330 0001:000107D5   332 0001:000107E2
+   333 0001:00010804   334 0001:00010818   336 0001:0001082B   337 0001:0001083C
+   338 0001:0001084A   339 0001:0001085B   340 0001:00010874   341 0001:00010877
+   342 0001:00010882   343 0001:00010890   344 0001:00010897   333 0001:0001089A
+   345 0001:000108A1   329 0001:000108A2   346 0001:000108AB   348 0001:000108BC
+   349 0001:000108C3   350 0001:000108D4   352 0001:000108ED   353 0001:00010916
+   354 0001:00010920   355 0001:0001092E   356 0001:00010935   350 0001:00010939
+   357 0001:0001093E   358 0001:0001094F   359 0001:00010956   360 0001:00010967
+   362 0001:00010980   363 0001:000109A9   364 0001:000109B3   365 0001:000109C1
+   366 0001:000109C8   360 0001:000109CC   367 0001:000109D1   368 0001:000109E2
+   369 0001:000109E9   370 0001:000109FA   372 0001:00010A13   373 0001:00010A3C
+   374 0001:00010A46   375 0001:00010A54   376 0001:00010A5B   370 0001:00010A5F
+   377 0001:00010A64   378 0001:00010A75   379 0001:00010A7C   380 0001:00010A8D
+   382 0001:00010AA6   383 0001:00010ACF   384 0001:00010AD9   385 0001:00010AE7
+   386 0001:00010AEE   380 0001:00010AF2   387 0001:00010AF7   388 0001:00010B08
+   389 0001:00010B0F   390 0001:00010B20   392 0001:00010B39   393 0001:00010B62
+   394 0001:00010B6C   395 0001:00010B7A   396 0001:00010B81   390 0001:00010B85
+   397 0001:00010B8A   398 0001:00010B9B   399 0001:00010BA2   400 0001:00010BB3
+   402 0001:00010BCC   403 0001:00010BF5   404 0001:00010BFF   405 0001:00010C0D
+   406 0001:00010C14   400 0001:00010C18   407 0001:00010C1D   408 0001:00010C2E
+   409 0001:00010C35   411 0001:00010FA0   412 0001:00010FBC   413 0001:00010FC3
+   414 0001:00010FCA   435 0001:00010FD4   438 0001:00010FE0   436 0001:00010FE2
+   439 0001:00011003   442 0001:00011007   440 0001:00011008   443 0001:00011031
+   444 0001:00011037   445 0001:00011046   446 0001:00011052   449 0001:00011057
+   447 0001:00011059   450 0001:0001107A   453 0001:00011094   454 0001:000110B4
+   455 0001:000110BE   456 0001:000110C5   458 0001:000110CB   457 0001:000110D3
+   459 0001:000110E6   461 0001:000110F2   462 0001:000110F4   463 0001:00011100
+   465 0001:00011129   469 0001:00011148   470 0001:0001114E   471 0001:00011152
+   472 0001:00011162   473 0001:0001116E   475 0001:00011177   476 0001:00011190
+   479 0001:000111A8   482 0001:000111B0   483 0001:000111B5   486 0001:000111C3
+   480 0001:000111D4   488 0001:000111E2   489 0001:000111F6   498 0001:0001122C
+   499 0001:0001123C   500 0001:00011255   502 0001:00011259   503 0001:0001126C
+   505 0001:00011282   506 0001:00011284   507 0001:00011286   502 0001:00011287
+   508 0001:0001128A   510 0001:000112A3   514 0001:000112BC   515 0001:000112CB
+   516 0001:000112DA   517 0001:000112F2   519 0001:00011310   520 0001:0001131F
+   521 0001:00011339   522 0001:0001134F   524 0001:00011365   520 0001:00011375
+   526 0001:0001137A   527 0001:00011393   529 0001:000113BC   530 0001:000113E5
+   531 0001:0001143C   534 0001:00011444   535 0001:00011449   536 0001:0001144E
+   537 0001:0001145A   539 0001:00011468   540 0001:00011476   541 0001:0001147D
+   542 0001:00011493   544 0001:0001149A   532 0001:000114AB   546 0001:000114B9
+   549 0001:000114E0   550 0001:000114E7   551 0001:000114EC   554 0001:00011506
+   555 0001:0001150B   556 0001:00011514   557 0001:00011523   559 0001:00011534
+   560 0001:00011539   562 0001:0001153E   563 0001:0001154F   564 0001:00011559
+   566 0001:00011570   567 0001:00011579   568 0001:0001157E   569 0001:00011584
+   570 0001:0001158E   572 0001:0001159B   573 0001:000115A0   574 0001:000115BF
+   575 0001:000115DB   577 0001:000115EE   578 0001:000115FF   583 0001:0001162B
+   552 0001:00011640   586 0001:00011654   587 0001:0001166B   588 0001:0001168A
+   592 0001:000116FC   594 0001:0001170D   597 0001:00011719   598 0001:0001171E
+   595 0001:00011733   601 0001:00011741   610 0001:00011758   615 0001:0001176B
+   618 0001:0001178D   619 0001:00011799   620 0001:000117A2   622 0001:000117A9
+   626 0001:000117B2   627 0001:000117BE   628 0001:000117C7   630 0001:000117CE
+   633 0001:000117D7   634 0001:000117E9   635 0001:000117F2   637 0001:000117F9
+   640 0001:00011802   641 0001:00011826   643 0001:00011968   646 0001:0001199A
+   650 0001:000119AB   652 0001:000119B4   653 0001:000119C5   654 0001:000119D6
+   657 0001:000119DD   658 0001:000119E7   660 0001:000119F1   661 0001:00011A05
+   662 0001:00011A38   663 0001:00011A5C   664 0001:00011A68   665 0001:00011A8C
+   666 0001:00011A98   667 0001:00011ABC   669 0001:00011AC8   670 0001:00011AED
+   672 0001:00011AF9   673 0001:00011B02   674 0001:00011B2B   675 0001:00011B34
+   677 0001:00011B5D   678 0001:00011B6E   679 0001:00011B78   660 0001:00011B79
+   681 0001:00011B80   683 0001:00011B89   684 0001:00011B9A   687 0001:00011BA4
+   688 0001:00011BAD   689 0001:00011BCC   706 0001:00011BEB   707 0001:00011BFB
+   708 0001:00011C0B   710 0001:00011C1B   711 0001:00011C25   712 0001:00011C2E
+   713 0001:00011C49   714 0001:00011C53   715 0001:00011C5C   716 0001:00011C77
+   717 0001:00011C81   718 0001:00011C8A   720 0001:00011CA5   724 0001:00011CAA
+   725 0001:00011CBB   726 0001:00011CC2   727 0001:00011CC9   728 0001:00011CCE
+   729 0001:00011CDB   730 0001:00011CE9   731 0001:00011CEE   732 0001:00011CF3
+   733 0001:00011CFC   734 0001:00011D13   737 0001:00011D1C   738 0001:00011D2D
+   739 0001:00011D32   741 0001:00011D3B   742 0001:00011D4C   744 0001:00011D51
+   745 0001:00011D62   746 0001:00011D6B   747 0001:00011D70   748 0001:00011D75
+   750 0001:00011D7A   751 0001:00011D7F   752 0001:00011D88   756 0001:00011D99
+   757 0001:00011DA3   758 0001:00011DAD   759 0001:00011DB7   773 0001:00011DC1
+   774 0001:00011DCA   777 0001:00011E00   783 0001:00011EA3   784 0001:00011EAC
+   788 0001:00011EC8   789 0001:00011ED1   790 0001:00011EDB   791 0001:00011EE9
+   793 0001:00011EF5   795 0001:00011F1B   797 0001:00011F3F
+
+Bound resource files
+
+8K6Arc
+
+
+Program entry point at 0001:00011968

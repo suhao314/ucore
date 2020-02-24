@@ -1,0 +1,127 @@
+import __builtin__
+
+class attrgetter(__builtin__.object):
+     def __call__(): pass
+     def __getattribute__(): pass
+     __new__ = 0
+
+class itemgetter(__builtin__.object):
+     def __call__(): pass
+     def __getattribute__(): pass
+     __new__ = 0
+
+class methodcaller(__builtin__.object):
+     def __call__(): pass
+     def __getattribute__(): pass
+     __new__ = 0
+
+def __abs__(): pass 
+def __add__(): pass 
+def __and__(): pass 
+def __concat__(): pass 
+def __contains__(): pass 
+def __delitem__(): pass 
+def __delslice__(): pass 
+def __div__(): pass 
+def __eq__(): pass 
+def __floordiv__(): pass 
+def __ge__(): pass 
+def __getitem__(): pass 
+def __getslice__(): pass 
+def __gt__(): pass 
+def __iadd__(): pass 
+def __iand__(): pass 
+def __iconcat__(): pass 
+def __idiv__(): pass 
+def __ifloordiv__(): pass 
+def __ilshift__(): pass 
+def __imod__(): pass 
+def __imul__(): pass 
+def __index__(): pass 
+def __inv__(): pass 
+def __invert__(): pass 
+def __ior__(): pass 
+def __ipow__(): pass 
+def __irepeat__(): pass 
+def __irshift__(): pass 
+def __isub__(): pass 
+def __itruediv__(): pass 
+def __ixor__(): pass 
+def __le__(): pass 
+def __lshift__(): pass 
+def __lt__(): pass 
+def __mod__(): pass 
+def __mul__(): pass 
+def __ne__(): pass 
+def __neg__(): pass 
+def __not__(): pass 
+def __or__(): pass 
+def __pos__(): pass 
+def __pow__(): pass 
+def __repeat__(): pass 
+def __rshift__(): pass 
+def __setitem__(): pass 
+def __setslice__(): pass 
+def __sub__(): pass 
+def __truediv__(): pass 
+def __xor__(): pass 
+def abs(): pass 
+def add(): pass 
+def and_(): pass 
+def concat(): pass 
+def contains(): pass 
+def countOf(): pass 
+def delitem(): pass 
+def delslice(): pass 
+def div(): pass 
+def eq(): pass 
+def floordiv(): pass 
+def ge(): pass 
+def getitem(): pass 
+def getslice(): pass 
+def gt(): pass 
+def iadd(): pass 
+def iand(): pass 
+def iconcat(): pass 
+def idiv(): pass 
+def ifloordiv(): pass 
+def ilshift(): pass 
+def imod(): pass 
+def imul(): pass 
+def index(): pass 
+def indexOf(): pass 
+def inv(): pass 
+def invert(): pass 
+def ior(): pass 
+def ipow(): pass 
+def irepeat(): pass 
+def irshift(): pass 
+def isCallable(): pass 
+def isMappingType(): pass 
+def isNumberType(): pass 
+def isSequenceType(): pass 
+def is_(): pass 
+def is_not(): pass 
+def isub(): pass 
+def itruediv(): pass 
+def ixor(): pass 
+def le(): pass 
+def lshift(): pass 
+def lt(): pass 
+def mod(): pass 
+def mul(): pass 
+def ne(): pass 
+def neg(): pass 
+def not_(): pass 
+def or_(): pass 
+def pos(): pass 
+def pow(): pass 
+def repeat(): pass 
+def rshift(): pass 
+def sequenceIncludes(): pass 
+def setitem(): pass 
+def setslice(): pass 
+def sub(): pass 
+def truediv(): pass 
+def truth(): pass 
+def xor(): pass 

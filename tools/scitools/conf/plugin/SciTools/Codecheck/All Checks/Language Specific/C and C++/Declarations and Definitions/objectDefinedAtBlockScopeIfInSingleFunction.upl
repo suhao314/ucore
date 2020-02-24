@@ -1,0 +1,173 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 1-16-15
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => '%1 is only used in a single function and should be defined at block scope.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name{
+  return 'An object should be defined at block scope if its identifier only appears in a single function';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '( Advisory ) An object should be defined at block scope if its identifier only appears in a single function.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Defining an object at block scope reduces the possibility that the object might be accessed inadvertently
+and makes clear the intention that it should not be accessed elsewhere.
+</p>
+
+<p>
+Within a function, whether objects are defined at the outermost or innermost block is largely a matter
+of style.
+</p>
+
+<p>
+It is recognized that there are situations in which it may not be possible to comply with this rule. For
+example, an object with static storage duration declared at block scope cannot be accessed directly
+from outside the block. This makes it impossible to set up and check the results of unit test cases
+without using indirect accesses to the object. In this kind of situation, some projects may prefer not
+to apply this rule.
+</p>
+
+<p><b>Example</b><br>
+In this compliant example, i is declared at block scope because it is a loop counter. There is no need
+for other functions in the same file to use the same object for any other purpose.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  void func ( void )
+  {
+    int32_t i;
+
+    for ( i = 0; i < N; ++i )
+    {
+    }
+  }
+
+</pre>
+
+<p>
+In this compliant example, the function count keeps track of the number of times it has been called
+and returns that number. No other function needs to know the details of the implementation of
+count so the call counter is defined with block scope.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  uint32_t count ( void )
+  {
+    static uint32_t call_count = 0;
+
+    ++call_count;
+    return call_count;
+  }
+
+</pre>
+
+<p><b>Developer's Note</b><br>
+This check is designed to use Understand's Strict parser. This check does work using Understand's Fuzzy parser, but the
+Fuzzy is limited on its ability to deal with namespaces and templates, which can lead to false positives involving these
+constructs.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is run per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is run on the whole project
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# This function finds the parent file or parent function
+sub findParent {
+
+  # Walk up the parent tree until I am looking at a file or a function
+  my $ent = shift;
+  while ( ! $ent->kind->check( 'C File' ) and ! $ent->kind->check( 'C Function' ) ) {
+    return 0 unless $ent->parent;
+    $ent = $ent->parent;
+  }
+  return $ent;
+
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull all global objects
+  my @globalObjects = $file->filerefs( 'Define, Declare', 'Global Object ~Unknown ~Unresolved', 1 );
+  return unless @globalObjects;
+
+  # Loop through each object and skip if the parent isn't a file
+  OBJ : foreach my $object ( @globalObjects ) {
+
+    next OBJ unless $object->ent->parent->kind->check( 'C File' );
+
+    my $parent;
+    my @allRefs = $object->ent->refs;
+
+    # Check all references and test to see if they all occure within a single fire or at a global scope
+    REF : foreach my $ref ( @allRefs ) {
+
+      my $ancestor = findParent( $ref->ent );
+      next REF unless $ancestor;
+
+      next REF if $ancestor->kind->check( 'C File' );
+      $parent = $ancestor unless $parent;
+      next OBJ if $parent->uniquename ne $ancestor->uniquename;
+
+    }
+    $check->violation( $object->ent, $object->file, $object->line, $object->column, ERR1, $object->ent->name ) if $parent;
+  }
+}

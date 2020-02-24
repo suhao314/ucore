@@ -1,0 +1,111 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'A type, object or function used in multiple translation units declared more than once: %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "3-2-3 A type, object or function that is used in multiple translation units shall be declared in one and only one file";}
+
+# This is the full description of the rule being tested
+sub description { return "3-2-3 (Required) A type, object or function that is used in multiple translation units shall be declared in one and only one file.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Having a single declaration of a type, object or function allows the compiler to detect incompatible
+types for the same entity.</p>
+<p>
+Normally, this will mean declaring an external identifier in a header file that will be included in
+any file where the identifier is defined or used.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  // header.hpp
+  extern int16_t a;
+  // file1.cpp
+  #include "header.hpp"
+  extern int16_t b;
+  // file2.cpp
+  #include "header.hpp"
+  extern int32_t b; // Non-compliant - compiler may not detect the error
+  int32_t a; // Compliant - compiler will detect the error
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull any type, object or function reference from file
+  my @checks = $file->filerefs("Declare", "Type, Typedef, Object, Function". "1");
+  
+  # Loop through each declare reference that we need to check
+  foreach my $checked(@checks) {
+    # Pull all declarein reference for each initial reference
+    my @declareRefs = $checked->ent->refs("Declarein");
+    if ( scalar @declareRefs > 1 ) {
+	  # Throw and error if more than one declarein reference exists.
+	  throwError($check, $checked->ent,$file,$checked->line,$checked->column,ERR1,$checked->ent->name);
+	}
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,187 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 10-1-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Identifier "%1" possibly hiding outer definition from line %2';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+sub name { return "2-10-2 Identifiers declared in an inner scope shall not hide an identifier declared in an outer scope";}
+
+sub description { return "2-10-2 (Required) Identifiers declared in an inner scope shall not hide an identifier declared in an outer scope.";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+If an identifer is declared in an inner scope and it uses the same name as an identifer that already
+exists in an outer scope, then the innermost declaration will "hide" the outer one. This may lead
+to developer confusion.</p>
+The terms outer and inner scope are defned as follows:<ul style="margin-top:0;padding-top:0;">
+<li>Identifers that have file scope can be considered as having the outermost scope.
+<li>Identifers that have block scope have a more inner scope.
+<li>Successive, nested blocks, introduce more inner scopes. 
+</ul>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  int16_t i; 
+  { 
+     int16_t i;   // This is a different variable 
+                  // This is Non-compliant 
+     i = 3;       // It could be confusing as to which i this refers 
+  }
+  void fn ( int16_t i )   // Non-compliant 
+  {
+  }
+</pre>
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+sub check {
+
+  # Pull check and file from Understand. Test that we are looking at a file and return otherwise
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  
+  # Start my hash for tracking patterns
+  my %patternsSeen = ();
+
+  # Start lexer, we have to walk through the whole file
+  my $lexer = $file->lexer(1,0,0);
+  return unless $lexer;
+  my $lexeme = $lexer->first();
+
+  # Start our descent into recursivsivsivsiv....
+  checkScope ( $check, $file, $lexeme, \%patternsSeen );
+
+}
+
+
+
+# Subroutine for recursively checking scopes
+sub checkScope {
+
+  # Pull everything from the calling function
+  my $check = shift;
+  my $file = shift;
+  my $lexeme = shift;
+  my $patternsReference = shift;
+  my %patternsSeen = %$patternsReference;
+  my %patternsSeenThisLevel = ();
+  my %parametersSeen = ();
+
+  # While we still have a valid lexeme
+  LEX : while ( $lexeme ) {
+
+    # Check if we need to go up a level
+    if ( $lexeme->token eq 'Punctuation' && $lexeme->text eq '}' ) {
+
+      return $lexeme;
+
+    # Check if we need to go down a level
+    } elsif ( $lexeme->token eq 'Punctuation' && $lexeme->text eq '{' ) {
+
+      $lexeme = $lexeme->nextUseful;
+      my %combinedPatterns = ( %patternsSeen, %patternsSeenThisLevel, %parametersSeen );
+      $lexeme = checkScope ( $check, $file, $lexeme, \%combinedPatterns );
+      %parametersSeen = ();
+
+    # If we see an identifier, add it to our hash
+    } elsif ( $lexeme->token eq 'Identifier' ) {
+
+      # Get our string and entity
+      my $subString = $lexeme->text;
+      my $ref = $lexeme->ref;
+
+      # Unless we are looking at a define reference, we don't care
+      unless ( $ref and ( $ref->kindname eq 'Define' or $ref->kindname eq 'Declare' or $ref->kindname eq 'Init' ) ) {
+        
+        $lexeme = $lexeme->nextUseful;
+        next LEX;
+
+      }
+
+
+      if ( exists $patternsSeen{ $subString } ) {
+
+        # We've seen this entity before
+        my $seenRef = $patternsSeen{ $subString };
+
+        # If we are looking at a class union or struct, we have to do an additional check to ensure it's not a constructor or destructor
+        my $flag = 0;
+        if (  $seenRef->ent->kind->longname =~/\bType\b/ or $seenRef->scope->kind->longname =~/\bType\b/ ) {
+
+          my $type = 0;
+          $type = $seenRef->ent if $seenRef->ent->kind->longname =~/\bType\b/;
+          $type = $seenRef->scope if $seenRef->scope->kind->longname =~/\bType\b/;
+          $flag = 1 if $type->longname eq $ref->scope->parent->longname;
+          
+        }
+
+
+        $check->violation( $ref->scope, $ref->file, $ref->line, $ref->column, ERR1, $ref->scope->name, $seenRef->line ) unless $flag;
+
+      } elsif ( $ref->scope->kindname =~ /\bParameter\b/ and exists $patternsSeenThisLevel{ $subString } ) {
+
+        # Special case because technically parameters are defined before the block they are considered a part of
+        my $seenRef = $patternsSeenThisLevel{ $subString };
+        $check->violation( $ref->scope, $ref->file, $ref->line, $ref->column, ERR1, $ref->scope->name, $seenRef->line );
+        $parametersSeen{ $subString } = $ref;
+        
+
+
+      } else {
+
+        if ( $ref->scope->kindname =~ /\bParameter\b/ ) {
+          $parametersSeen{ $subString } = $ref;
+        } else {
+          $patternsSeenThisLevel{ $subString } = $ref;
+        }
+        
+
+      }
+
+    }
+
+    $lexeme = $lexeme->nextUseful if $lexeme;
+
+  }
+}
+
+

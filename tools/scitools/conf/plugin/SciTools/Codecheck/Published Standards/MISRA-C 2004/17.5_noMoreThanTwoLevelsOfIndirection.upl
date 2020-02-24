@@ -1,0 +1,82 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use Codecheck::Libraries::InfoSiftr qw(resolveTypedefs);
+
+use constant MAX_NUM => 2;
+
+use constant ERR1 => 'Violation: object "%1" includes more than ' . MAX_NUM . ' levels of indirection (%2 levels).';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '17.5 no more than 2 levels of indirection.' }
+
+sub description { '17.5 (Advisory) The declaration of objects should contain no more than 2 levels of pointer indirection.' }
+
+sub detailed_description { <<'END_DESC'
+Use of more than 2 levels of indirection can seriously impair the ability to understand the behaviour of the code, and should therefore be avoided.
+
+<p><b>Developer's Note</b><br>
+This check only works using the Strict Parser. To change your parser settings, click
+Project -> Configure Project then select Languages on the left and then click
+Strict*.
+</p>
+
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 0 }
+
+sub test_global { 1 }
+
+sub define_options { }
+
+sub check {
+	my $check = shift;
+	my %typelist;
+  
+	foreach my $file ($check->get_files) {
+    next unless $file->kind->check('c file');
+		my $type;
+		foreach my $ref ($file->filerefs('declare, define', 'c object, c parameter, c function', 0)) {
+			if($typelist{$ref->ent->type}){
+			$type = $typelist{$ref->ent->type};
+			}
+			else{
+				$type = resolveTypedefs($ref->ent->type, $check->db);
+				$typelist{$ref->ent->type} = $type;
+			}
+		
+		while ($type =~ m! \( (.*?) \) !xg) { # must be a function pointer
+			# thus, we must handle the two significant parts separately
+			my $contents = $1;
+			(my $stars = $1) =~ s![^*\[]!!g;
+			my $levels = length $stars;
+			
+			if ($levels > MAX_NUM) {
+				$check->violation($ref->ent, $ref->file, $ref->line, $ref->column, ERR1, $ref->ent->longname, $levels);
+			}
+			
+			$type =~ s! \( \Q$contents\E \) !!xg;
+		}
+		
+		$type =~ s![^*\[]!!g;
+		my $levels = length $type;
+		
+		if ($levels > MAX_NUM) {
+			$check->violation($ref->ent, $ref->file, $ref->line, $ref->column, ERR1, $ref->ent->longname, $levels);
+		}
+	}
+	}
+	return;
+}

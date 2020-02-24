@@ -1,0 +1,89 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Assembly code does not appear to be isolated';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "2.1 Assembly language shall be encapsulated and isolated";}
+
+sub description { return "2.1 (Required) Assembly language shall be encapsulated and isolated.";}
+
+sub detailed_description { return <<"END_DESC"
+Where assembly language instructions are required it is recommended that they be encapsulated 
+and isolated in either (a) assembler functions, (b) C functions or (c) macros.
+For reasons of efficiency it is sometimes necessary to embed simple assembly language instructions 
+in-line, for example to enable and disable interrupts. If it is necessary to do this for any reason, 
+then it is recommended that it be achieved by using macros.
+Note that the use of in-line assembly language is an extension to standard C, and therefore also 
+requires a deviation against Rule 1.1.
+  #define NOP asm("   NOP")
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file"); 
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  
+  my $lexeme = $lexer->first();
+  my $inFunc =0;
+  my $endRef;
+  my @asmStatements;
+  my $lastent;
+  
+  while($lexeme){
+    #asembler use in preprocessor is okay, skip it
+    if ($lexeme->token eq "Preprocessor"){
+      while($lexeme && $lexeme->token ne "Newline"){
+        $lexeme=$lexeme->next;
+      }
+      next;
+    }
+    #determine if we are in a function
+    if($lexeme->ref && $lexeme->ent->kind->check("function")){
+      $inFunc = $lexeme->ent if $lexeme->ref->kind->check("definein"); 
+      $endRef = $inFunc->ref("endby") if $inFunc;
+    }
+    if ($inFunc && $lexeme->line_begin >= $endRef->line && $lexeme->column_begin >= $endRef->column){
+      # we are at the end of the function and need to determine if the number of assembly statements
+      # is a healthy percentage of the total statements. Right now all statements need to be assembly
+      my $stmts = $inFunc->metric("CountStmt");
+      my $asmStmts = scalar(@asmStatements);
+      if ($asmStmts < $stmts){
+        foreach my $asmLex(@asmStatements){
+          $check->violation($inFunc,$file,$asmLex->line_begin,$asmLex->column_begin,ERR1);
+        }
+      }
+      @asmStatements=();
+      $inFunc = 0;
+    }
+
+    if($lexeme->token eq "Keyword" && $lexeme->text =~ /^[_]*asm[_]*$/i){
+      if($inFunc){
+        push(@asmStatements,$lexeme);
+      }else{
+        $check->violation(0,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1);
+      }
+    }
+  }continue{
+    $lexeme=$lexeme->next if $lexeme;
+  }
+}

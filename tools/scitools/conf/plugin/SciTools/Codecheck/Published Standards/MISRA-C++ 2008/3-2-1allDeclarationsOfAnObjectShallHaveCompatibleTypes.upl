@@ -1,0 +1,330 @@
+# This script is designed to run with Understand - CodeCheck
+# Rewritten by Kyle Jackson
+# 11-5-14
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Declaration or Definition of %1 is not compatible with another declaration or definition in file %2 on line %3';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { 
+  return "3-2-1 All declarations of an object or function shall have compatible types";
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return "3-2-1 (Required) All declarations of an object or function shall have compatible types.";
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+It is <i>undefined behaviour</i> if the declarations of an object or function in two different translation
+units do not have <i>compatible types</i>.
+</p>
+
+<p>
+The easiest way of ensuring object or function types are compatible is to make the declarations
+identical.
+</p>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  // File a.cpp
+  extern int a;
+  extern int b [];
+  extern char c;
+  int f1 ( );
+  int f2 ( int );
+  // File b.cpp
+  extern int long a;    // Non-compliant – not compatible
+  extern int b [ 5 ];   // Compliant
+  int c;                // Non-compliant
+  char f1 ( );          // Non-compliant
+  char f2 ( char );     // Compliant – not the same function as
+                        // int32_t f2 ( int32_t )
+</pre>
+
+<p><b>Developer's Note</b><br>
+This check's ability to test compatibility between types is some what limited. This check cannot
+test campatibility between non basic types. While checking compatibility between basic types, this
+check assumes the format ( Optional signed/unsigned ) ( Type ) ( Optional int ).
+</p>
+
+<p>
+E.g. signed long int<br>
+E.g. short int<br>
+E.g. unsigned long long<br>
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 0;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 1;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# Trim leading and trailing space
+sub trim {
+
+  my $string = shift;
+  $string =~ s/^\s+|\s+$|\r//g;
+  return $string;
+
+}
+
+
+sub compatibilityTest {
+
+  # Pull incoming strings
+  my $stringA = shift;
+  my $stringB = shift;
+
+  # Perturb string A
+  # Convert unsigned long longs
+  $stringA =~ s/\bunsigned\slong\slong\sint/ulli/g;
+  $stringA =~ s/\bunsigned\slong\slong/ulli/g;
+
+  # Convert long longs
+  $stringA =~ s/\bsigned\slong\slong\sint/slli/g;
+  $stringA =~ s/\bsigned\slong\slong/slli/g;
+  $stringA =~ s/\blong\slong\sint/slli/g;
+  $stringA =~ s/\blong\slong/slli/g;
+
+  # Convert unsinged longs
+  $stringA =~ s/\bunsigned\slong\sint/uli/g;
+  $stringA =~ s/\bunsigned\slong/uli/g;
+
+  # Convert longs
+  $stringA =~ s/\bsigned\slong\sint/sli/g;
+  $stringA =~ s/\bsigned\slong/sli/g;
+  $stringA =~ s/\blong\sint/sli/g;
+  $stringA =~ s/\blong/sli/g;
+
+  # Convert unsigned shorts
+  $stringA =~ s/\bunsigned\sshort\sint/usi/g;
+  $stringA =~ s/\bunsigned\sshort/usi/g;
+
+  # Convert shorts
+  $stringA =~ s/\bsigned\sshort\sint/ssi/g;
+  $stringA =~ s/\bsigned\sshort/ssi/g;
+  $stringA =~ s/\bshort\sint/ssi/g;
+  $stringA =~ s/\bshort/ssi/g;
+  
+  # Convert unsigned int
+  $stringA =~ s/\bunsigned\sint/ui/g;
+  $stringA =~ s/\bunsigned/ui/g;
+
+  # Convert int
+  $stringA =~ s/\bsigned\sint/si/g;
+  $stringA =~ s/\bint/si/g;
+  $stringA =~ s/\bsigned/si/g;
+
+  # Perturb string B
+  # Convert unsigned long longs
+  $stringB =~ s/\bunsigned\slong\slong\sint/ulli/g;
+  $stringB =~ s/\bunsigned\slong\slong/ulli/g;
+
+  # Convert long longs
+  $stringB =~ s/\bsigned\slong\slong\sint/slli/g;
+  $stringB =~ s/\bsigned\slong\slong/slli/g;
+  $stringB =~ s/\blong\slong\sint/slli/g;
+  $stringB =~ s/\blong\slong/slli/g;
+
+  # Convert unsinged longs
+  $stringB =~ s/\bunsigned\slong\sint/uli/g;
+  $stringB =~ s/\bunsigned\slong/uli/g;
+
+  # Convert longs
+  $stringB =~ s/\bsigned\slong\sint/sli/g;
+  $stringB =~ s/\bsigned\slong/sli/g;
+  $stringB =~ s/\blong\sint/sli/g;
+  $stringB =~ s/\blong/sli/g;
+
+  # Convert unsigned shorts
+  $stringB =~ s/\bunsigned\sshort\sint/usi/g;
+  $stringB =~ s/\bunsigned\sshort/usi/g;
+
+  # Convert shorts
+  $stringB =~ s/\bsigned\sshort\sint/ssi/g;
+  $stringB =~ s/\bsigned\sshort/ssi/g;
+  $stringB =~ s/\bshort\sint/ssi/g;
+  $stringB =~ s/\bshort/ssi/g;
+  
+  # Convert unsigned int
+  $stringB =~ s/\bunsigned\sint/ui/g;
+  $stringB =~ s/\bunsigned/ui/g;
+
+  # Convert int
+  $stringB =~ s/\bsigned\sint/si/g;
+  $stringB =~ s/\bint/si/g;
+  $stringB =~ s/\bsigned/si/g;
+
+  return ( trim ( $stringA ) eq trim ( $stringB ) );
+
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull all functions and objects, return if neither
+  my $check = shift;
+
+  my @functionsDefined = $check->db->ents( 'C Function ~Member' );
+  my @objectsDefined = $check->db->ents( 'C Object Global' );
+
+  return unless @functionsDefined;
+
+  # Test all functions
+  foreach my $function ( @functionsDefined ) {
+
+    # Skip built in functions
+    next if $function->name =~ /^__/;
+
+    # Pull all define and declare references and set up error tracking
+    my @functionDeclares = $function->refs ( 'Declarein, Definein',"c");
+    my $originalSig = '';
+    my $originalFile = '';
+    my $originalLine = '';
+
+    # Loop through each declaration and definition
+    foreach my $declare ( @functionDeclares ) {
+
+      # Build the signature into a string
+      my $sig = '';
+      my $lexeme = $declare->lexeme;
+
+      while ( $lexeme->text ne ')' ) {
+
+        if ( $lexeme->token eq 'Keyword' ) {
+
+          $sig .= $lexeme->text;
+          $sig .= ' ';
+
+        } else {
+
+          $sig .= $lexeme->text;
+
+        }
+
+        $lexeme = $lexeme->nextUseful;
+
+      }
+
+      # Set reference if this is the first time through the loop
+      if ( $originalSig eq '' ) {
+
+        $originalSig = trim ( $sig );
+        $originalFile = $declare->file->name;
+        $originalLine = $declare->line;
+
+      # Otherwise compare the signatures to see if there is an error
+      } else {
+
+        next if trim ( $sig ) eq $originalSig;
+        my $ok = compatibilityTest ( $originalSig, $sig );
+        $check->violation( $function, $declare->file, $declare->line, $declare->column, ERR1, $function->name, $originalFile, $originalLine ) unless $ok;
+
+      }
+    }
+  }
+
+
+  # Test all objects
+  foreach my $object ( @objectsDefined ) {
+
+    # Make sure our object has a type
+    my $type = $object->type;
+    next unless $type;
+
+    # Pull a define and all declare references
+    my $defineRef = $object->ref ( 'Definein',"c" );
+    my @declares = $object->refs ( 'Declarein',"c" );
+    next unless $defineRef and @declares;
+
+    # Loop through all declare references
+    DEC : foreach my $declare ( @declares ) {
+
+      # Sometimes Define references have mirror declare references
+      next if $defineRef->file->name eq $declare->file->name;
+
+      my $lexeme = $declare->lexeme;
+
+      # Move the lexeme back until we see the keyword extern
+      while ( $lexeme->prevUseful->text ne 'extern' ) {
+
+        # If we see a Macro first, abort. 
+        if ( $lexeme->token eq 'Identifier' ) {
+          next DEC if $lexeme->ent->kind->longname =~ /\bMacro\b/;
+        }
+
+        $lexeme = $lexeme->prevUseful;
+
+      }
+
+      my $declareString = '';
+
+      # Build my kind string as it is written in the file
+      while ( $lexeme->text ne $object->name ) {
+
+        # Special case if we see a comma seperated list
+        if ( $lexeme->text eq ',' ) {
+
+          $declareString =~ s/\b\w+\s+$//g;
+
+        } else {
+
+          $declareString .= $lexeme->text . ' ';
+
+        }
+
+        $lexeme = $lexeme->nextUseful;
+
+      }
+
+      # Test kind string vas type associated with ent
+      next if trim ( $declareString ) eq $type;
+      my $ok = compatibilityTest ( trim ( $type ), trim ( $declareString ) );
+      $check->violation( $object, $declare->file, $declare->line, $declare->column, ERR1, $object->name, $defineRef->file->name, $defineRef->line ) unless $ok;
+
+    }
+
+  }
+}

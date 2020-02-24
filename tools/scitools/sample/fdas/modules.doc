@@ -1,0 +1,286 @@
+This is a brief description of the various modules in this package.
+Full documentation of the module interfaces exists, but it is fairly
+large (about 130 pages in LaTeX) and probably more than most people
+would want to wade through unless they really wanted to use the
+modules.  Therefore, I've thrown together this very brief overview
+aimed at those who are just looking at the code as a sample of some
+Fortran 90.  Every argument of every subroutine is at least briefly
+documented with comments in the code; those comments plus this
+overview ought to be enough to get a general idea of what is going on.
+
+source/misc directory:
+  This directory has several low-level miscellaneous modules suitable for
+  use in other applications.  I generally put all these modules into
+  a single library that is used in many of my applications.
+
+  standard_files module (part of the sysdepIo.f90 file)
+    This data module has the unit numbers for the "standard" files such as
+    standard input, standard output and standard error.  If 5 and 6
+    aren't the right unit numbers, change them in this module.
+
+  sysdep_io module
+    This module has system-dependent i/o subroutines for such things
+    as system-dependent initialization and termination, writing
+    error messages, assigning unit numbers, getting file and user
+    information, and spawning system shell commands.  The generic
+    version of the module included in this package has reasonably
+    portable versions of some of the routines (such as those to
+    assign unit numbers) and dummy stubs for several of the others.
+
+  subroutine write_error_sub (in the error.f90 file)
+    External subroutine called from the sysdep_io module to write
+    error messages.  This is segregated into a separate external
+    subroutine so that applications can use the sysdep_io module
+    with application-specific versions of write_error_sub.
+    For example, the server programs (not included here) try to send
+    most error messages to their clients if possible so that the
+    client can display the message to the user.
+
+  precision module
+    This module defines the type KIND parameter values used everywhere.
+
+  binary module
+    This module has procedures to support binary data transfer among
+    different systems.  This includes subroutines to translate between
+    the system native binary formats and the binary formats used for data
+    transfer.  The code is very system-dependent.  The "generic" version
+    included ought to compile on any f90 compiler, but correct execution
+    depends on the system binary formats and other assumptions.  The
+    provided test case doesn't execute any of the code in this module,
+    so there is no need to worry about porting this module just to run the
+    test case.
+
+  string module
+    This module has general purpose string manipulation procedures.
+    It includes procedures for case-insensitive string comparisons,
+    conversion between string and numeric types, and a routine to
+    extract delmitted fields from a string.
+
+  time module
+    This module has general purpose procedures for manipulating
+    time.  It includes procedures to parse user time-specifications
+    and to format time values for printing.
+
+  client module
+    This module is the client side of a tcp/ip client-server
+    communication facility.  This version is just a stub that
+    is never actually called by the provided test case.  The
+    working version of this module is system-dependent.  It was easier
+    to include this stub version than to remove the calls to it
+    from elsewhere in the code.  (No you won't find even a stub of
+    the server side in this package - it wasn't needed).
+
+  gd_list module
+    This is a trivial linked list module.  It is specific to lists of
+    16-character names and the functionality needed a few places in
+    the fdas.  It probably ought to be much more general and have
+    more functionality.  In the primary place where this module is
+    currently used, simplicity of use is more important than generality.
+
+  gd_tree module
+    This module implements a balanced binary tree.  The keys must be
+    character strings, but the data associated with the keys can be
+    of any type.  Portable use of the TRANSFER intrinsic to accomodate
+    arbitrary data types is somewhat awkward (and in my mind illustrates
+    one area where f90 could use a minor improvement); see the places
+    where this module is used for samples.  Note that this module
+    illustrates the use of recursive subroutines.
+
+  command module
+    This module reads user commands.  It handles prompting, continuation
+    lines and input from nested command files.  The standalone package
+    omits all the user interface parts that use this module, but I've
+    left the module here anyway.
+
+source/thWrite directory
+  This directory has the th_write module and several sub-modules
+  used by it.  I generally put all these modules into a single
+  library that is used by many applications.  Only the th_write
+  module is supposed to be used directly by the applications;
+  the other modules in this library are submodules used internally
+  by the th_write module.  The modules in this directory use several
+  of the modules from the misc directory.
+
+  th_write module
+    This module writes time history files in any of several formats.
+    Time history files are files giving the values of various signals
+    as functions of time.  Although such files are simple in concept,
+    we have enough data of this nature (hundreds of gigabytes) and
+    enough different applications interchanging such data that some
+    specialized formats are appropriate.  All the programs that
+    write time-history files are supposed to use this module so that
+    the files will be interchangeable with other programs.
+
+  th_write_asc12 module
+    This submodule writes files in two ascii formats (asc1 and asc2).
+    The distinctions between the two formats are boring and largely
+    historical.
+
+  th_write_unc2 module
+    This submodule writes files in a simple binary format called unc2
+    (for uncompressed format 2 - unc1 being long obsolete).
+
+  th_write_unc3 module
+    This submodule writes files in a machine-independent binary format
+    called unc3.  It depends on the binary module to do the translation
+    between the machine-independent and native machine data formats.
+
+  th_write_cmp3 module
+    This submodule writes files in a machine-independent binary format
+    called cmp3 (for compressed format 3 - cmp1 and cmp2 being obsolete).
+    Like unc3, this format also depends on the binary module.  This format
+    includes data compression that is simple in concept, but effective for
+    the kinds of data that we have most of.  There is also an internal
+    index for fast positioning.  This is our default format for most
+    purposes.
+
+  th_write_lis1 module
+    This submodule writes files in an ascii format laid out "nicely"
+    for human reading.  Files in this format are intended for human
+    viewing rather than for input to other programs.
+
+source/thRead directory
+  This directory has the th_read module and several sub-modules
+  used by it.  I generally put all these modules into a single
+  library that is used by many applications.  Only the th_read
+  module is supposed to be used directly by the applications;
+  the other modules in this library are submodules used internally
+  by the th_read module.  The modules in this directory use several
+  of the modules from the misc directory.
+
+  th_read module
+    This module reads time history files in any of several formats.
+    It is a counterpoint to the th_write module and can read any
+    file written by th_write (except for the lis1 format files).
+    This module is substantially more complicated than the th_write
+    module because there are more options involved in reading the
+    files; we may want to read only some subset of the available
+    signals or times.
+
+  th_read_gen module
+    This submodule provides some generic support routines used by
+    the th_read module and by the format-specific submodules.
+
+  th_read_asc12 module
+    This submodule reads files in asc1 or asc2 format.
+
+  th_read_unc3 module
+    This submodule reads files in unc3 format.
+
+  th_read_cmp3 module
+    This submodule reads files in cmp3 format.
+
+  th_read_net1 submodule
+    This submodule reads time history data by connecting to a time
+    history data server running on another system.  The code in this
+    module is machine-independent, but it requires the machine-dependent
+    client module to work.  The version of the client module included
+    in this package is just a stub that always returns a failure
+    status.
+
+  th_read_net1_codes submodule (part of the thRNet1.f90 file)
+    This submodule has protocol codes used by both the th_read_net1
+    module and the corresponding server.
+
+source/gdRead directory
+  This directory has the gd_read module and several sub-modules
+  used by it.  I generally put all these modules into a single
+  library that is used by many applications.  Only the gd_read
+  module is supposed to be used directly by the applications;
+  the other modules in this library are submodules used internally
+  by the gd_read module.  The modules in this directory use the
+  th_read module plus several of the modules from the misc directory.
+
+  gd_read module
+    This module reads time history data and provides capabilities for
+    several operations on the data.  Applications can use either
+    the th_read or the gd_read module to read time history data,
+    depending on the capabilities required.
+
+    The th_read module is for "simple" access to individual time
+    history files; the only "operations" supported are selection of a
+    subset of the available signals and time frames from a file.
+
+    The gd_read module uses the th_read module for low-level file
+    access, but adds the following capabilities: merging and splicing
+    data from multiple files (in general with different sample rates);
+    time-skewing of individual signals, with hold-last-value or linear
+    interpolation in time; signal filtering; and calculated signals.
+
+    The gd_read module is the "highest level" module in this standalone
+    package.  The complete fdas package also has higher level modules
+    that incorporate a database defining such things as what files,
+    filters, and calculated functions should be used for each flight.
+    However, those modules require system-dependent interfaces to
+    a database, so they are omitted from the standalone sample package.
+
+  gd_common module
+    This submodule provides some generic support routines used by
+    the gd_read module and by several of the other submodules.  This
+    generic support is primarily related to maintaining the lists of
+    data sources and signals.
+
+  gd_file module
+    This submodule manages data sources that are files.  It supports
+    end-to-end time-splicing of multiple input files with the same
+    signals.  Each set of spliced files is considered a single data
+    source.
+
+  gd_filter module
+    This submodule manages data sources that are filters.  Each filter
+    becomes part of a filter list that is applied to the data from
+    a file data source.  The filter output signal vectors are
+    appended to the signal vector of the file to form an augmented
+    signal vector.
+
+  link_filter module
+    This submodule links to the specific filter implementations.  Multiple
+    filter implementations can be active at once.  This particular
+    version of the link_filter module supports a simple portable linking
+    mechanism where the filter implementations are statically linked
+    into the code.  Other versions of the link_filter module can be
+    written to support run-time dynamic linking of filter implementations.
+    Such dynamic linking would be system-dependent.  The system-dependence
+    would be confined to this module.  (I haven't actually yet done a
+    dynamic linking version of link_filter because we are currently
+    using only a small set of filter implementations and it is easier
+    to just link them in statically).
+
+    This portable version of link_filter illustrates the use of
+    the rename feature of the USE statement.  This allows us to
+    use the same subroutine names in each of the filter implementations,
+    changing only the module name.
+
+  gd_filter1 and gd_filter2 modules (in the sampleFilt.f90 file)
+    These submodules implement two sample filters, a 3rd order
+    lowpass and a notch.
+
+  gd_calc module
+    This submodule manages data sources that are calculated functions.
+    A calculated function data source uses signals from other data
+    sources and calculates derived signals.  The calculated functions
+    can use signals from any of the other data sources (including
+    previously defined calulated signals).
+
+  link_calc module
+    This submodule links to specific calculated function implementations.
+    It is simillar in concept to the link_filter module.  The actual
+    fdas system does use a version of the link_calc module that
+    does dynamic run-time linking because we have many calculated
+    function modules and more are added regularly; a database
+    query is done at run-time to determine which calculated functions
+    should be used for the particular flight being accessed.  The
+    database interface and the dynamic linking are both system-dependent,
+    so I've included only this simple portable version of link_calc
+    in this standalone package.
+
+  sample_calc and gd_calc1 modules (in the sampleCalc.f90 file)
+    These modules implement some trivial sample calculations.
+    The gd_calc1 module illustrates a simple wrapper to allow
+    the sample_calc module to be used as gd_calc1; a simillar
+    wrapper could alternatively allow sample_calc to be used
+    as gd_calc2 without changing sample_calc itself.
+
+  dummy_gd_calc and gd_calc2 modules (in the dumCalc.f90 file)
+    These modules are a dummy stub for a second calculated
+    function.

@@ -1,0 +1,135 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Bit representation of floating-point value used by %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "The underlying bit representations of floating-point values shall not be used";}
+
+# This is the full description of the rule being tested
+sub description { return "The underlying bit representations of floating-point values shall not be used.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The storage layout used for floating-point values may vary from one compiler to another, and
+therefore no floating-point manipulations shall be made which rely directly on the way the values
+are stored. The in-built operators and functions, which hide the storage details from the developer,
+should be used.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  float My_fabs ( float f )
+  {
+    unsigned char * pB = reinterpret_cast< unsigned char * >( &f );
+    *( pB + 3 ) &= 0x7f; // Non-compliant – generate the absolute value
+                         // of an IEEE-754 float value.
+    return ( f );
+  }
+</pre>
+<p><b>Developer's Note</b><br>
+There are three ways to directly modify the bit field in a float. First is using a C type cast. This
+check catches that usage. The next is by using a Union and combining a float with another data type 
+under one identifier. By modifying the non-float data type, the programmer is violating the above rule. 
+This check accurately detects when a float is modified through a union.<BR>
+<BR>
+The last way is to use a reinterpret_cast call as demonstrated above. Because of the modularity of the
+C++ language, it is currently impossible to detect when a bit field of a float is modified through the
+use of a reinterpret_cast for all cases. This check instead detects when reinterpret_cast is used on a
+float and then flags that usage as an error. This can create false positives as simply examining the 
+data after using reinterpret_cast does not violate this rule.</p>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+  # Pull a list of all floats to be tested for bit modification
+  my @floats = $file->filerefs("Addr Useby");
+  
+  # Loop through all floats that pass their address to another object
+  foreach my $float(@floats) {
+    next unless $float->ent->type eq "float";
+    my $name = $float->scope->name;
+    my $text = $float->ent->contents;
+	# Check for reinterpret_cast
+	throwError($check, $float->scope,$file,$float->line,$float->column,ERR1,$float->ent->name) if $text =~ /reinterpret_cast.*&$name/;
+	# Check for C type cast
+	throwError($check, $float->scope,$file,$float->line,$float->column,ERR1,$float->ent->name) if $text =~ /\(.*\*\s*\)\s+&$name/;
+  }
+  
+  # Pull a list of all unions and test for violation
+  my @unions = $file->filerefs("Define", "Union");
+  
+  foreach my $union(@unions) {
+    # Pull everything defined within this union
+    my @unionDefines = $union->ent->refs("Define");
+	my $flag;
+	# If this union defines a float, flag for additional testing
+	foreach my $firstPass(@unionDefines) {
+	  $flag = 1 if $firstPass->ent->type eq "float";
+	}
+	next unless $flag;
+	# Test if float is modified indirectly by using another defined object within the union.
+	PASS: foreach my $secondPass(@unionDefines) {
+	  next PASS if $secondPass->ent->type eq "float";
+	  throwError($check, $secondPass->ent,$file,$secondPass->line,$secondPass->column,ERR1,$secondPass->ent->name) if $secondPass->ent->refs("ModifyBy, SetBy");
+	}
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

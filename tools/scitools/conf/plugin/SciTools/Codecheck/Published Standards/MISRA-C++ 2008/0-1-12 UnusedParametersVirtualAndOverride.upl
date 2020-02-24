@@ -1,0 +1,154 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => "Unused Parameters in Virtual Functions and overrides";
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+
+}
+
+# This is the short error the Understand will use
+sub name{
+  return '0-1-12 There shall be no unused parameters (named or unnamed) in the set of parameters for a virtual function and all the functions that override it';
+}
+
+# This is the full description of the rule being tested
+sub description {
+  return "0-1-12 (Required) There shall be no unused parameters (named or unnamed) in the set of parameters for a virtual function and all the functions that override it.";
+}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+<p><b>Rationale</b><br>
+<i>Unused</i> function parameters are often due to design changes and can lead to mismatched parameter lists.
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+class A
+{
+public:
+  virtual void withunusedpara ( uint16_t * para1,
+								int16_t unusedpara ) = 0; // Non-compliant
+  virtual void withoutunusedpara ( uint16_t * para1,
+								   int16_t & para2 ) = 0;
+};
+class B1: public A
+{
+public:
+  virtual void withunusedpara ( uint16_t * para1,
+								int16_t unusedpara ) // Non-compliant, error will be thrown at overridden function
+  {
+    *para1 = 1U;
+  }
+virtual void withoutunusedpara ( uint16_t * para1,
+								 int16_t & para2 )
+  {
+    *para1 = 1U;
+  }
+};
+class B2: public A
+{
+public:
+  virtual void withunusedpara ( uint16_t * para1,
+								int16_t unusedpara ) // Non-compliant, error will be thrown at overridden function
+  {
+    *para1 = 1U;
+  }
+  virtual void withoutunusedpara ( uint16_t * para1,
+								   int16_t & para2 )
+  {
+    para2 = 0;
+  }
+};
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+# Any defined options go here
+sub define_options{}
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("c file");
+
+  # Pull all defined virtual functions
+  my @funcrefs = $file->filerefs("define","function virtual",1);
+
+  # Pull all declared pure virtual functions
+  push (@funcrefs, $file->filerefs("declare","function virtual pure",1));
+
+  # Loop through each virtual function
+  FUNC: foreach my $ref(@funcrefs) {
+
+    # Check to see if function is overridden by another function
+    next FUNC unless $ref->ent->refs("overriddenby");
+
+	  # Pull all parameters from base function
+    # Need to filter ellipsis from parameters in case user is using fuzzy parser
+    my @parameters;
+    my @currentParameters = $ref->ent->refs("define", "parameter",1);
+    foreach my $cur ( @currentParameters ) {
+
+      push ( @parameters, $cur ) if $cur->ent->name ne '...';
+
+    }
+	
+	  # This is a special case for pure virtual functions
+	  my $freeText = $ref->ent->freetext("Parameters");
+	  my @freePara = split(",", $freeText);
+	
+	  # Use special case unless base case worked
+	  push (@parameters, @freePara) unless @parameters;
+	
+	  # Create an array the same size as the number of arguments and assigned each value to 0 or unused
+	  my @declaredParameters;
+	  foreach (@parameters) {
+	    push (@declaredParameters, "0");
+	  }
+	
+  	# Look all functions that override our current virtual method
+  	my @doplegangerrefs = $ref->ent->refs("overriddenby");
+  	# For each function that overrides our base
+      PARA: foreach my $clone(@doplegangerrefs) {
+  	  my $count = 0;
+  	  my @parametersTwin = $clone->ent->refs("define", "parameter",1);
+  	  # For each argument in the overriding method, mark as used
+  	  foreach my $otherPara(@parametersTwin) {
+  	    @declaredParameters[$count] = "1" if $otherPara->ent->refs("Deref Setby, Setby, Useby");
+  		$count++;
+  	  }
+  	}
+  	# if all parameters are not accounted for, throw an error
+  	ERRCHECK: foreach my $value (@declaredParameters) {
+  		next ERRCHECK if $value eq "1";
+  		$check->violation($ref->ent,$ref->file,$ref->line,$ref->column,ERR1);
+  	}
+  }
+}

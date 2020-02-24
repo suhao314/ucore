@@ -1,0 +1,75 @@
+gnu.regexp README
+-----------------
+
+This is open source software distributed under the terms of the GNU
+Lesser General Public License.  See the COPYING.LIB file for details.
+Some included utilities are distributed under the terms of the GNU
+General Public License, a copy of which is included in the file COPYING.
+
+INSTALLING
+
+Copy the gnu.regexp jar file (located in the 'lib' directory)
+to your usual installation directory for Java archives.
+
+To use gnu.regexp, you will need to include it in your classpath
+setting.  Typically this is done by adding an entry to your CLASSPATH
+variable setting with the full path to the JAR file, e.g.
+  csh:  % setenv CLASSPATH ${CLASSPATH}:/usr/java/lib/gnu-regexp-1.1.x.jar
+ bash:  % export CLASSPATH=${CLASSPATH}:/usr/java/lib/gnu-regexp-1.1.x.jar
+  DOS:  > set CLASSPATH %CLASSPATH%;C:\Java\lib\gnu-regexp-1.1.x.jar
+Various shells and operating systems may have slightly different methods.
+Consult your Java virtual machine documentation for details.  You may also
+specify the -classpath option to the java executable, e.g.
+compile: % javac -classpath /usr/java/lib/gnu-regexp-1.1.x.jar MyClass.java
+execute: % java -classpath /usr/java/lib/gnu-regexp-1.1.x.jar MyClass
+
+DOCUMENTATION
+
+HTML documentation is provided in the 'docs' directory.  This is basically
+a snapshot of the official gnu.regexp web site (see below for URL).  The
+documentation files are:
+ docs/index.html -- general package information
+ docs/changes.html -- change history
+ docs/credits.html -- credits and contributors
+ docs/faq.html -- frequently asked questions
+ docs/syntax.html -- supported/unsupported syntax and usage notes
+ docs/reapplet.html -- demo applet HTML wrapper
+ docs/api/*.html -- javadoc generated info
+
+For additional help, you can try emailing <help-java-regexp@gnu.org>.
+
+UTILITIES
+
+gnu.regexp comes with a number of simple utility programs intended to test
+and demonstrate its features.  These are not compiled into the Java archive
+file, but can be found in the 'src/gnu/regexp/util' directory.  To run the
+Grep and Egrep programs, you'll need to install the gnu.getopt package,
+available at http://www.urbanophile.com/~arenn/hacking/download.html, and put
+those class files in your classpath as well.  
+
+HACKING
+
+You are free to fold, spindle, mutilate and modify this library,
+provided you follow the terms outlined in COPYING.LIB.  The gnu.regexp
+project team gratefully accepts any bug fixes or enhancements you may
+come up with (see the TODO file if you're in need of some ideas). A
+few parameters at the top of the Makefile in the 'src' directory
+need to be edited to match your local system setup.
+
+BUG REPORTS
+
+Send bug reports to <bug-java-regexp@gnu.org>, or join the gnu.regexp
+mailing list by sending a "subscribe" message to
+<regexp-request@cacas.org>.  It helps if you can send a code sample
+showing the regular expression you were using and how you were using
+it.
+
+LATEST VERSION
+
+You can always obtain info about the latest version of gnu.regexp at
+http://www.cacas.org/java/gnu/regexp/.  New versions are also announced on
+the regexp mailing list (see above).
+
+Thanks!
+
+Wes Biggs <wes@cacas.org>

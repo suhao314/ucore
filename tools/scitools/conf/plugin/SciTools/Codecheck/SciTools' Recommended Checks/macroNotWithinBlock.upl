@@ -1,0 +1,56 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Macro %1 is defined within a block';
+use constant ERR2 => 'Macro %1 is undefined within a block';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub name { return "Macros shall not be #define'd or #undef'd within a block";}
+
+sub description { return "Macros shall not be #define'd or #undef'd within a block";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+While it is legal to place #define or #undef directives anywhere in a code file, placing them
+inside blocks is misleading as it implies a scope restricted to that block, which is not the case.
+Normally, #define and #undef directives will be placed near the start of a file, before the first function definition.</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  return unless $file->filerefs("","c macro");
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  my $findEnt = 0;
+  foreach my $lexeme ($lexer->lexemes()) {
+    if (!($lexeme->inactive) && $lexeme->text =~ /^undef$|^define$/i && $lexeme->token eq "Preprocessor"){
+        $findEnt = $lexeme->text;
+    }elsif($findEnt && $lexeme->ref){
+        my $err = $findEnt =~ /define/?ERR1:ERR2;
+        $check->violation($lexeme->ent,$file,$lexeme->line_begin,$lexeme->column_begin,$err,$lexeme->ent->name) if $lexeme->ref->ent->id != $file->id; 
+        $findEnt=0;
+    }
+  }
+}

@@ -1,0 +1,129 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Comment appears to contain code';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return '"Commented Out" Code';}
+
+sub description { return "Sections of code should not be \"commented out\".";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Ideally, comments should only be used to explain aspects of the code that may not be clear from 
+the source code itself. Code that is commented-out may become out of date, which may lead to 
+confusion when maintaining the code.</p>
+<p>If code is detected in multiple, back-to-back comments, only the first comment will be reported</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{
+  my $check = shift;
+  $check->option->radio_vert("strict","Aggresivness",["More Aggresive - may result in false positives, comments that are not really code", "Less Aggressive - may result in missing instances of commented code"],"Less Aggressive - may result in missing instances of commented code");
+}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file"); 
+  
+  my @keywords = qw(double not_eq throw and_eq dynamic_cast operator true asm try auto enum or_eq typedef bitand explicit private typeid bitor extern protected typename bool false public union float register unsigned case reinterpret-cast using catch friend virtual char goto short void class signed volatile compl inline sizeof wchar_t const int static const-cast long static_cast xor continue mutable struct xor_eq default namespace switch delete new template);
+  my @strongKeywordsRegExp = ('for\s*\(' , 'while\s*\(' , 'if\s*\(');
+  my @preProc = ("#include", "#define", "#endif","#ifndef", "#ifdef");
+  my @strongLineEnds = (";","{");
+  my @maybeLineEnds	= (")");
+  my $multiRatio = .4;
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  
+  my $lexeme = $lexer->first;
+  return unless $lexeme;
+  my $reported = 0;
+  LEXEME:foreach my $lexeme($lexer->lexemes()){
+    $reported=0 unless $lexeme->token =~ /Comment|Whitespace|Newline/;
+    next LEXEME unless $lexeme->token eq "Comment";
+    my $comment = $lexeme->text;
+    $comment =~ s'^/\*|^//|\*/$''g; #Strip comment character
+
+	my $isCode = 0;
+	my $maybeCode =0;
+	my $lineNum=$lexeme->line_begin;
+	my $codeLine=0;
+  my $strict = $check->option->lookup("strict") =~ /More Aggresive/;
+	#consider each line of the comment separately
+	LINE:foreach my $line (split('\n',$comment)){
+		my ($strongCode, $strongEnd,$weakCode, $weakEnd,$preproc);
+		$line =~ s/^\s+//; #trim leading whitespace
+		$line =~ s/\s+$//; #trim trailing whitespace
+		
+		#Test for preprocessors in comments
+		foreach my $word (@preProc){
+			$preproc = 1 if $line =~ /\Q$word/;
+		}
+		
+		#Test for strong keyword match
+		foreach my $test (@strongKeywordsRegExp){
+			$strongCode = 1 if $line =~ /(?<!\w)$test/;
+		}	
+		
+		#Test the comment line has a strong line/statement ending
+		foreach my $char (@strongLineEnds){
+			$strongEnd = 1 if $line =~ /\Q$char\E$/;
+		}
+		
+		#Test the comment line has a weak line/statement ending
+		foreach my $char (@maybeLineEnds){
+			$weakEnd = 1 if $line =~ /\Q$char\E$/;
+		}
+		
+		#Test that the comment line has weak statements
+		foreach my $word (@keywords){		
+			$weakCode = 0 if $line =~ /(?<!\w)\Q$word\E(?!\w)/;
+		}
+		if($strict){
+      $isCode = 1 if $preproc || $strongCode || $strongEnd;
+      $isCode =1 if $weakCode && $weakEnd;
+      $maybeCode ++ if ($weakCode || $weakEnd) && ! $isCode;
+		
+    }else{
+		$isCode = 1 if $preproc;
+		$isCode = 1 if $strongCode && ($strongEnd || $weakEnd);
+		$isCode = 1 if $weakCode && $strongEnd;
+		$maybeCode++ if $weakCode && $weakEnd;
+    }
+		
+		$codeLine= $lineNum if $isCode;
+		last LINE if $isCode;
+    
+    
+	}continue{
+		$lineNum++;
+	}
+	
+	my $totalLines = ($lineNum - $lexeme->line_begin);
+	$isCode = 1 if $maybeCode && $totalLines > 2 && (($maybeCode / $totalLines) > $multiRatio);
+
+	
+    if (!$reported && $isCode){
+      $check->violation(0,$file,$codeLine,-1,ERR1);
+      $reported=1;
+    }
+  }
+}

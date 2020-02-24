@@ -1,0 +1,181 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-10-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Copy assignment operator not declared.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "A copy assignment operator shall be declared when there is a template assignment operator with a parameter that is a generic parameter";}
+
+
+# This is the full description of the rule being tested
+sub description { return "( Required ) A copy assignment operator shall be declared when there is a template assignment operator with a parameter that is a generic parameter.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Contrary to possible developer expectations, a template assignment operator will not suppress
+the compiler generated <i>copy assignment operator</i>. This may lead to incorrect copy semantics for
+members requiring deep copies.</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  class A
+  {
+  public:
+    // A & operator= ( A const & rhs ) Example 1 - implicitly generated
+    // {
+    // i = rhs.i;
+    // return *this;
+    // }
+    template <typename T>
+    T & operator= ( T const & rhs ) // Example 2
+      {
+        if ( this != &rhs ) {
+          delete i;
+          i = new int32_t;
+          *i = *rhs.i;
+        }
+      return *this;
+    }
+  private:
+    int32_t * i; // Member requires deep copy
+  };
+  void f ( A const & a1, A & a2 )
+  {
+    a2 = a1; // Unexpectedly uses Example 1
+  }
+
+</pre>
+
+<p>
+The implicitly generated <i>copy assignment operator</i> Example 1 will be used to copy a1 to a2.
+Therefore, a shallow copy on the pointer member i will result in both a1.i and a2.i pointing to
+the same object. Was this the intent, or was it expected that a new object would be created and
+initialized?</p>
+<br>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation( $ent, $file, $line, $column, $error, $name );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull all the classes
+  my @classesDefined = $file->filerefs( 'Define', 'Class', 0 );
+  return unless @classesDefined;
+
+  # Loop through all the defined classes
+  CLS : foreach my $class ( @classesDefined ) {
+
+    # Set flags for error detection
+    my $hasTemplateAssignmentOperator = 0;
+    my $hasCopyAssignmentOperator = 0;
+
+    # Pull everything defined in this class
+    my @methodsDefined = $class->ent->refs( 'Define', 'Member Function Template', 1 );
+    next CLS unless @methodsDefined;
+
+    # Loop through each method
+    foreach my $method ( @methodsDefined ) {
+
+      # Set flag if we see a template assignment operator
+      if ( $method->ent->name eq 'operator=' ) {
+
+        ####
+        # Start at the function definition and walk backwards
+        my $lexeme = $method->lexeme;
+
+        # Set a flag and walk backwards until we see the 'template' keyword
+        my $genericType = 0;
+        while ( $lexeme->text ne 'template' ) {
+
+          # If we see a keyword, because of the nature of templates, it should mean the template has a generic type
+          if ( $lexeme->token eq 'Keyword' ){
+            $hasTemplateAssignmentOperator = 1;
+          }
+          $lexeme = $lexeme->prevUseful;
+
+        }
+
+      }
+
+    }
+    next CLS unless $hasTemplateAssignmentOperator;
+
+    # Pull everything declared in this class
+    my @methodsDeclared = $class->ent->refs( 'Declare', 'Member Function', 1 );
+
+    # Loop through each method
+    foreach my $method ( @methodsDeclared ) {
+
+      # Set flag if we see a copy assignment operator declared
+      if ( $method->ent->name eq 'operator=' ) {
+        $hasCopyAssignmentOperator = 1;
+      }
+
+    }
+
+    # Throw error if we have seen a template assignemnt operator but no copy assignment operator declared
+    if ( $hasTemplateAssignmentOperator and !$hasCopyAssignmentOperator ) {
+      throwError( $check, $class->ent, $class->file, $class->line, $class->column, ERR1, $class->ent->name );
+    }
+  }
+}

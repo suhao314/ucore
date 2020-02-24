@@ -1,0 +1,110 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => "Unused Parameter %1 in Non Virtual Functions";
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+
+}
+
+# This is the short error the Understand will use
+sub name{
+  return 'A There shall be no unused parameters (named or unnamed) in non-virtual functions';
+}
+
+# This is the full description of the rule being tested
+sub description {
+  return "(Required) A There shall be no unused parameters (named or unnamed) in non-virtual functions.";
+}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+<p><b>Rationale</b><br>
+<i>Unused</i> function parameters are often due to design changes and can lead to mismatched parameter lists.</p>
+<p><b>Exception</b><br>
+An unnamed parameter in the definition of a function that is used as a <i>callback</i> does not violate this rule.
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  typedef int16_t ( * CallbackFn )( int16_t a, int16_t b );
+  int16_t Callback_1 ( int16_t a, int16_t b ) // Compliant
+  {
+    return a + b;
+  }
+  int16_t Callback_2 ( int16_t a, int16_t b ) // Non-compliant
+  {
+    return a;
+  }
+  int16_t Callback_3 ( int16_t, int16_t b ) // Compliant by exception
+  {
+    return b;
+  }
+  void Dispatch ( int16_t n,
+                  int16_t a,
+          int16_t b,
+          int16_t c, // Non-compliant
+          int16_t ) // Non-compliant if Dispatch not a callback.
+  {
+    CallbackFn pFn;
+    switch ( n )
+    {
+      case 0: pFn = &Callback_1; break;
+      case 1: pFn = &Callback_2; break;
+      default: pFn = &Callback_3; break;
+    }
+    ( *pFn )( a, b );
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+# Any defined options go here
+sub define_options{}
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+  # loop through all non virtual functions
+  my @funcrefs = $file->filerefs( "define", "function ~virtual", 1 ); 
+  FUNC: foreach my $ref ( @funcrefs ) {
+
+    # loop through all parameters of each function
+    my @parameters = $ref->ent->refs( "define", "parameter", 1 );
+    PARA: foreach my $para ( @parameters ) {
+    
+    # check that each parameter is used
+    next PARA if $para->ent->name eq '...';
+    next PARA if $para->ent->refs( "setby ~init, useby ~inactive, modifyby, callby" );
+    next PARA if $ref->ent->refs( "useby ptr" ) && $para->ent->name eq "[unnamed]";
+    $check->violation($para->ent,$para->file,$para->line,$para->column, ERR1, $para->ent->name);
+  }
+  }
+}

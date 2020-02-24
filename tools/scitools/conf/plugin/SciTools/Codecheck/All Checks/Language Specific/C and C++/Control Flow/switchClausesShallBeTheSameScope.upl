@@ -1,0 +1,154 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Switch label not the same scope as other labels in %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "A switch-label shall only be used when the most closely enclosing compound statement is the body of a switch statement";}
+
+# This is the full description of the rule being tested
+sub description { return "A switch-label shall only be used when the most closelyenclosing compound statement is the body of a switch statement.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+A <i>switch-label</i> can be placed anywhere within the statements that form the body of a <i>switch</i>
+statement, potentially leading to unstructured code. To prevent this from happening, the scope
+of a <i>case-label</i> or <i>default-label</i> shall be the compound statement forming the body of a <i>switch</i>
+statement. All <i>case-clauses</i> and the <i>default-clause</i> shall be at the same scope.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  switch ( x )
+  {
+  case 1: // Compliant
+    if ( ... )
+    {
+    case 2: // Non-compliant
+      DoIt ( );
+    }
+    break;
+  default:
+    break;
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+sub checkAswitch {
+  my $check = shift;
+  my $file = shift;
+  my $ref = shift;
+  my $lexeme = shift;
+  
+  while ( $lexeme->text ne "{" ) {
+    $lexeme = $lexeme->nextUseful
+  }
+  my $count = 1;
+  $lexeme = $lexeme->nextUseful;
+  
+  while ( $count > 0 ) {
+    if ( $lexeme->text eq "switch" ) {
+	  $lexeme = checkAswitch($check, $file, $ref, $lexeme);
+	} elsif ( $lexeme->text eq "{" ) {
+	  $count++;
+	} elsif ( $lexeme->text eq "}" ) {
+	  $count--;
+	  return $lexeme if $count == 0;
+	} elsif ( $lexeme->text eq "case" || $lexeme->text eq "default" ) {
+	  throwError($check, $ref->ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$ref->scope->name) unless $count == 1;
+	}
+  }
+  continue {
+    $lexeme = $lexeme->nextUseful;
+  }
+  return $lexeme;
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function(@functionsDefined) {
+    my $text = $function->ent->contents;
+	# Remove any // style comments
+	$text =~ s/\/\/.*\n/\n/g;
+	# Remove any /* */ style comments
+	$text =~ s/\/\*.*\*\//\n/gs;
+    # Next unless we have a switch statement
+    next unless $text =~ /\s+switch(\s+|\()/;
+	# Get end point
+    my $end = $function->ent->ref("End");
+    # Spin up a lexer
+    my $lexeme = $function->lexeme;
+	
+	#While I am still within the function
+	while ( $lexeme->line_begin < $end->line ) {
+	  $lexeme = checkAswitch($check, $file, $function, $lexeme) if $lexeme->text eq "switch";
+	}
+	# Standard continue statement 
+	continue {
+      $lexeme = $lexeme->nextUseful;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

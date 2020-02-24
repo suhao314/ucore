@@ -1,0 +1,15 @@
+Source: dyacclex
+Section: contrib/devel
+Priority: optional
+Maintainer: Michiel Rook <michiel@grendelproject.nl>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.1
+
+Package: dyacclex
+Architecture: any
+Depends: libc6 (>= 2.3.2.ds1-4)
+Description: Delphi Yacc & Lex - Parser generator toolset for Delphi and Kylix
+ Delphi Yacc & Lex is a parser generator toolset for Delphi and Kylix,
+ based on Turbo Pascal Lex and Yacc, version 4.1, by Albert Graef et al.
+ The primary goal is to clean up the code, and improve compatibility
+ and maintainability.

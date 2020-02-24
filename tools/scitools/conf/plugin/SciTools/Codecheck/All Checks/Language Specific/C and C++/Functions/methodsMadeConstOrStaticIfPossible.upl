@@ -1,0 +1,176 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Member function %1 can be made static, but is not static';
+use constant ERR2 => 'Member function %1 can be made const, but is not const';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "If a member function can be made static then it shall be made static, otherwise if it can be made const then it shall be made const";}
+
+
+# This is the full description of the rule being tested
+sub description { return "(Required) If a member function can be made static then it shall be made static, otherwise if it can be made const then it shall be made const.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Declaring a member function static or const limits its access to the non-static data members.
+</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  class A
+  {
+  public:
+    int16_t f1 ( )    // Non-compliant – can be const
+    {
+      return m_i;
+    }
+    int16_t f2 ( )    // Non-compliant – can be static
+    {
+      return m_s;
+    }
+    int16_t f3 ( )    // Compliant – cannot be const or static
+    {
+      return ++m_i;
+    }
+  private:
+    int16_t m_i;
+    static int16_t m_s;
+  };
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation( $ent, $file, $line, $column, $error, $name );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all Methods that are defined within this file
+  my @methodsDefined = $file->filerefs( 'Define', 'Member Function ~Static ~Const' );
+  return unless @methodsDefined;
+
+  METH : foreach my $method ( @methodsDefined ) {
+
+    # Skip constructors and destructors
+    next if $method->ent->longname eq $method->ent->name . '::' . $method->ent->name;
+    next if $method->ent->longname =~ /\~/;
+
+    # Test if method can be static, throw error if so
+    if ( canBeStatic ( $method ) ) {
+
+      throwError ( $check, $method->ent, $method->file, $method->line, $method->column, ERR1, $method->ent->name );
+      next METH;
+
+    # Test if method can be const, throww error if so
+    } elsif ( canBeConst ( $method ) ) {
+
+      throwError ( $check, $method->ent, $method->file, $method->line, $method->column, ERR2, $method->ent->name );
+      next METH;
+
+    }
+  }
+}
+
+
+sub canBeStatic {
+
+  my $ref = shift;
+  my $passed = 1;
+
+  # Pull the contents of the function
+  my $text = $ref->ent->contents;
+  # Remove any // style comments
+  $text =~ s/\/\/.*\n/\n/g;
+  # Remove any /* */ style comments
+  $text =~ s/\/\*.*\*\//\n/gs;
+
+  $passed = 0 if $text =~ /this\-\>/;
+  $passed = 0 if $ref->ent->kindname =~ /\bVirtual\b/;
+
+  my @useRefs = $ref->ent->refs( 'Use' );
+  foreach my $use ( @useRefs ) {
+
+    $passed = 0 if $use->ent->kindname !~ /\bStatic\b/;
+
+  }
+
+  return $passed;
+}
+
+
+sub canBeConst {
+
+  my $ref = shift;
+  my $passed = 1;
+
+  my @modifies = $ref->ent->refs( 'Modify' );
+  my @sets = $ref->ent->refs( 'Set' );
+  push ( @modifies, @sets );
+
+  foreach my $mods ( @modifies ) {
+
+    $passed = 0 if $mods->ent->kind->longname =~ /\bMember\b/;
+
+  }
+
+  return $passed;
+}

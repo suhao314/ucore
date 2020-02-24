@@ -1,0 +1,178 @@
+use base ("Understand::Codecheck");
+use Understand::Flowchart;
+use strict;
+
+
+sub name {
+	return "0-1-1 A project shall not contain unreachable code";
+}
+
+sub description {
+	return "0-1-1 (Required) A project shall not contain unreachable code.";
+}
+
+sub detailed_description {
+  return  <<"END_DESC"
+<p><b>Rationale</b><br>
+Code is unreachable	if	there	is	no	syntactic	(control	flow)	path	to	it.	If	such	code	exists,	it	is	
+unclear if this is intentional or simply that an appropriate path has been accidentally omitted.
+Compilers  may  choose  not  to  generate  code  for  these  constructs,  meaning  that,  even  if  the 
+unreachable code	is	intentional,	it	may	not	be	present	in	the	final	executable	code.
+<p>Missing statements, often caused by editing activities, are a common source of unreachable code.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+int16_t with_unreach ( int16_t para ) 
+{ 
+   int16_t local;
+   local = 0;
+   switch ( para ) 
+   {
+      local = para;   // unreachable – Non-compliant
+      case 1: 
+      { 
+         break; 
+      }
+      default: 
+      { 
+         break; 
+      }
+   } 
+   return para; 
+   para++;            // unreachable – Non-compliant 
+}
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language =~ /C\+\+/;
+  return 1;
+}
+
+sub test_entity {
+  my $entity = shift;
+  my $result = isValidFlowchartEntity($entity);
+  return $result ? 1 : -1;
+}
+
+sub test_global {
+	return 0;
+}
+
+sub define_option{
+  my $check = shift;
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("c file ~dll");
+  
+  my @funcRefs = $file->filerefs("definein, body declarein","c function ~unknown ~unresolved".
+   ",java method ~abstract".
+   ",fortran subroutine, fortran function, fortran main program ~unknown ~unresolved".
+   ",c# method ~abstract".
+   ",vhdl procedure, vhdl function".
+   ",ada procedure, ada function, ada task",1);
+  
+  FUNC:foreach my $funcRef (@funcRefs){
+    my $func = $funcRef->ent;
+    next FUNC unless $func->freetext("CGraph");
+    my @nodes = ();
+      my $id=1;
+    foreach my $fields (split(";", $func->freetext("CGraph"))) {
+      my %node = {};
+      my @parents = ();
+      ($node{kind}, $node{sline}, $node{scol}, $node{eline}, $node{ecol},
+       $node{endstr}, my @children) = split(",", $fields);
+      $node{id} = $id++;
+      $node{fields} = $fields;
+      $node{parents} = \@parents;
+      $node{children} = \@children;
+      push(@nodes, \%node);
+    }
+    # connect nodes
+    my $start = $nodes[0];
+    my $end = $nodes[-1];
+    foreach my $node (@nodes) {
+      my @children = ();
+      foreach my $id (@{$node->{children}}) {
+        my $child = $nodes[$id - 1];
+        push(@{$child->{parents}}, $node);
+        push(@children, $child);
+      }
+      $node->{children} = \@children;
+    }
+      
+    traverse($start);
+    filter(\@nodes);
+    collapse(\@nodes);
+
+    foreach my $node(@nodes){
+      next if $node == $end;
+      if (!$node->{filtered} &&!$node->{reachable}){
+        $check->violation($func,$file,$node->{sline},$node->{scol},"Unreachable Code"); 
+        next FUNC;
+      }
+    }
+  }
+}
+
+# mark children reachable from node as 'reachable'
+sub traverse {
+  my $node = shift;
+  $node->{reachable} = 1;
+  foreach my $child (@{$node->{children}}) {
+    if (!$child->{reachable}) {
+      traverse($child);
+    }
+  }
+}
+
+sub filter {
+  my $nodes = shift;
+
+  # mark implicit nodes as 'filtered'
+  my $start = $nodes->[0];
+  my $end = $nodes->[-1];
+  foreach my $node (@$nodes) {
+    my $kind = $node->{kind};
+    if (($kind == 36 && $node != $start && $node != $end) ||
+        ($kind == 39 && @{$node->{children}} <= 1) ||
+        $kind == 0 || $kind == 4 || $kind == 7 || $kind == 8 || $kind == 9 ||
+        $kind == 15 || $kind == 24 || $kind == 42 || $kind == 45 ||
+        $kind == 75 || $kind == 84) {
+      $node->{filtered} = 1;
+    } elsif ($kind >= 78 && $kind <= 82) {
+      $node->{deferred} = 1;
+    }
+  }
+}
+
+sub collapse {
+  my $nodes = shift;
+
+  # collapse node into parent and mark as 'filtered'
+  foreach my $node (@$nodes) {
+    if (@{$node->{children}} == 1) {
+      my $kind = $node->{kind};
+      my $child = $node->{children}->[0];
+      if ($kind == 35 && $child->{kind} == 35 &&
+          @{$child->{parents}} == 1) {
+        $child->{collapse} = $node;
+        $child->{filtered} = 1;
+      }
+    }
+  }
+}
+
+sub children {
+  my $node = shift;
+
+  # skip edges to filtered nodes
+  my @children = ();
+  foreach my $child (@{$node->{children}}) {
+    push(@children, $child->{filtered} ? children($child) : $child);
+  }
+
+  return @children;
+}

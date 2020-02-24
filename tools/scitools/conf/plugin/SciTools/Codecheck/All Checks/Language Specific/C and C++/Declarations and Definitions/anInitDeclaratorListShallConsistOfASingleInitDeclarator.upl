@@ -1,0 +1,93 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson 
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Init-declarator-list contains more than one init-declarator: %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "An init-declarator-list or a member-declarator-list shall consist of a single init-declarator or member-declarator respectively";}
+
+# This is the full description of the rule being tested
+sub description { return "An init-declarator-list or a member-declarator-list shall consist of a single init-declarator or member-declarator respectively.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Where multiple declarators appear in the same declaration the type of an identifier may not meet
+developer expectations.</p>
+
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  
+  int32_t i1; int32_t j1; // Compliant
+  int32_t i2, *j2; // Non-compliant
+  int32_t *i3,
+          &j3 = i2; // Non-compliant
+  </pre>
+
+<BR />
+
+<p><b>See also</b><br>
+ISO/IEC 14882:2003 [1] §9.2</p>
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+
+  # Check if we are looking at a file
+  return unless $file->kind->check('c file');
+  
+  # Pull all objects references for sets and defines
+  my @allRefs = $file->filerefs("Define, Set", "Object");
+  
+  # Loop through each reference
+  foreach my $ref ( @allRefs ) {
+
+    # Spin up a lexer and text if the next token is a comma (,)
+    my $lexeme = $ref->lexeme;
+    throwError($check, $ref->ent, $file, $ref->line, $ref->column, ERR1, $ref->ent->name) if $lexeme->nextUseful->text eq ',';
+  }
+}

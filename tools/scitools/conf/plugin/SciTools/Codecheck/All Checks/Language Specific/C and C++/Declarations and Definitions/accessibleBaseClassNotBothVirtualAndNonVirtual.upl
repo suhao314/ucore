@@ -1,0 +1,165 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Class %1 has a base class that is both virtual and non-virtual in its hierarchy';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "An accessible base class shall not be both virtual and non-virtual in the same hierarchy";}
+
+
+# This is the full description of the rule being tested
+sub description { return "(Required) An accessible base class shall not be both virtual and non-virtual in the same hierarchy.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+If a base class is both virtual and non-virtual in a multiple inheritance hierarchy then there will be
+at least two copies of the base class sub-object in the derived object. This may not be consistent
+with developer expectations.</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  class A {};
+  class B1: public virtual A {};
+  class B2: public virtual A {};
+  class B3: public A {};
+  class C: public B1, B2, B3 {};  // Non-compliant –
+                                  // C has two A sub-objects
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation( $ent, $file, $line, $column, $error, $name );
+}
+
+
+our %baseClasses = ();
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all classes that are defined within this file
+  my @classesDefined = $file->filerefs( 'Define', 'Class' );
+  return unless @classesDefined;
+
+  # Loop through each defined class
+  CLS : foreach my $class ( @classesDefined ) {
+
+    # Pull all the bases for this class
+    my @publicBases = $class->ent->refs( 'Public Base' );
+    my @privateBases = $class->ent->refs( 'Private Base' );
+
+    # Move on if we don't have both public and private bases
+    next CLS unless @publicBases and @privateBases;
+
+    # Empty our global hash
+    for ( keys %baseClasses ) {
+      delete $baseClasses{$_};
+    }
+
+    # Put all base classes into our global hash
+    foreach my $public ( @publicBases ) {
+      findParent( $public, 1 );
+    }
+
+    # Check all private classes against the public classes
+    foreach my $private ( @privateBases ) {
+      findParent( $private, 0 );
+    }
+
+    # Check the hash for any detected violations
+    foreach my $count ( values %baseClasses ) {
+
+      $check->violation( $class->ent, $file, $class->line, $class->column, ERR1, $class->ent->name ) if $count > 1;
+
+    }
+  }
+}
+
+
+# This subroutine finds the parent class
+sub findParent {
+
+  # Pull the incoming class and get that class' base classes
+  my $class = shift;
+  my $firstPass = shift;
+  my @baseClasses = $class->ent->refs( 'Base' );
+
+  # Recursively check all parent classes
+  if ( @baseClasses ) {
+    foreach my $base ( @baseClasses ) {
+      findParent( $base, $firstPass );
+    }
+
+  # Add this class to the global hash
+  } else {
+
+    # Use the flag to determine if we are looking for duplicates or not
+    if ( $firstPass ) {
+      $baseClasses{ $class->ent->uniquename } = 1;
+    } else {
+
+      # Test if the key exists, if so mark it
+      if ( exists $baseClasses{ $class->ent->uniquename } ) {
+        $baseClasses{ $class->ent->uniquename } = 2;
+      }
+
+    }
+  }
+}

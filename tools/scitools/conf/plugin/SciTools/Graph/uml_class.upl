@@ -1,0 +1,231 @@
+#
+# options
+#
+
+my $debug = 0;
+my $debugFile = "c:/uml_debug.log";
+
+my $filter = "";
+my %drawn;
+
+#
+# globals
+#
+
+my $kind =
+  "class ~unknown ~unresolved,".
+  "typedef ~unknown ~unresolved,".
+  "struct ~unknown ~unresolved,".
+  "ada type ~unknown ~unresolved";
+
+
+#
+# overrides
+#
+
+use base ("Understand::Graph::Gv");
+use strict;
+
+sub name { return "UML Class Diagram"; }
+
+sub test_entity {
+  my $entity = shift;
+  return 1 if $entity->kind()->check($kind);
+  if ($entity->kind()->check("file ~unknown ~unresolved")){
+    my @refs = $entity->filerefs("define,body declare",$kind,1);
+    return 1 if @refs;
+  }
+  return -1;
+}
+
+sub test_global { return 1; }
+
+sub init {
+	my $graph = shift;
+
+	$graph->options->define("Show Solo Classes",["Off","On"],"On");
+	$graph->options->define("Show Class Details",["Off","On"],"On");
+   $graph->options->define("Show Related Classes",["Off","On"],"On");
+}
+
+sub do_load {
+   my $graph = shift;
+   my $entity = shift;
+  
+   my $isFile = 1 if $entity && $entity->kind()->check("file");
+	  
+   my @ents;
+	%drawn =();
+  
+   if($debug) {
+      open (FILE,">$debugFile") || die "Couldn't open debug file";
+      print FILE "starting\n";
+      print FILE "Show Solo Classes  - ". $graph->options->lookup("Show Solo Classes")."\n";
+      print FILE "Show Class Details - ".  $graph->options->lookup("Show Class Details")."\n";
+      print FILE "Show Related Classes - ".  $graph->options->lookup("Show Related Classes")."\n";
+      close FILE;
+   }
+
+  
+   if ($isFile) {
+      my @refs = $entity->filerefs("define,body declare",$kind,1);
+      @ents = map{$_->ent} @refs;
+      printDebug(@ents." entities in file");
+   } elsif ($entity) {
+      @ents = ($entity);
+      printDebug(@ents." entities selected");
+   } else {
+      @ents = $graph->db->ents($kind);
+      @ents = grep {$_->library ne "Standard"} @ents;
+		@ents = grep {$_->longname !~ /$filter/i} @ents if $filter;
+      printDebug(@ents." project entities");
+   }
+
+	$graph->default("rankdir","BT","graph");
+	$graph->default("concentrate","true","graph");
+	$graph->default("color","blue","node");
+	$graph->default("shape","polygon","node");
+   $graph->default("sides","4","node");
+	$graph->default("fontcolor","black","node");
+	$graph->default("fontsize","10","node");
+	$graph->default("color","#CC0044","edge");
+   $graph->default("packmode","graph","graph");
+
+	my $singletons = $graph->options->lookup("Show Solo Classes") eq "On";
+	my $showDetails = $graph->options->lookup("Show Class Details") eq "On";
+  
+
+  
+   # alpha sort matching classes and output 
+   foreach my $ent (sort {$a->name() cmp $b->name();} @ents) {
+      if ($ent->kind()->check("typedef")) {
+         my $typeRef = $ent->ref("typed");
+         if ($typeRef && $typeRef->ent->kind->check($kind)) {
+            if ($ent->name eq $typeRef->ent->name || $typeRef->ent->name eq "[unnamed]") {
+               $ent = $typeRef->ent;
+            }
+         }
+      }
+		my @relatives = $ent->refs("base, derive, inherit,inheritby");
+		if (@relatives || $singletons) {
+			draw_class($ent, $graph, $entity, 1, 1,$showDetails);
+		}
+	}
+   printDebug("finished analyzing, rendering graph");
+}
+
+
+#
+# user subs
+#
+
+sub draw_class {
+   my $ent = shift;
+   my $g = shift;
+   my $is_entity = shift;
+   my $do_base = shift;
+   my $do_derive = shift;
+   my $showDetails = shift;
+
+   my $className = $ent->longname;
+
+   if ($className eq "[unnamed]") {
+      my $ref= $ent->ref("Typedby");
+      $className = $ref->ent->longname if $ref;
+   }
+
+   # make the graph node and its label
+   printDebug("Starting analysis of class $className");
+
+   my $showRelated = $g->options->lookup("Show Related Classes") eq "On";
+
+   #Handle infinite recursion
+   if ($drawn{$ent->id}) {
+      return $drawn{$ent->id} 
+   }
+
+   my $classnode = $g->node($ent);
+
+   if ($is_entity) {
+      $classnode->set("color", "red");
+   }
+
+   $drawn{$ent->id}=$classnode;
+
+   $classnode->set("shape", "record");
+
+   my $classnodeFuncLabel = "{".$className."|";
+   my $classnodeAttrLabel = "";
+
+	if ($showRelated) {
+      # show base and derive classes
+      my @bases = $do_base ? $ent->ents("base, extend, inherit") : ();
+      @bases = grep {$_->longname !~ /$filter/i} @bases if $filter;
+      my @derived = $do_derive ? $ent->ents("derive, extendby, inheritby") : ();
+      @derived = grep {$_->longname !~ /$filter/i} @derived if $filter;
+
+      foreach my $base (sort {$a->name cmp  $b->name} @bases) {
+         my $node = draw_class($base, $g, 0, 1, 0,$showDetails);
+         $g->edge($classnode, $node);
+      }
+
+      foreach my $derive (sort {$a->name cmp  $b->name} @derived) {
+         my $node = draw_class($derive, $g, 0, 0, 1,$showDetails);
+         $g->edge($node, $classnode);
+      }
+   }
+
+   # output any members
+   # sort by kind using a hash of arrays
+   my %members=();
+
+   foreach my $ref ($ent->refs("operation, define, declare", "", 1)) {
+      push @{$members{$ref->ent()->kindname()} }, $ref->ent();
+   }
+
+   # reverse sort by member type
+   foreach my $membertype ( sort {$b cmp $a;} keys (%members)) {
+      if (@{$members{$membertype}}) {
+         foreach my $member (sort {$a->name() cmp  $b->name(); }
+			  @{$members{$membertype}}) {
+            printDebug($membertype." ".$member->longname());
+	
+				# now build up the UML label - for private,
+				# # for protected, + for public
+		
+	         my $umlmembertype = "+"; #default to public
+
+	         if ($membertype =~ /protected/i) {
+	            $umlmembertype = "#"; # UML symbol for protected
+	         } elsif ($membertype =~ /private/i) {
+	            $umlmembertype = "-"; #UML symbol for private
+	         }
+			
+	         if ($membertype =~ /procedure|function|method/i) {
+	            # now add the UML member symbol + name to the 
+	            # node label for functions
+		
+	            $classnodeFuncLabel = $classnodeFuncLabel .
+	              $umlmembertype . $member->name() . "\\l";
+	         } elsif ($membertype =~ /component|object|variable|field/i) {
+	            $classnodeAttrLabel = $classnodeAttrLabel .
+	              $umlmembertype . $member->name() . "\\l";
+	         }
+         }
+	
+         $classnode->set("label", $classnodeFuncLabel . "|" . $classnodeAttrLabel ."}")
+           if $showDetails;
+      }
+   }
+
+	printDebug("finished Calculating $className");
+   return $classnode;
+}
+
+sub printDebug {
+   my $message = shift;
+   return unless $debug;
+   open (FILE,">>$debugFile") || die "Couldn't open debug file";
+   print FILE $message."\n";
+   close FILE;
+}

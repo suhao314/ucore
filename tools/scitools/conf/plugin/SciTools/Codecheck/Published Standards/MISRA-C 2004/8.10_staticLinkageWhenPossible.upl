@@ -1,0 +1,67 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: %2 is only used within %3, so static keyword should be used.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '8.10 prefer internal linkage over external whenever possible' }
+
+sub description { '8.10 (Required) All declarations and definitions of objects or functions at file scope shall have internal linkage unless external linkage is required.' }
+
+sub detailed_description { <<'END_DESC'
+If a variable is only to be used by functions within the same file then use <i>static</i>. Similarly if a function is only called from elsewhere within the same file, use <i>static</i>. Use of the <i>static</i> storage-class specifier will ensure that the identifier is only visible in the file in which it is declared and avoids any possibility of confusion with an identical identifier in another file or a library.
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 0 }
+
+sub test_global { 1 }
+
+sub define_options { }
+
+sub check {
+	my $check = shift;
+	
+	my @definedEnts;
+	FILE:foreach my $file ($check->get_files) {
+    next unless $file->kind->check('c file');
+		return if $check->is_abort();
+		REF:foreach my $ref ($file->filerefs("define","c global object ~static ~unknown, c function ~static ~unknown",1)){
+			push (@definedEnts,$ref->ent);
+		}
+	}
+	
+	my %seen;
+	ENT:foreach my $ent (@definedEnts){
+		next if $ent->name eq 'main';
+		next if $seen{$ent->id};
+		$seen{$ent->id}=1;
+		my @defines = $ent->refs("definein");
+		my @files;
+		foreach my $defRef (@defines){
+			push (@files,$defRef->file->id) unless $defRef->file->id ~~ @files;
+		}
+		my $defRef = @defines[0];
+		my @refs = $ent->refs("~definein ~declarein","c");
+		my $callsExternal=0;
+		REF:foreach my $ref(@refs){
+			next REF if $ref->file->id ~~ @files;
+			$callsExternal=1;
+			next ENT;
+		}
+		$check->violation($defRef->scope, $defRef->file, $defRef->line, $defRef->column, ERR1,$defRef->scope->name,$defRef->file->name) if !$callsExternal;
+	}
+	
+	return;
+}

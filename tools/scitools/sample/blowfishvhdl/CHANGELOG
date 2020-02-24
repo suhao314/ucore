@@ -1,0 +1,12 @@
+2.0
+---
+
+  * Completely rewritten in a more modern style.
+  * Full self-checking test bench with official test vectors.
+  * Easier to maintain, modify, optimize.
+  * Easier to target to modern FPGAs.
+
+Pre-2.0
+-------
+  
+  * See SVN for complete change history.

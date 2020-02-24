@@ -1,0 +1,51 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Nested Comment: /* found inside C-style comment';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { 'Nested Comments' }
+
+sub description { 'The character sequence /* shall not be used within a C-style comment.' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+Nested C-Style comments (/*) can lead to runaway comments and is not supported by the C or C++ standard even though some compilers support this as a non-portable language extension. A comment beginning with /* continues until the first */ is encountered. Any /* occurring inside a comment is a violation of this rule.</p>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c file');
+	
+	my $lexer = $file->lexer(0);
+	my @lexemes = $lexer->lexemes if $lexer;
+	
+	foreach my $lexeme (@lexemes){
+		if ($lexeme->token eq 'Comment'
+			&& $lexeme->text =~ m! ^ /\* .* /\* !sx) {
+			$check->violation(0, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1, $lexeme->text);
+		}
+	}
+	
+	return;
+}

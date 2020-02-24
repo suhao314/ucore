@@ -1,0 +1,121 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant MULT => 'Multiple exit points from function';
+use constant NOEXIT => 'No exit point in function';
+use constant NOTEND => 'Exit point not at end of function';
+use constant MULTTRY => 'Multiple exit points from function try block';
+use constant MULTCATCH => 'Multiple exit points from catch handler';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(MULT);
+  $check->add_tr_text(NOEXIT);
+  $check->add_tr_text(NOTEND);
+}
+
+sub name { return "6-6-5 A function shall have a single point of exit at the end of the function";}
+
+sub description { return "6-6-5 (Required) A function shall have a single point of exit at the end of the function.";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+This is required by IEC 61508 [12], as part of the requirements for a modular approach.
+<p><b>Exception</b><br>
+A function implementing a function-try-block is permitted to have multiple points of exit, one for 
+the try block and one for each catch handler.
+Throwing an exception that is not caught within the function is not considered a point of exit for 
+this rule.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  void functionTryBlock ( void ) try 
+  { 
+     return;                // Compliant by exception 
+  } 
+  { 
+  catch ( int32_t ) 
+     return;                // Compliant by exception 
+  } 
+  catch ( ... ) 
+  { 
+     return;                // Compliant by exception 
+  }</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{
+  my $check = shift;
+  $check->option->checkbox("ignore","Ignore Constructors and Destructors",0);
+}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file");
+  my @funcEnds =$file->filerefs("end","function");
+  return unless @funcEnds;
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  
+  #Start at the end of the function and walk through it backwards;
+  FUNCTIONLOOP:foreach my $funcEnd (@funcEnds){
+    next if($check->option->lookup("ignore") && $funcEnd->ent->parent && $funcEnd->ent->parent->name() eq $funcEnd->ent->name());
+    next if($funcEnd->ent->name =~ /^~/);
+    my $start = $funcEnd->ent->ref("definein");
+    my $atEnd = 0;
+    my $statementCount;
+    my $exitCount;
+    my $bracket=0;
+    my $tryFunc;
+    my $lexeme = $lexer->lexeme($funcEnd->line,$funcEnd->column);
+    while($lexeme && $lexeme->line_begin >= $start->line){
+      $exitCount++ if $lexeme->token eq "Keyword" && $lexeme->text =~ /Exit|return|goto/i;
+      $statementCount++ if $lexeme->token eq "Punctuation" && $lexeme->text =~ /[;}]/;
+      $bracket++ if $lexeme->token eq "Punctuation" && $lexeme->text eq "}";
+      $bracket-- if $lexeme->token eq "Punctuation" && $lexeme->text eq "{";
+      if ($statementCount == 2 && $exitCount){
+        $atEnd = 1;
+      }
+      #$check->violation($funcEnd->ent,$file,$lexeme->line_begin,$lexeme->column_begin,$lexeme->text.":".$bracket);  
+      if (!$bracket && $lexeme->token eq "Keyword" && $lexeme->text =~ /catch|try/i){ #Hopefully we are on a new set of function try block
+       if ($exitCount > 1){
+          my $err = $lexeme->text =~ /catch/i ?MULTCATCH:MULTTRY;
+          $check->violation($funcEnd->ent,$file,$lexeme->line_begin,$lexeme->column_begin,$err);
+        }
+        $exitCount = 0;
+        $atEnd = 1;
+        $tryFunc=1;
+     }
+     
+    }continue{
+      $lexeme=$lexeme->previous;
+    }
+    next FUNCTIONLOOP if $tryFunc;
+    if ($exitCount && $exitCount > 1){
+      $check->violation($funcEnd->ent,$file,$start->line,$start->column,MULT);
+    }elsif(! $exitCount && $funcEnd->ent->type ne "void"){
+      $check->violation($funcEnd->ent,$file,$start->line,$start->column,NOEXIT);
+    }elsif($exitCount==1 && ! $atEnd){
+      $check->violation($funcEnd->ent,$file,$start->line,$start->column,NOTEND);
+    }
+  }
+  
+ 
+  
+  # $check->violation($entity,$file,$line,$column,ERR1,%1,%2);  # the %1 and %2 are optional parameters
+  # $check->violation(0,0,-1,-1,ERR1,%1,%2)  #if no entity or location
+  
+  #my $optionVal = $check->option->lookup($name);
+}

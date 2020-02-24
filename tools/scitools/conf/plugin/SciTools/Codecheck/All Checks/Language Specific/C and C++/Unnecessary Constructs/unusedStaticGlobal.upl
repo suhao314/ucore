@@ -1,0 +1,56 @@
+# Unused static global variables.
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => "Unused Static Global Variable";
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+
+}
+
+sub name{
+  return "Unused Static Globals";
+}
+
+sub description{
+  return "Find Static Global Variables that are defined but not used.";
+}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Static Globals that are defined but not used can lead to memory management issues as well as making 
+code more difficult to follow. They can also be indicitive of an error where a programmer meant to use 
+one variable and accidently used another. This check ignores references inside inactive code (ie #if 0...#endif).</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/;
+}
+
+sub test_entity {
+  return 1;
+}
+
+sub test_global {
+  return 0;
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # loop through static global
+  my @entrefs = $file->filerefs("define","object static global ~unresolved",1);
+  ENT:foreach my $varref(@entrefs) {
+      next ENT if ($varref->ent->refs("setby ~init,useby ~inactive,modifyby"));
+      my @doplegangers = $check->db->lookup($varref->ent->name,"object static global unresolved",1);
+      foreach my $evilTwin (@doplegangers){
+        next ENT if ($evilTwin->refs("setby ~init,useby ~inactive,modifyby"));
+      }
+      $check->violation($varref->ent,$varref->file,$varref->line,$varref->column,ERR1);
+    }
+}

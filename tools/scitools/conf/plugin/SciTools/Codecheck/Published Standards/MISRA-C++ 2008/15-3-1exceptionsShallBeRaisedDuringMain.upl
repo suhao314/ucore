@@ -1,0 +1,213 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Exception raised either before start-up or after termination of main in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "15-3-1 Exceptions shall be raised only after start-up and before termination of the program";}
+
+# This is the full description of the rule being tested
+sub description { return "15-3-1 (Required) Exceptions shall be raised only after start-up and before termination of the program.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Throwing an exception during start-up or termination results in the program being terminated in
+an <i>implementation-defined</i> manner.</p>
+<P>
+Before the program starts executing the body of <i>main</i>, it is in a start-up phase, constructing and
+initializing static objects. Similarly, after <i>main</i> has returned, it is in a termination phase where
+static objects are being destroyed. If an exception is thrown in either of these phases it leads to the
+program being terminated in an <i>implementation-defined</i> manner. Specifically from Section 15.3(13)
+of ISO/IEC 14882:2003 [1], if <i>main</i> is implemented as a <i>function-try-block</i>, exceptions raised
+during start-up and close down are not caught by the <i>catch</i> block(s) of <i>main</i>.</p>
+<p>
+This is in effect a special case of Rule 15–3–4, as there is nowhere a handler can be placed to catch
+exceptions thrown during start-up or termination.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  class C
+  {
+  public:
+    C ( )
+    {
+      throw ( 0 ); // Non-compliant – thrown before main starts
+    }
+    ~C ( )
+    {
+      throw ( 0 ); // Non-compliant – thrown after main exits
+    }
+  };
+  C c; // An exception thrown in C's constructor or destructor will
+       // cause the program to terminate, and will not be caught by
+       // the handler in main
+  int main( ... )
+  {
+    try
+    {
+      // program code
+      return 0;
+    }
+    // The following catch-all exception handler can only
+    // catch exceptions thrown in the above program code
+    catch ( ... )
+    {
+      // Handle exception
+      return 0;
+    }
+  }
+</pre>
+<p><b>See also</b><br>
+Rule 15–3–3, Rule 15–3–4, Rule 15–5–1, Rule 15–5–3</p>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Create a list of all functions and classes are defined
+  my @functionsDefined = $file->filerefs("define", "function, class");
+  return unless @functionsDefined;
+  
+  # Pull all global or static member objects
+  my @funcrefs = $file->filerefs("Define", "global object, static member object");
+  return unless @funcrefs;
+  
+  # Initialize the two lists needed to track the call stack linked to the potentially violating functions
+  my @badFuncs;
+  my @badId;
+  
+  # Loop through each function and object looking for the throw command
+  foreach my $function(@functionsDefined) {
+    # Check the text of each function for the throw keyword.
+	if ($function->ent->contents =~ /throw/) {
+	  # We have found a throw command; Initialize and check the lexer
+      my $firstLexer = $file->lexer(0,0,0);
+      return unless $firstLexer;
+
+      # Set the first lexeme and counters need to check entire function or object
+	  my $counter = 1;
+	  my $first = 0;
+      my $firstLexeme = $firstLexer->lexeme($function->line, $function->column);
+	  #While we are still inside the current definition
+	  while ($counter != 0){
+	    $counter++ if $first == 1 and $firstLexeme->text eq "{";
+		$counter-- if $first == 1 and $firstLexeme->text eq "}";
+	    $first = 1 if $first == 0 and $firstLexeme->text eq "{";
+		# Check if the throw command is active, if so, push the ref and id onto our lists
+		if ($firstLexeme->text eq "throw" && !$firstLexeme->inactive) {
+		  push (@badFuncs, $function);
+	      push (@badId, $function->ent->id);
+		}
+	  }
+	  continue {
+        $firstLexeme = $firstLexeme->next;
+      }
+	}
+  }
+  
+  # Check each function and object with a throw command for all references that call them
+  foreach my $call(@badFuncs) {
+    my @callstack = $call->ent->refs("callby, typedby");
+	# For each function the calls or types one of black listed fucntions or objects, we need to add them to the list for checking
+	foreach my $additional(@callstack) {
+	  my $id = $additional->ent->id;
+	  # Avoid duplication
+	  if ( !grep( /$id/, @badId ) ) {
+	    push (@badFuncs, $additional);
+		push (@badId, $id);
+	  }
+	}
+  }
+  
+  # Error possible, time to start the checks. Loop through all static and global reference
+  foreach my $ref(@funcrefs) {
+  
+    # Initialize and check the lexer
+    my $lexer = $file->lexer(1,8,0);
+    return unless $lexer;
+
+    # Set the first lexeme
+    my $lexeme = $lexer->lexeme($ref->line, $ref->column);
+	
+	# Start pulling lexemes from the start of the line to find location of reference
+    while ($lexeme->text ne ";"){
+	  # As we pull lexemes from the lexer, we check if any of them match something in our black list
+	  my $badCall = $lexeme->ent->id if $lexeme->ent;
+	  next unless $badCall;
+	  # Anything that is setby is exempt from our requirements unless it is set by one of our black list objects
+	  next if $lexeme->ent->ref("setby");
+	  throwError($check, $ref->ent,$ref->file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$ref->file->name) if ( grep( /$badCall/, @badId ) );
+    }
+	continue {
+      $lexeme = $lexeme->next;
+    }
+  }
+}
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

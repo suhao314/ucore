@@ -1,0 +1,51 @@
+#This script is designed to run with Understand - CodeCheck
+#Rule 2.3 The character sequence /* shall not be used within a comment.
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: /* found inside comment:' . "\n/*%1*/";
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '2.3 The character sequence /* shall not be used within a comment.' }
+
+sub description { '2.3 (Required) The character sequence /* shall not be used within a comment.' }
+
+sub detailed_description { <<'END_DESC'
+C does not support the nesting of comments even though some compilers support this as a language extension. A comment begins with /* and continues until the first */ is encountered.
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c file');
+	
+	my $lexer = $file->lexer(0);
+	my @lexemes = $lexer->lexemes if $lexer;
+	
+	foreach my $lexeme (@lexemes){
+		if ($lexeme->token eq 'Comment'
+			&& $lexeme->text =~ m! ^ /\* .* /\* !sx) {
+			$check->violation(0, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1, $lexeme->text);
+		}
+	}
+	
+	return;
+}

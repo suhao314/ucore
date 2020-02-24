@@ -1,0 +1,60 @@
+#This script is designed to run with Understand - CodeCheck
+#Robert Gempeler - July 18, 2010
+use base ("Understand::Codecheck");
+use strict;
+
+use constant ERR1 => 'File contains "goto" statement.';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "Goto Statements";}
+
+sub description { return "The \"goto\" statement shall not be used.";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The "goto" statement is considered very dangerous in many aspects and should almost never be used.</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull text of the file
+  my $text = $file->contents;
+  # Remove any // style comments
+  $text =~ s/\/\/.*\n/\n/g;
+  # Remove any /* */ style comments
+  $text =~ s/\/\*.*\*\//\n/gs;
+
+  # Skip this file unless the word restrict exists
+  return unless $text =~ /\bgoto|goto\b/;
+
+  # Find the restrict usage and throw an error
+  my $lexer = $file->lexer( 0 );
+  my @lexemes = $lexer->lexemes if $lexer;
+  
+  foreach my $lexeme ( @lexemes ){
+    $check->violation( $file, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1 ) if $lexeme->token eq 'Keyword' and $lexeme->text eq 'goto';
+  }  
+}

@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Linux)">
+	<META NAME="AUTHOR" CONTENT="Wesley Landaker">
+	<META NAME="CREATED" CONTENT="20001018;12124800">
+	<META NAME="CHANGEDBY" CONTENT="Wesley Landaker">
+	<META NAME="CHANGED" CONTENT="20001020;15263000">
+	<STYLE>
+	<!--
+		@page { margin-left: 1.25in; margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+		P { margin-bottom: 0.08in }
+		H1 { margin-bottom: 0.08in; font-family: "helvetica", sans-serif; font-size: 16pt }
+		H2 { margin-bottom: 0.08in; font-family: "helvetica", sans-serif; font-size: 14pt; font-style: italic }
+		H6 { margin-bottom: 0.08in; font-family: "helvetica", sans-serif; font-size: 10pt }
+		P.text-body-indent { margin-left: 0.2in }
+	-->
+	</STYLE>
+</HEAD>
+<BODY>
+<p>Click here to go to the blowfishvhdl sourceforge page: <A href="http://sourceforge.net/projects/blowfishvhdl"> <IMG src="http://sourceforge.net/sflogo.php?group_id=13143" width="88" height="31" border="0" alt="SourceForge Logo"></A>
+<p>Below is a paper I wrote when I coded up the original blowfish algorithm. I apologize in advance for any problems with this document; I wrote it up in a couple hours and never really edited it. =)
+<P ALIGN=RIGHT STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 ALIGN=CENTER>Blowfish Implementation in VHDL</H1>
+<P ALIGN=CENTER>By Wesley J. Landaker &lt;wjl@icecavern.net&gt;</P>
+<P ALIGN=CENTER STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2>Introduction</H2>
+<P>	Because something comparable was not readily and freely
+availible, I implemented the Blowfish encryption algorithm in
+synthesizable VHDL. My implementation is certainly not the fastest
+possible implementation, and it is also not the smallest.</P>
+<P>	My implementation is somewhere middle-of-the-line, where I made
+significant tradeoffs between speed, size, and ease of
+implementation. The main focus was to make an implementation that was
+usable, moderately compact, and would still run at an acceptable
+clock speed.</P>
+<H2>Background</H2>
+<P>	I chose to implement Blowfish for several reasons. The Blowfish
+cipher is extremely strong, is completely free, and currently does
+not have any public VHDL or hardware implementation of any sort
+readily available anywhere.</P>
+<P>	As described by Counterpane, the home of the algorithm, &quot;Blowfish
+is a symmetric block cipher that can be used as a drop-in replacement
+for DES or IDEA.  It takes a variable-length key, from 32 bits to 448
+bits, making it ideal for both domestic and exportable use. Blowfish
+was designed in 1993 by Bruce Schneier as a fast, free alternative to
+existing encryption algorithms.  Since then it has been analyzed
+considerably, and it is slowly gaining acceptance as a strong
+encryption algorithm.  Blowfish is unpatented and license-free, and
+is available free for all uses.&quot;
+(<A HREF="http://www.counterpane.com/blowfish.html">http://www.counterpane.com/blowfish.html</A>)</P>
+<H2>Implementation Details</H2>
+<P>	The Blowfish algorithm is block cipher consisting of a standard
+Fiestel network with 16 rounds, plus some initial and final
+encryption functions. The main feature that sets it off from other
+similar algorithms is that the non-linear substitution boxes (called
+sboxes) are key-dependent. Because of this, there is an expensive
+initialization step required on every key change, requiring the
+equivalent of 520 encryptions to initialize the sboxes. Because of
+this step, any Blowfish implementation requires a substantial number
+of finite state machines to control initialization and encryption.</P>
+<P>	In any implementation, there are several separate circuit pieces
+that can be identified. First is the encryption core (further
+referred to as 'crypt') that implements the actual Fiestel network.
+Second is the function F(xL) that crypt relies on for each round of
+the Fiestel network. Third is a generated array of sub-keys, called
+the parray, which is also used by crypt each round. Fourth are the
+four key-dependent sboxes that are read by the F(xL) function also
+each round. Fifth would be any control logic necessary to initialize
+the parray and sboxes.</P>
+<P>	As with all circuits, there are many ways to implement this
+algorithm. There are, however, two main paradigms for Blowfish
+implementation. The first is a purely combination or fully-pipelined
+core (which both have the same problems as discussed below) with a
+synchronous control. With this approach, the main problem is that
+since all 16 rounds will be running simultaneously, the parray and
+the sboxes must be able to have all of their data read at every
+location, every clock cycle. This translates to 1024 32-bit memory
+ports with 8-bit addresses, and 18 more with 5-bit addresses, which
+could be an extremely expensive size cost. This also means that the
+crypt and F(xL) hardware must be duplicated 16 times. The advantages
+to this approach, however, are that one data block could be processed
+every clock cycle, and a new key could be initialized in 520 clock
+cycles.</P>
+<P>	The other obvious way to implement this algorithm is the way that
+I have done it. That is, to have a single register that feeds back to
+itself through each round. First, this means that the parray and
+sboxes only need to have 1 memory port each--a total of 5 memory
+ports, compared to the 1042 required in the previously discussed
+implementation. Second, this also means that the only hardware that
+has to exist in crypt is that for a single round, and the hardware
+for F(xL) only has to exist once. The downside of this sort of
+implementation is that running optimally, one round per cycle, it can
+never take less than 16 clock cycles per data block, and 8320 cycles
+to initialize a key. In my implementation, I actually take
+approximately twice as long, because my sboxes and parray are
+implemented synchronously. For more information about the exact
+timing of my design, see the section on timing below.</P>
+<P>	The final large issue is the issue of supporting variable key
+lengths. It is viable for an implementation to hard-code a key length
+into the circuit if it is known that only keys of a certain size will
+be used. However, to implement the algorithm the most generally, it
+requires a very large structure of muxes or something similar to
+route various bits of the key to the proper places depending on the
+key length. In my implementation, I have added this large muxing
+structure, but if the key length is hard coded to a constant value
+before synthesis, this hardware will not be synthesized, and a
+considerable space savings will be achieved.</P>
+<H2>Testing</H2>
+<P>	In order to test this implementation of Blowfish, I used a
+software version of Blowfish I have written that has been checked
+against some standard test vectors and the official reference
+implementation of Blowfish. This allowed me to run the same data
+through the software and VHDL implementations of Blowfish and compare
+the results.</P>
+<P>	I tested this implementation with several key lengths between 128
+and 448, each with 2 or 3 random data blocks. Each block encrypted
+was then decrypted to make sure that the original data was restored
+correctly.</P>
+<P>	Although it would be nearly impossible to exhaustively test all
+combinations of inputs (448 bits of key, 4 bits of key_size, and  64
+bits of data = 114688 bits!!), because of the nature of encryption
+algorithms (they are designed to have every output bit depend on
+every input bit), several tests is usually all that is necessary to
+determine that the system works correctly.</P>
+<H2>Interfacing with Blowfish</H2>
+<P>	Interfacing with this implementation Blowfish is very
+straightforward. Below is a description of the inputs and outputs and
+how they are used.</P>
+<H6>Inputs</H6>
+<P CLASS="text-body-indent"><B>clk </B>     : 1   - The input clock
+signal.</P>
+<P CLASS="text-body-indent"><B>key</B>      : 448 - The
+encryption/decryption key. If less than a 448 bit key is desired,
+this signal must be padded up to 448 bits. Typically, this padding
+consists of all 0's.</P>
+<P CLASS="text-body-indent"><B>key_size</B> : 4   - The size of the
+<B>key</B> being used, in 32-bit words. Valid inputs are between 1
+and 14. If 0 or 15 are used, <B>key_size</B> of 14 is assumed. For
+example, 4 corresponds to a 128-bit <B>key</B>, 14 corresponds to a
+448-bit <B>key</B>. NOTE: If this is hard_coded before synthesis, it
+eliminate a huge matrix of multiplexers needed to implement key
+permutations of variable size.</P>
+<P CLASS="text-body-indent"><B>data_in</B>  : 64  - The input data.
+In encryption mode, this is the plaintext. In decryption mode, this
+is the ciphertext. This is only read when the <B>ready</B> signal is
+asserted.</P>
+<P CLASS="text-body-indent"><B>new_data</B> : 1   - This signal
+should be asserted when new data is presented on the <B>data_in</B>
+port. This signal is ignored when the circuit is not asserting <B>ready</B>.
+This should not be asserted at the same time as <B>new_key</B>.</P>
+<P CLASS="text-body-indent"><B>new_key</B>  : 1   - This signal
+should be asserted when a new <B>key</B> or <B>key_size</B> is
+presented. This signal is ignored when the circuit is not asserting
+<B>ready</B>. This should not be asserted at the same time as
+<B>new_data</B>.</P>
+<P CLASS="text-body-indent"><B>encrypt</B>  : 1   - This signal
+toggles between encryption and decryption operation. <B>1</B> means
+encrypt, <B>0</B> means decrypt. This signal is only read the same
+cycle that <B>new_data</B> is asserted and read.</P>
+<H6>Outputs</H6>
+<P CLASS="text-body-indent"><B>data_out </B>: 64  - The output data.
+In encryption mode, this is the ciphertext. In decryption mode, this
+is the plaintext. This is only modified during key initialization and
+the same cycle that <B>ready</B> is raised after an encryption or
+decryption sequence.</P>
+<P CLASS="text-body-indent"><B>ready</B>    : 1   - This signal is
+asserted when the circuit is ready to receive a new data block or a
+<SPAN STYLE="font-weight: medium">new </SPAN><B>key</B> (or
+<B>key_size</B>). The circuit will ONLY read <B>new_key</B> or
+<B>new_data</B> when this signal is asserted. This signal also
+signifies that the <B>data_out</B> signal is valid if an encryption
+or decryption sequence was previously running.</P>
+<H6>Initialization</H6>
+<P>	To properly initialize the circuit, <B>new_key</B> and <B>new_data</B>
+must be low before the first rising edge of the clock. After the
+first clock cycle, the circuit will assert <B>ready</B> and it can
+then be used. If this constraint is not met, the circuit will still
+initialize, but can take up to 21106 clock cycles before <B>ready</B>
+is asserted. However, any time that<B> ready</B> is asserted after
+the first clock cycle, the circuit is usable.</P>
+<H6>Timing</H6>
+<P>	The following timing is given as a reference. Generally, in
+interfacing with this implementation, it is not necessary to keep
+track of any timing or have any external counters--it is sufficient
+to assert the proper signals, then wait for the ready signal to come
+back on before performing the next operation.</P>
+<P CLASS="text-body-indent">Time from when <B>new_key</B> is asserted
+and read to when <B>ready</B> is asserted again (i.e. time to
+initialize the algorithm with a new key): <B>21106</B> clock cycles.</P>
+<P CLASS="text-body-indent">Time from when <B>new_data</B> is
+asserted and read to when <B>ready</B> is asserted again (i.e. time
+to process one block of data): <B>37</B> clock cycles.</P>
+<P CLASS="text-body-indent">(NOTE: <B>new_key</B> and <B>new_data</B>
+are only read when <B>ready</B> is asserted.)</P>
+<H2>Conclusions</H2>
+<P>	My implementation of Blowfish has been designed to completely and
+correctly implement the algorithm with a focus on ease-of-design and
+ease-of-use without sacrificing too much speed or size. Certainly
+better implementations could be used and my existing circuit could
+definitely be optimized. However, the circuit does work as designed
+and follows the Blowfish algorithm specification exactly, which was
+my main goal.</P>
+<P>	This VHDL implementation will be cleaned up a bit with code
+comments and some minor documentation and licensing information and
+then will be released publicly under the GNU Public License, which
+will provide almost unlimited use of this VHDL model to the public.</P>
+</BODY>
+</HTML>

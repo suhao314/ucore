@@ -1,0 +1,47 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Static Identifier \'%1\' reused';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "Static name reuse";}
+
+sub description { return "Non member static identifiers should not have their identifiers reused";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Reuse of static identifier names can lead to confusion.</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 0;}
+
+sub test_global { return 1;}
+
+sub define_options{}
+
+
+sub check {
+  my $check = shift; 
+
+  my @statics = map{$_->name;}$check->db->ents("c static function ~member,c static object ~member");
+  my @notStatics = $check->db->ents("c function ~static, c object ~static");
+  foreach my $ent (@notStatics){
+    if($ent->name ~~ @statics){
+      my $ref= $ent->ref("define, declare");
+      $ref = $ent->ref unless $ref;
+      $check->violation($ent,$ref->file,$ref->line,$ref->column,ERR1,$ent->name);
+    }
+  }
+}

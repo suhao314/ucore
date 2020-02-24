@@ -1,0 +1,67 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Macro %1 is defined within a block';
+use constant ERR2 => 'Macro %1 is undefined within a block';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub name { return "16-0-2 Macros shall only be #define'd or #undef'd in the global namespace";}
+
+sub description { return "16-0-2 (Required) Macros shall only be #define'd or #undef'd in the global namespace";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+While it is legal to place #define or #undef directives anywhere in a source file, placing them outside
+of the global namespace is misleading as their scope is not restricted. This may be inconsistent
+with developer expectations.</p>
+<p>See also Rule 16-0-3</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  #ifndef MY_HDR
+  #define MY_HDR // Compliant
+  namespace NS
+  {
+  #define FOO // Non-compliant
+  #undef FOO // Non-compliant
+  }
+  #endif
+</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  return unless $file->filerefs("","macro");
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  my $findEnt = 0;
+  foreach my $lexeme ($lexer->lexemes()) {
+    if (!($lexeme->inactive) && $lexeme->text =~ /^undef$|^define$/i && $lexeme->token eq "Preprocessor"){
+        $findEnt = $lexeme->text;
+    }elsif($findEnt && $lexeme->ref){
+        my $err = $findEnt =~ /define/?ERR1:ERR2;
+        $check->violation($lexeme->ent,$file,$lexeme->line_begin,$lexeme->column_begin,$err,$lexeme->ent->name) if $lexeme->ref->ent->id != $file->id; 
+        $findEnt=0;
+    }
+  }
+}

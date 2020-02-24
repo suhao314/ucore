@@ -1,0 +1,124 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Undefined macro identifier used in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "19.11 All macro identifiers in preprocessor directives shall be defined before use, except in #ifdef and #ifndef preprocessor directives and the defined() operator";}
+
+# This is the full description of the rule being tested
+sub description { return "19.11 (Required) All macro identifiers in preprocessor directives shall be defined before use, except in #ifdef and #ifndef preprocessor directives and the defined() operator.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+If an attempt is made to use an identifier in a preprocessor directive, and that identifier has not
+been defined, the preprocessor will sometimes not give any warning but will assume the value
+zero. #<i>ifdef</i>, #<i>ifndef</i> and <i>defined()</i> are provided to test the existence of a macro, and are therefore
+excluded.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  #if x < 0 // Non-compliant - x assumed to be zero as it is not defined
+</pre>
+<p>
+Consideration should be given to the use of a <i>#ifdef</i> test before an identifier is used.<br>
+Note that preprocessing identifiers may be defined either by use of <i>#define</i> directives or by options
+specified at compiler invocation. However, the use of the <i>#define</i> directive is preferred.
+</p>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Loop through all macros and check and check if they are unknown
+  my @funcrefs = $file->filerefs("Use","macro unknown");
+  
+  # Start loop of unknown macros found
+  REFS: foreach my $ref(@funcrefs) {
+    # Initialize and check the lexer
+    my $lexer = $ref->file->lexer(0,8,1);
+    next unless $lexer;
+	
+	# Set the first lexeme
+    my $lexeme = $lexer->lexeme($ref->line, 0);
+	
+	# Start pulling lexemes from the start of the line to see if the undefined macro is used in an if or elif
+    while ($lexeme){
+	  if ( ($lexeme->text eq "if" || $lexeme->text eq "elif") && ($lexeme->next->text ne "defined" && $lexeme->next->next->text ne "defined") ) {
+	    throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$file->name);
+		next REFS;
+	  }
+	  next REFS if $lexeme->token eq "Newline";
+    }
+	continue {
+      $lexeme = $lexeme->next;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

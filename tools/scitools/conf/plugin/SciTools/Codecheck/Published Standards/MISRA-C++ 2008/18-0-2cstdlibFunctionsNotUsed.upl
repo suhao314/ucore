@@ -1,0 +1,71 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'cstdlib function %2 used in file %1';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "18-0-2 The library functions atof, atoi and atol from library <cstdlib> shall not be used";}
+
+sub description { return "18-0-2 (Required) The library functions atof, atoi and atol from library <cstdlib> shall not be used";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+These functions have undefined behaviour associated with them when the string cannot be
+converted.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+#include <cstdlib>
+int32_t f ( const char_t * numstr )
+{
+return atoi ( numstr ); // Non-compliant
+}
+</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+our %seen;
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+ 	foreach my $libFuncs($file->filerefs(" ","Function")){
+ 		if($libFuncs->ent->name eq "atof" || $libFuncs->ent->name eq "atoi" || $libFuncs->ent->name eq "atol"){
+ 			my $libUsed = includeCheck($file);
+      if($libUsed){
+        $check->violation($libFuncs->ent,$file,$libFuncs->line,$libFuncs->column,ERR1,$file->name,$libFuncs->ent->name);
+      }
+    }
+ 	}
+  %seen=();
+}
+
+sub includeCheck {
+  my $file = shift;
+  
+  if ($seen{$file->id}){
+    return 0;
+  }
+  $seen{$file->id}=1;
+  if($file->name eq "cstdlib"){
+    return 1;
+  }
+  my @refs = $file->refs("include","file",1);
+  foreach my $ref (@refs){
+    return 1 if includeCheck($ref->ent);
+  }
+}

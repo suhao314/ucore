@@ -1,0 +1,55 @@
+# Check for declaration of types or externals at the function level.
+use base ("Understand::Codecheck");
+use strict;
+
+use constant ERR1 => 'Declaration of type or external at function level';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name{
+	return 'Types or externals declared at the function level.';
+}
+
+sub description {
+	return "Types or externals will not be be declared at the function level.";
+}
+
+sub detailed_description {
+	return "Find Declaration of types or externals at the function level.";
+}
+
+sub test_language {
+	my $language = shift;
+	return $language =~ /C\+\+/;
+}
+
+sub test_entity {
+	return 1;
+}
+
+sub test_global {
+	return 0;
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+	my @refs = $file->filerefs("","function ~unresolved ~unknown",1);
+	my @ents = map{$_->ent;}@refs;
+	foreach my $function (@ents){
+		foreach my $ref ($function->refs("declare")){
+			$check->violation($ref->ent,$file,$ref->line,$ref->column,ERR1);
+		}
+		foreach my $ref ($function->refs("define","type")){
+			$check->violation($ref->ent,$file,$ref->line,$ref->column,ERR1);
+		}
+	}
+	
+  # $check->entity_violation("Violation Text",$entity,$file,$line,$column); #Register a violation
+  # $check->option->lookup($name) - lookup the value or values for an option  
+}

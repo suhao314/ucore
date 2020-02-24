@@ -1,0 +1,130 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'The # token is not immediately followed by a preprocessing token in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "If the # token appears as the first token on a line, then it shall be immediately followed by a preprocessing token";}
+
+# This is the full description of the rule being tested
+sub description { return "If the # token appears as the first token on a line, then it shall be immediately followed by a preprocessing token.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+When a section of source code is excluded by preprocessor directives, the content of each excluded
+statement is ignored until a #else, #elif or #endif directive is encountered (depending on the
+context). If one of these excluded directives is badly formed, it may be ignored without warning
+by a compiler with unexpected consequences.</p>
+<br>
+<p>The requirement of this rule is that all preprocessor directives shall be syntactically valid even
+when they occur within an excluded block of code.</p>
+<br>
+<p>In particular, ensure that #else and #endif directives are not followed by any characters other than
+white-space. Compilers are not always consistent in enforcing this requirement.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  #define AAA 2
+  int32_t foo(void)
+  {
+    int32_t x = 0;
+  #ifndef AAA
+    x = 1;
+  #else1 // Non-compliant
+    x = AAA;
+  #endif
+    return x;
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # This check requires use of the Understand lexer. Initialize and check for failure 
+  my $lexer = $file->lexer(0,,0,0);
+  return unless $lexer;
+  
+  # $lexeme is intialized as the first element returned from the lexer
+  my $lexeme = $lexer->first();
+  
+  # While the lexer has lexemes ...
+  while ($lexeme) {
+    next if $lexeme->column_begin > 0;
+    next if $lexeme->text ne "#";
+	next if $lexeme->text eq "#" && $lexeme->next->token eq "Preprocessor";
+	throwError($check, $lexeme->ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$file->name);
+	next;
+  }
+  # Set $lexeme to the next value from $lexer
+  continue {
+    $lexeme = $lexeme->next;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

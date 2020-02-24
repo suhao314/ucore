@@ -1,0 +1,541 @@
+use base ("Understand::Graph::Gv");
+use strict;
+
+# shapes
+use constant CONDITIONAL => (5, 6, 14, 51, 85);
+use constant LOOP => (1, 10, 11, 12, 54, 55, 56, 59, 76);
+use constant SWITCH => (2, 21, 46, 47, 61);
+
+# filter
+use constant FILTER => (0, 4, 7, 8, 9, 15, 24, 42,
+                        45, 50, 52, 53, 57, 75, 84);
+
+# deferred
+use constant DEFERRED => (78, 79, 80, 81, 82);
+
+sub name { return "Control Flow"; }
+
+sub test_global {
+  return -1;
+}
+
+sub test_entity {
+  my $entity = shift;
+
+  if ($entity->freetext("CGraph")) {
+    if (my $file = file($entity)) {
+      return !$file->lexer_test;
+    }
+  }
+
+  return -1;
+}
+
+sub init {
+  my $graph = shift;
+  $graph->options->define("Cluster", ["On", "Off"], "Off");
+  $graph->options->define("Collapse", ["On", "Off"], "Off");
+  $graph->options->define("Comments", ["On", "Off"], "Off");
+  $graph->options->define("Debug", ["On", "Off"], "Off");
+  $graph->options->define("Entity Name", ["On", "Off"], "Off");
+  $graph->options->define("Filter", ["On", "Off"], "On");
+  $graph->options->define("Labels", ["On", "Off"], "On");
+  $graph->options->define("Source Code", ["On", "Off"], "On");
+  $graph->options->define("Macro Expansion", ["On", "Off"], "Off");
+}
+
+sub do_load {
+  my $graph = shift;
+  my $entity = shift;
+
+  my @names = (
+    "do-while",
+    "end-do-while",
+    "case",
+    "case-when",
+    "end-case",
+    "if",
+    "elsif",
+    "else",
+    "end-if",
+    "loop",
+    "while-for",
+    "while",
+    "for",
+    "exit",
+    "exit-when",
+    "end-loop",
+    "select",
+    "select-or",
+    "select-else",
+    "select-then-abort",
+    "end-select",
+    "switch",
+    "switch-case",
+    "switch-default",
+    "end-switch",
+    "question-begin",
+    "question-colon",
+    "end-question",
+    "goto",
+    "raise",
+    "return",
+    "terminate",
+    "break",
+    "continue",
+    "throw",
+    "passive",
+    "passive-implicit",
+    "java-block-begin",
+    "end-java-block",
+    "ada-block-begin",
+    "ada-accept-block-begin",
+    "exception-when",
+    "end-ada-block",
+    "try",
+    "try-catch",
+    "end-try",
+    "fortran-arith-if",
+    "fortran-select-case",
+    "fortran-case",
+    "fortran-case-default",
+    "fortran-end-select",
+    "fortran-where",
+    "fortran-else-where",
+    "fortran-end-where",
+    "fortran-do",
+    "fortran-do-infinite",
+    "fortran-do-while",
+    "fortran-end-do",
+    "fortran-until",
+    "fortran-loop-expr",
+    "fortran-assigned-goto",
+    "fortran-computed-goto",
+    "fortran-cycle",
+    "fortran-stop",
+    "fortran-exit-do",
+    "fortran-exit-for",
+    "fortran-exit-if",
+    "fortran-exit-loop",
+    "fortran-exit-while",
+    "fortran-exit-do-if",
+    "fortran-exit-for-if",
+    "fortran-exit-if-if",
+    "fortran-exit-loop-if",
+    "fortran-exit-while-if",
+    "end-routine",
+    "repeat-until",
+    "end-repeat-until",
+    "try-finally",
+    "deferred-break",
+    "deferred-continue",
+    "deferred-goto",
+    "deferred-return",
+    "deferred-throw",
+    "with-do",
+    "end-with-do",
+    "fortran-else-where-cond",
+    "while-for-else",
+    "try-else",
+    "fortran-io-control"
+  );
+
+  # read options
+  my $debug = ($graph->options->lookup("Debug") eq "On");
+  my $filter = ($graph->options->lookup("Filter") eq "On");
+  my $labels = ($graph->options->lookup("Labels") eq "On");
+  my $source = ($graph->options->lookup("Source Code") eq "On");
+  my $cluster = ($graph->options->lookup("Cluster") eq "On");
+  my $collapse = ($graph->options->lookup("Collapse") eq "On");
+  my $comments = ($graph->options->lookup("Comments") eq "On");
+  my $expand = ($graph->options->lookup("Macro Expansion") eq "On");
+  my $entname = ($graph->options->lookup("Entity Name") eq "On");
+
+  # set graph defaults
+  $graph->default("shape", "box", "node");
+  $graph->default("color", "blue", "node");
+  $graph->default("color", "black", "edge");
+  $graph->default("style", "solid", "edge");
+  $graph->default("labeljust", "centered", "node");
+
+  # create nodes
+  my $id = 1;
+  my @nodes = ();
+  foreach my $fields (split(";", $entity->freetext("CGraph"))) {
+    my %node = {};
+    my @parents = ();
+    ($node{kind}, $node{sline}, $node{scol}, $node{eline}, $node{ecol},
+     $node{endstr}, my @children) = split(",", $fields);
+    $node{id} = $id++;
+    $node{fields} = $fields;
+    $node{parents} = \@parents;
+    $node{children} = \@children;
+    push(@nodes, \%node);
+  }
+
+  my $start = $nodes[0];
+  my $end = $nodes[-1];
+
+  # connect nodes
+  foreach my $node (@nodes) {
+    my @children = ();
+    foreach my $id (@{$node->{children}}) {
+      # check range
+      next if $id < 0 || $id > @nodes;
+
+      if ($id == 0) {
+        # placeholder
+        my %child = {};
+        $child{placeholder} = 1;
+        push(@children, \%child);
+      } else {
+        my $child = $nodes[$id - 1];
+        push(@{$child->{parents}}, $node);
+        push(@children, $child);
+      }
+    }
+
+    $node->{children} = \@children;
+  }
+
+  # check connectivity
+  traverse($start);
+
+  # filter
+  if ($filter) {
+    filter(\@nodes);
+  }
+
+  # collapse
+  if ($collapse) {
+    collapse(\@nodes);
+  }
+
+  # lookup file and lexer
+  my $file = file($entity);
+  my $lexer = $file->lexer(0, 8, 0, $expand);
+
+  # init clusters
+  my @subgraphs = ();
+  my @subgraphids = ();
+  push(@subgraphids, 0);
+  push(@subgraphs, $graph);
+
+  # create graph nodes
+  foreach my $node (@nodes) {
+    my $id = $node->{id};
+    my $kind = $node->{kind};
+
+    # cluster before filtering
+    my $subgraph = $subgraphs[-1];
+    if ($cluster) {
+      my $endstr = $node->{endstr};
+      if ($endstr ne "") {
+        $subgraph = $subgraph->cluster($debug ? $id . "-" . $endstr : undef);
+        $subgraph->default("color", "cyan", "graph");
+        push(@subgraphids, $endstr);
+        push(@subgraphs, $subgraph);
+      } elsif ($id == $subgraphids[-1]) {
+        $subgraph = pop(@subgraphs);
+        pop(@subgraphids);
+      }
+    }
+
+    # skip filtered nodes
+    next if $node->{filtered} || $node->{deferred};
+
+    # get text
+    my @lines = ();
+    if ($debug) {
+      push(@lines, $id . " - " . $names[$kind]);
+      push(@lines, $node->{fields});
+    }
+
+    my $name = "";
+    if ($node == $start) {
+      if ($labels) {
+        push(@lines, "start");
+      }
+
+      if ($entname) {
+        $name = $entity->longname ? $entity->longname : $entity->name;
+        $name = $name . "(" . $entity->parameters . ")";
+        push(@lines, $name);
+      }
+    } elsif ($node == $end) {
+      if ($labels) {
+        push(@lines, "end");
+      }
+    } else {
+      my $tmp = $node;
+      do {
+        # preceding comments
+        if ($comments) {
+          my @comments = ();
+          my $line = $tmp->{sline} - 1;
+          while ($line >= 0) {
+            my $lexeme = $lexer->lexeme($line, 0);
+            while ($lexeme && whitespace($lexeme)) {
+              $lexeme = $lexeme->next;
+            }
+
+            if ($lexeme && comment($lexeme)) {
+              unshift(@comments, $lexeme->text);
+              $line = $lexeme->line_begin - 1;
+            } else {
+              last;
+            }
+          }
+
+          push(@lines, @comments);
+        }
+
+        # text
+        my $text = "";
+        if ($tmp->{sline} ne "" && $tmp->{scol} ne "" &&
+            $tmp->{eline} ne "" && $tmp->{ecol} ne "") {
+          my $lexeme = $lexer->lexeme($tmp->{sline}, $tmp->{scol});
+          while (before($lexeme, $tmp->{eline}, $tmp->{ecol})) {
+            if (newline($lexeme)) {
+              if ($source) {
+                push(@lines, $text);
+              }
+
+              $text = "";
+            } else {
+              if (!comment($lexeme) || $comments) {
+                $text .= $lexeme->text;
+              }
+            }
+
+            $lexeme = $lexeme->next;
+          }
+
+          # trailing comment
+          if ($comments) {
+            while ($lexeme && !newline($lexeme)) {
+              $lexeme = $lexeme->next;
+            }
+
+            my $prev = $lexeme->previous;
+            if (comment($prev)) {
+              $text .= " " . $prev->text;
+            }
+          }
+        } else {
+          $text = $names[$tmp->{kind}];
+        }
+
+        if ($source) {
+          push(@lines, $text);
+        }
+
+        $tmp = $tmp->{children}->[0];
+      } while ($tmp && $tmp->{collapse});
+    }
+
+    # strip leading and trailing space
+    # escape literal backslashes
+    foreach my $line (@lines) {
+      $line =~ s/^\s+//;
+      $line =~ s/\s+$//;
+      $line =~ s/\\/\\\\/g;
+    }
+
+    my $text = join("\n", @lines);
+    $node->{node} = $subgraph->node($id, $text);
+
+    # set node properties
+    if ($node == $start) {
+      $node->{node}->set("shape", "Msquare") if !$entname;
+      $node->{node}->set("color", "darkgreen");
+    } elsif ($node == $end) {
+      $node->{node}->set("shape", "Msquare") if !$entname;
+      $node->{node}->set("color", "brown");
+    } elsif (grep($_ == $kind, CONDITIONAL)) {
+      $node->{node}->set("shape", "diamond");
+    } elsif (grep($_ == $kind, SWITCH)) {
+      $node->{node}->set("shape", "octagon");
+    } elsif (grep($_ == $kind, LOOP)) {
+      $node->{node}->set("shape", "oval");
+    } elsif ($kind == 43) {
+      $node->{node}->set("shape", "hexagon");
+      $node->{node}->set("color", "red");
+    } elsif ($kind == 44 || $kind == 77) {
+      $node->{node}->set("shape", "oval");
+      $node->{node}->set("color", "red");
+    } elsif (grep($_ == $kind, DEFERRED)) {
+      $node->{node}->set("color", "gray");
+    }
+
+    # color unreachable nodes
+    if (!$node->{reachable}) {
+      $node->{node}->set("color", "red");
+    }
+
+    # sync to file
+    if ($node->{sline} ne "" && $node->{scol} ne "") {
+      $node->{node}->sync($file, $node->{sline}, $node->{scol});
+    }
+  }
+
+  # connect graph nodes
+  foreach my $node (@nodes) {
+    # skip edges from filtered nodes
+    next if $node->{filtered} || $node->{deferred};
+
+    my $edges = 0;
+    my $kind = $node->{kind};
+    foreach my $child (children($node)) {
+      next if $child->{placeholder};
+
+      # filter deferred nodes
+      my $deferred = undef;
+      if ($child->{deferred}) {
+        $deferred = $names[$child->{kind}];
+        my @successors = children($child);
+        $child = $successors[0];
+      }
+
+      my $edge = $graph->edge($node->{node}, $child->{node});
+
+      if ($deferred || grep($_ == $kind, DEFERRED) ||
+          grep($_ == $child->{kind}, DEFERRED)) {
+        $edge->set("color", "gray");
+        $edge->set("label", $deferred) if $deferred;
+      } elsif (grep($_ == $kind, CONDITIONAL) || grep($_ == $kind, LOOP)) {
+        $edge->set("color", $edges ? "red" : "green");
+        if ($labels) {
+          $edge->set("label", $edges ? "no" : "yes");
+        }
+      } elsif ($kind == 46) {
+        # fortran-arith-if
+        if ($edges == 0) {
+          $edge->set("label", "<0");
+        } elsif ($edges == 1) {
+          $edge->set("label", "=0");
+        } elsif ($edges == 2) {
+          $edge->set("label", ">0");
+        }
+      } elsif ($kind == 61) {
+        # fortran-computed-goto
+        $edge->set("label", $edges ? $edges : "default");
+      } elsif ($kind == 88) {
+        # fortran-io-control
+        if ($edges == 0) {
+          $edge->set("label", "default");
+        } elsif ($edges == 1) {
+          $edge->set("label", "end");
+        } elsif ($edges == 2) {
+          $edge->set("label", "eor");
+        } elsif ($edges == 3) {
+          $edge->set("label", "err");
+        }
+      }
+    } continue {
+      $edges++;
+    }
+  }
+}
+
+sub traverse {
+  my $node = shift;
+
+  # mark children reachable from node as 'reachable'
+  $node->{reachable} = 1;
+  foreach my $child (@{$node->{children}}) {
+    if (!$child->{reachable}) {
+      traverse($child);
+    }
+  }
+}
+
+sub filter {
+  my $nodes = shift;
+
+  # mark implicit nodes as 'filtered'
+  my $start = $nodes->[0];
+  my $end = $nodes->[-1];
+  foreach my $node (@$nodes) {
+    my $kind = $node->{kind};
+    if (($kind == 36 && $node != $start && $node != $end) ||
+        ($kind == 39 && @{$node->{children}} <= 1) ||
+        grep($_ == $kind, FILTER)) {
+      $node->{filtered} = 1;
+    } elsif (grep($_ == $kind, DEFERRED)) {
+      $node->{deferred} = 1;
+    }
+  }
+}
+
+sub collapse {
+  my $nodes = shift;
+
+  # collapse node into parent and mark as 'filtered'
+  foreach my $node (@$nodes) {
+    if (@{$node->{children}} == 1) {
+      my $kind = $node->{kind};
+      my $child = $node->{children}->[0];
+      if ($kind == 35 && $child->{kind} == 35 &&
+          @{$child->{parents}} == 1) {
+        $child->{collapse} = $node;
+        $child->{filtered} = 1;
+      }
+    }
+  }
+}
+
+sub children {
+  my $node = shift;
+
+  # skip edges to filtered nodes
+  my @children = ();
+  foreach my $child (@{$node->{children}}) {
+    push(@children, $child->{filtered} ? children($child) : $child);
+  }
+
+  return @children;
+}
+
+sub file {
+  my $entity = shift;
+
+  if ($entity->kind->check("file")) {
+    return $entity;
+  }
+
+  if (my $ref = $entity->ref("definein,body declarein")) {
+    return $ref->file;
+  }
+
+  return undef;
+}
+
+# token predicates
+sub comment {
+  my $lexeme = shift;
+  return ($lexeme->token eq "Comment");
+}
+
+sub newline {
+  my $lexeme = shift;
+  return ($lexeme->token eq "Newline");
+}
+
+sub whitespace {
+  my $lexeme = shift;
+  return ($lexeme->token eq "Whitespace");
+}
+
+sub before {
+  my $lexeme = shift;
+  my $eline = shift;
+  my $ecol = shift;
+
+  # end of lexical stream
+  return undef unless $lexeme;
+
+  my $sline = $lexeme->line_begin;
+  my $scol = $lexeme->column_begin;
+  return ($sline < $eline || ($sline == $eline && $scol <= $ecol));
+}

@@ -1,0 +1,171 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 11/3/14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'An object or function, %1, has external linkage and is not declared in a header file. Declare in header file or move to unnamed namespace.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return '3-3-1 Objects or functions with external linkage shall be declared in a header file';}
+
+
+# This is the full description of the rule being tested
+sub description { return '3-3-1 (Required) Objects or functions with external linkage shall be declared in a header file.';}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Placing the declarations of objects and functions with external linkage in a <i>header file</i> documents
+that they are intended to be accessible from other translation units.
+</p>
+
+<p>
+If external linkage is not required, then the object or function shall either be declared in an unnamed
+namespace or declared <i>static</i>.
+</p>
+
+<p>
+This will reduce the visibility of objects and functions, which is considered to be good practice.
+</p>
+
+<p><b>Exception</b><br>
+This rule does not apply to <i>main</i>, or to members of unnamed namespaces.
+</p>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  // header.hpp
+  extern int a1;
+  extern void f3 ( );
+
+  // file1.cpp
+  int a1 = 0; // Compliant
+  int a2 = 0; // Non-compliant
+  static int a3 = 0; // Compliant
+
+  namespace
+  {
+    int a4 = 0; // Compliant
+    void f1 () // Compliant
+    {
+    }
+  }
+
+  static void f2 ( ) // Compliant
+  {
+  }
+
+  void f3 ( ) // Compliant
+  {
+    a1 = 1;
+    a2 = 1;
+    a3 = 1;
+    a4 = 1;
+  }
+
+  void f4 ( ) // Non-compliant
+  {
+    a1 = 2;
+    a2 = 2;
+    a3 = 2;
+    a4 = 2;
+  }
+
+  int main ( ) // Compliant by exception
+  {
+    f1 ( );
+    f2 ( ); 
+    f3 ( );
+    f4 ( );
+	return 0;
+  }
+
+</pre>
+
+<p><b>Developer's Note</b><br>
+This check is designed to work with Understand's strict parser. While this check does function within Understand's fuzzy parser,
+if the developer is using fuzzy, than objects and fuctions defined within an anonymous namespace will be falsly reported as violations.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+
+  # Check that this is a file and that it is not a header file
+  return unless $file->kind->check ( 'c file' );
+  return if $file->kind->longname =~ /\bHeader\b/;
+
+  # Pull all functions and objects
+  my @globalsDefined = $file->filerefs ( 'Define', 'Function ~Static, Object Global ~Static' );
+
+  foreach my $global ( @globalsDefined )  {
+
+    # Check to see if the parent is the file, thus confirming global
+    my $parent = $global->ent->parent;
+    next unless $parent->kind->check ( 'file' );
+
+    # Check to see if any of this globals declare references are inside a header file
+    my @functionsDeclared = $global->ent->refs ( 'Declarein' );
+    my $ok = 0;
+    foreach my $declared ( @functionsDeclared ) {
+
+      $ok = 1 if $declared->ent->kind->longname =~ /\bHeader\b/;
+
+    }
+    next if $ok;
+
+    # Check to ensure this is not main
+    next if $global->ent->name eq 'main';
+
+    # If we make it this far we have a violation
+    $check->violation( $global->ent, $global->file, $global->line, $global->column, ERR1, $global->ent->name );
+
+  }
+}

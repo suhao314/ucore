@@ -1,0 +1,100 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+ 
+use constant ERR1 => 'Violation: function "%1" is directly recursive, which is unsafe.';
+use constant ERR2 => 'Violation: function "%1" is indirectly recursive through "%2", which is unsafe.';
+
+our $entKindString = "ada entry, ada function, ada package, ada procedure, ada protected, ada task,"
+  ."c function,"
+  ."cobol program,"
+  ."csharp method,"
+  ."fortran block data, fortran function, fortran interface, fortran program, fortran subroutine,"
+  ."java method,"
+  ."jovial file, jovial subroutine,"
+  ."pascal compunit, pascal function, pascal procedure,"
+  ."vhdl procedure, vhdl function, vhdl process, vhdl architecture,"
+  ."php function";
+  
+our $refKindString = "ada call ~dispatch,"
+  ."c call ~virtual, c use ptr,"
+  ."cobol call,"
+  ."csharp call ~virtual, csharp use ptr,"
+  ."fortran call,"
+  ."java call,"
+  ."jovial call, jovial asm use,"
+  ."pascal call ~virtual,"
+  ."vhdl call,"
+  ."php call";
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+	$check->add_tr_text(ERR2);
+}
+
+sub name { 'No direct or indirect recursion allowed.' }
+
+sub description { 'Functions shall not call themselves, either directly or indirectly.' }
+
+sub detailed_description { <<'END_DESC'
+This means that recursive function calls cannot be used in safety-related systems. Recursion carries with it the danger of exceeding available stack space, which can be a serious error. Unless recursion is very tightly controlled, it is not possible to determine before execution what the worst-case stack usage could be.
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language =~ /ada|C|c#|cobol|fortran|java|jovial|pascal|vhdl|php/i;
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+sub discoverRecursion {
+	my $check = shift;
+	my $ent = shift;
+	my $firstTime   = do { @_ ? shift : 1 }; # to detect "directly recursive"
+	my $seen        = do { @_ ? shift : {} };
+	my $originalEnt = do { @_ ? shift : $ent };
+
+	
+	return unless $ent->kind->check($entKindString);
+	
+	foreach my $callRef ($ent->refs($refKindString, $entKindString, 1)) {
+		my $callEnt = $callRef->ent;
+		++$seen->{$callEnt->uniquename};
+		next if $seen->{$callEnt->uniquename} > 1;
+		
+		if ($callEnt->uniquename eq $originalEnt->uniquename) {
+      my $ref = $callRef->ent->ref;
+      if ($firstTime){
+        	$check->violation($originalEnt, $ref->file, $ref->line, $ref->column, ERR1, $originalEnt->longname);
+      }else{
+      	$check->violation($originalEnt, $ref->file, $ref->line, $ref->column, ERR2, $originalEnt->longname, $ent->longname);
+      }
+			return;
+		}
+		
+		discoverRecursion($check, $callEnt, 0, $seen, $originalEnt);
+	}
+	
+	return;
+}
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('file');
+	
+	foreach my $ref ($file->filerefs('define,body declare', $entKindString, 1)) {
+		my $ent = $ref->ent;
+		
+		discoverRecursion($check, $ent);
+	}
+	
+	return;
+}

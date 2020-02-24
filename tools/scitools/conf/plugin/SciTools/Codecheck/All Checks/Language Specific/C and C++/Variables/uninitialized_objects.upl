@@ -1,0 +1,112 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+use warnings;
+
+use constant OPT1 => "Flag variables that are initialized in sub-blocks or conditional statements";
+use constant ERR1 => 'Uninitialized variable';
+use constant ERR2 => 'Variable conditionally initialized';
+
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_test(OPT1);
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+
+# Required - Return the short name of the check
+sub name { return "Uninitialized Variables";}
+
+# Required - Return the short description of the check
+sub description { return "Check for uninitialized variables";}
+
+# Required - Return the long description of the check
+sub detailed_description { return "Check for uninitialized and potentially uninitialized variables. The option will report variables that are first set inside of a conditional statement where there may be a possiblity it will not be set at runtime.";}
+
+
+# Required - Test the language of the current file, the check will be 
+# skipped if this returns 0
+sub test_language {
+  my $language = shift;
+  return 1 if $language =~ /C/i;
+}
+
+# Required - Return 1 if this check will be run on a per-entity basis
+# Currently only supported on a per-file basis
+sub test_entity { return 1;}
+
+# Required - Return 1 if this check should be run on the entire project
+# regardless of what files are selected. Should only be used for 
+# project-level checks
+sub test_global { return 0;}
+
+# Optional - define configurable options for the check.
+sub define_options{
+  my $check = shift;  
+  $check->option->checkbox("conditionals",OPT1 ,1);
+}
+
+
+# Required - Run the check and return violations if any.
+# This is called for each file if test_entity is set to 1 and $file is the Understand::Ent object for the file
+# it is also called once with $file set to null if test_global is set to 1
+sub check {
+  my $check = shift; #The check object, needed to report violations and lookup option values
+  my $file = shift;  # Will be empty if test_global set to 1 and test_entity set to 0
+  
+  # test_entity only runs on files for now, but could change in the future, so force the check to only run on files
+  return unless $file->kind->check('c file'); 
+  
+  my @objRefs = $file->filerefs("define","object ~unknown",1);
+  REF: foreach my $ref (@objRefs){
+    
+    # Set at initialization
+    next REF if ($ref->ent->ref("setby init"));
+    next REF if ($ref->ent->parent && $ref->ent->parent->kind->check("struct,union"));
+    
+    # Never set
+    if (! $ref->ent->ref("setby")){
+      $check->violation($ref->ent,$file,$ref->line,$ref->column,ERR1);
+      next REF;
+    }
+    
+    # Conditionally set
+    next REF unless $check->option->lookup("conditionals");
+    my $lexer = $file->lexer();
+    next REF unless $lexer;
+    my $lexeme = $lexer->lexeme($ref->line,$ref->column);
+    next REF unless $lexeme;
+    
+    my $parenCount=1;
+    
+    LEX: while ($lexeme && $parenCount){
+    #skip single line conditionals
+    if ($lexeme->token eq "Keyword" && $lexeme->text =~ /for|while|do|if/i){
+        while ($lexeme && !($lexeme->token eq "Punctuation" && $lexeme->text =~ /{|;/)){
+          $lexeme = $lexeme->next;
+        }
+      }
+      if ($lexeme->text eq "{" && $lexeme->token eq "Punctuation"){
+        $parenCount++;
+        next LEX;
+      }
+      if ($lexeme->text eq "}" && $lexeme->token eq "Punctuation"){
+        $parenCount--;
+        next LEX;
+      }
+      next LEX if $parenCount > 1; #skip blocks (usually conditional as well)
+      
+      if ($lexeme->ref && $lexeme->ent && $lexeme->ent->id eq $ref->ent->id){
+        next REF if $lexeme->ref->kind->check("setby");
+      }
+      
+    }continue{
+      $lexeme = $lexeme->next;
+    }
+    
+    $check->violation($ref->ent,$file,$ref->line,$ref->column,ERR2);
+    
+  }
+}

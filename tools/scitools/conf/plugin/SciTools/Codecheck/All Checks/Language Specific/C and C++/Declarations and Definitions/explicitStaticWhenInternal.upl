@@ -1,0 +1,66 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: %1 "%2" appears to have internal linkage within %3, so static keyword should be used.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { 'use static keyword for internal linkage' }
+
+sub description { 'The static storage class specifier shall be used in definitions and declarations of objects and functions that have internal linkage.' }
+
+sub detailed_description { <<'END_DESC'
+The <i>static</i> and <i>extern</i> storage class specifiers can be a source of confusion.  It is good practice to apply the <i>static</i> keyword consistently to all declarations of objects and functions with internal linkage.
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 0 }
+
+sub test_global { 1 }
+
+sub define_options { }
+
+
+sub checkKind {
+	my ($check, $kind) = @_;
+	
+	my $db = $check->db;
+	
+	my $refString = 'define';
+	my $kindString = $kind . ' ~static';
+	
+	my %seen;
+	FILE: foreach my $file ($check->get_files) {
+		REF: foreach my $ref ($file->filerefs($refString, $kindString, 0)) {
+			my $ent = $ref->ent;
+			next REF if $ent->name eq 'main';
+			
+			foreach my $otherRef ($ent->refs) {
+				next REF if $otherRef->file->uniquename ne $file->uniquename;
+			}
+			
+			$check->violation($ent, $ref->file, $ref->line, $ref->column, ERR1, $kind, $ent->longname, $ref->file->name);
+		}
+	}
+	
+	return;
+}
+
+sub check {
+	my $check = shift;
+	
+	checkKind($check, 'C global object');
+	checkKind($check, 'C function');
+	
+	return;
+}

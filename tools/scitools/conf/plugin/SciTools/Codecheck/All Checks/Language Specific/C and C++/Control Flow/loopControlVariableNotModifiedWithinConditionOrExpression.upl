@@ -1,0 +1,182 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Non counter loop control variable modified within condition or expression of a for loop';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "A loop-control-variable other than the loop-counter shall not be modified within condition or expression";}
+
+# This is the full description of the rule being tested
+sub description { return "A loop-control-variable other than the loop-counter shall not be modified within condition or expression.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+<i>loop-control-variables</i> are either the <i>loop-counter</i>, or flags used for early loop termination. The
+code is easier to understand if these are not modified within <i>condition</i> or <i>expression</i>.</p>
+<p>
+Note that it is possible for a <i>loop-control-variable</i> with <i>volatile</i> qualification to change value (or
+have it changed) outside <i>statement</i> due to the volatile nature of the object. Such modification does
+not break this rule.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  for ( x = 0; ( x < 10 ) && !bool_a; ++x )
+  {
+    if ( ... )
+    {
+      bool_a = true; // Compliant
+    }
+  }
+
+  bool test_a ( bool * pB )
+  {
+    *pB = ... ? true : false;
+    return *pB;
+  }
+
+  for ( x = 0; ( x < 10 ) && test_a ( &bool_a ); ++x ) // Non-compliant
+
+  volatile bool status;
+  for ( x = 0; ( x < 10 ) && status; ++x) // Compliant
+  for ( x = 0; x < 10; bool_a = test( ++x ) ) // Non-compliant
+</pre>
+<br>
+<p><b>Developer's Note</b><br>
+This check will only test for traditional boolean flags. Because of the sheer number of options C++ has for
+creating flags from ints to chars to bitfields, it is not currently possible to always detect that a non boolean
+identifier is being used as a flag.<br>
+<br>
+It should also be noted that when a boolean flag is passed by reference inside the condition or expression
+portion of a for loop, while the boolean value may not necessarily change, this check treats that situation as an violation</p>
+<p>
+
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull a list of all functions that are defined within this file
+  my @functionsDefined = $file->filerefs("Define", "Function");
+  return unless @functionsDefined;
+  
+  # loop through all defined functions
+  foreach my $function(@functionsDefined) {
+    
+    # Pull text of function
+    my $text = $function->ent->contents;
+    # Remove any // style comments
+    $text =~ s/\/\/.*\n/\n/g;
+    # Remove any /* */ style comments
+    $text =~ s/\/\*.*\*\//\n/gs;
+    # check if a for loop exists
+    next unless $text =~/for\s*\(/;
+
+    # Spin up lexer and find for loop
+    my $lexeme = $function->lexeme();
+
+    # Check entire function
+    my $end = $function->ent->ref('end')->line;
+    while ( $lexeme->line_begin < $end ) {
+
+      # Move through function until we find a for loop
+      if ( $lexeme->token eq 'Keyword' and $lexeme->text eq 'for') {
+
+        # Move into for loop structure
+        $lexeme = $lexeme->nextUseful();
+        $lexeme = $lexeme->nextUseful();
+
+        # Move through the init phase of for loop
+        while ( $lexeme->text ne ';' ) {
+          $lexeme = $lexeme->nextUseful;
+        }
+
+        # Create count to track when we are done looking at for loop instantiation
+        my $count = 1;
+
+        # Check the rest of the for loop instantiation
+        ENT : while ( !( $count == 1 and $lexeme->text eq ')' ) ) {
+
+          $count ++ if $lexeme->text eq '(';
+          $count -- if $lexeme->text eq ')';
+
+          # Protect the script from code with errors in it
+          if ( !( $lexeme->ref ) ) {
+
+            $lexeme = $lexeme->nextUseful;
+            next ENT;
+
+          }
+          
+          # If we are not looking at an identifier, or the identifier is not of type bool, we don't care
+          if ( ( $lexeme->token ne 'Identifier' ) or ( $lexeme->ent->type ne 'bool' ) ) {
+            $lexeme = $lexeme->nextUseful;
+            next ENT;
+          }
+          
+          # Test for error situations and throw an error if detected
+          my $errorDetected = 0;
+
+          $errorDetected = 1 if $lexeme->ref->kind->name eq 'Set';
+          $errorDetected = 1 if $lexeme->ref->kind->name eq 'Modify';
+          $errorDetected = 1 if $lexeme->ref->kind->name eq 'Addr Use';
+
+          throwError($check, $lexeme->ent, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1) if $errorDetected == 1;
+
+          $lexeme = $lexeme->nextUseful;
+
+        }
+      } else {
+
+        $lexeme = $lexeme->nextUseful;
+
+      }
+
+    }
+  }
+}

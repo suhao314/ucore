@@ -1,0 +1,59 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use Codecheck::Libraries::InfoSiftr qw(resolveTypedefs getObjectBitFieldWidth);
+
+use constant ERR1 => 'Violation: bit field type must be explicitly "signed", "unsigned", or "bool".';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { '9-6-2 Bit-fields shall be either bool type or an explicitly unsigned or signed integral type.' }
+
+sub description { '9-6-2 (Required) Bit-fields shall be either bool type or an explicitly unsigned or signed integral type.' }
+
+sub detailed_description { <<'END_DESC'
+Using int is implementation-defined because bit-fields of type int can be either signed or
+unsigned.
+
+The use of wchar_t as a bit-field type is prohibited as ISO/IEC 14882:2003 [1] does not explicitly
+define the underlying representation as signed or unsigned.
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c file');
+	
+	my $lexer = $file->lexer(0);
+	
+	foreach my $ref ($file->filerefs('define', 'object', 0)) {
+		my $ent = $ref->ent;
+		
+		# narrow down to bit fields (unsigned int var : 3)
+		my $bits = getObjectBitFieldWidth($ent, $lexer);
+		next unless defined $bits;
+		
+		if (!$ent->type || resolveTypedefs($ent->type, $check->db) !~ m/ \b ( signed | unsigned | bool ) \b /x) {
+			$check->violation($ent, $file, $ref->line, $ref->column, ERR1);
+		}
+	}
+	
+	return;
+}

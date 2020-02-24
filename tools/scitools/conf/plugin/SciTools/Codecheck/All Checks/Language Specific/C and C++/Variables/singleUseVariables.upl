@@ -1,0 +1,152 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-15-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Non-volitile POD variables has only one use.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+sub name { return "A project shall not contain non-volatile POD variables having only one use";}
+
+
+# This is the full description of the rule being tested
+sub description { return "( Required ) A project shall not contain non-volatile POD variables having only one use.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+With the exception of volatile variables, variables declared and used only once do not contribute
+to program computations. A <i>use</i> is either an assignment (explicit initialization) or a reference.
+These variables are essentially noise but their presence may indicate that the wrong variable has
+been used elsewhere. Missing statements contribute to this problem.</p>
+<br>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+const int16_t x = 19;       // Compliant
+const int16_t y = 21;       // Non-compliant
+void usedonlyonce ( void )
+{
+  int16_t once_1 = 42;      // Non-compliant
+  int16_t once_2;
+  once_2 = x ;              // Non-compliant
+}
+
+</pre>
+
+<p>
+Note that x is compliant as there are two uses, firstly when initialized and secondly when assigned
+to once_2.</p>
+<br>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation( $ent, $file, $line, $column, $error, $name );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+  # Pull a reference for all objects that are defined
+  my @objectsDefined = $file->filerefs( 'Define', 'Object ~Member', 1 );
+  return unless @objectsDefined;
+
+  # Loop through each reference
+  OBJ : foreach my $object ( @objectsDefined ) {
+
+    # Check if object is volitile and if it is plain old data
+    next OBJ if $object->ent->type =~ /\bvolatile\b/;
+    next OBJ unless isPOD( $object );
+
+    # Pull all use and set references
+    my @uses = $object->ent->refs( 'Setby, Useby' );
+
+    # Throw error if we don't have at least two uses
+    throwError( $check, $object->ent, $object->file, $object->line, $object->column, ERR1, $object->ent->name ) unless 0+@uses > 1;
+
+  }
+}
+
+
+# This subroutine tests to see if an object is POD
+sub isPOD {
+
+  # Pull incoming parameters and set flag
+  my $object = shift;
+  my $isPOD = 1;
+
+  $isPOD = 0 if $object->ent->type !~ /\bint\b|\bchar\b|\bwchar_t\b|\bbool\b|\bfloat\b|\bdouble\b|\blong\b|\bshort\b|enum|\*/;
+
+  # Check if we are looking at a struct of some kind, return 1 if not
+  my $class = $object->ent->ref( 'Typed' );
+  return $isPOD unless $class;
+  
+  # Pull everything that this class defines
+  my @refsDefined = $class->ent->refs( 'Define' );
+  foreach my $ref ( @refsDefined ) {
+
+    # Test each part of the definition for what is POD
+    $isPOD = 0 if $ref->ent->longname eq $ref->ent->name . '::' . $ref->ent->name;
+    $isPOD = 0 if $ref->ent->longname eq $ref->ent->name . '::~' . $ref->ent->name;
+    $isPOD = 0 if $ref->ent->kind->longname =~ /\bProtected\b/ and $ref->ent->kind->longname !~ /\bStatic\b/;
+    $isPOD = 0 if $ref->ent->kind->longname =~ /\bPrivate\b/ and $ref->ent->kind->longname !~ /\bStatic\b/;
+    $isPOD = 0 if $ref->ent->kind->longname =~ /\bVirtual\b/;
+    $isPOD = 0 if $ref->kind->longname =~ /\bDerive\b/;
+    $isPOD = 0 if $ref->kind->longname =~ /\bBase\b/;
+
+  }
+
+}

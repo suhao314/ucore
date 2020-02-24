@@ -1,0 +1,116 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Standard Library Function overridden in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "The names of standard library functions shall not be overridden";}
+
+# This is the full description of the rule being tested
+sub description { return "The names of standard library functions shall not be overridden.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Where the developer uses new versions of standard library functions (e.g. to enhance functionality
+or add checks of input values), the modified function shall have a new name. However, it is
+permissible to overload the name to add new parameter types if the functionality is consistent
+with those of the original. This ensures that the behaviour associated with the name remains
+consistent. So, for example, if a new version of the sqrt function is written to check that the input
+is not negative, the new function shall not be named â€œsqrtâ€?, but shall be given a new name. It is
+permissible to add a new <i>sqrt</i> function for a type not present in the library.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  int32_t printf ( int32_t a, int32_t b ) // Non-compliant
+  {
+    return ( ( a > b ) ? a : b );
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  #define my array of reserved keywords
+  my @reservedNames = ("abort", "abs", "acos", "asctime", "asin", "atan", "atan2", "atexit", 
+                       "atof", "atoi", "atol", "bsearch", "btowc", "calloc", "ceil", 
+					   "clearerr", "clock", "cos", "cosh", "ctime", "difftime", "div", 
+					   "exit", "exp", "fabs", "fclose", "feof", "ferror", "fflush", "fgetc", 
+					   "fgetpos", "fgets", "fgetwc", "fgetws", "floor", "fmod", "fopen", 
+					   "fprintf", "fputc", "fputs", "fputwc", "fputws", "fread", "free", 
+					   "freopen", "frexp", "fscanf", "fseek", "fsetpos", "ftell", "fwide", 
+					   "fwprintf", "fwrite", "fwscanf", "getc", "getchar", "getenv", "gets", 
+					   "getwc", "getwchar", "gmtime", "isalnum", "isalpha", "iscntrl", 
+					   "isdigit", "isgraph", "islower", "isprint", "ispunct", "isspace", 
+					   "isupper", "iswalnum", "iswalpha", "iswcntrl", "iswctype", "iswdigit", 
+					   "iswgraph", "iswlower", "iswprint", "iswpunct", "iswspace", "iswupper", 
+					   "iswxdigit", "isxdigit", "labs", "ldexp", "ldiv", "localeconv", 
+					   "localtime", "log", "log10", "longjmp", "malloc", "mblen", "mbrlen", 
+					   "mbrtowc", "mbsinit", "mbsrtowcs", "mbstowcs", "mbtowc", "memchr", 
+					   "memcmp", "memcpy", "memmove", "memset", "mktime", "modf", "perror", 
+					   "pow", "printf", "putc", "putchar", "puts", "putwc", "putwchar", "qsort", 
+					   "raise", "rand", "realloc", "remove", "rename", "rewind", "scanf", 
+					   "setbuf", "setlocale", "setvbuf", "signal", "sin", "sinh", "sprintf", 
+					   "sqrt", "srand", "sscanf", "strcat", "strchr", "strcmp", "strcoll", 
+					   "strcpy", "strcspn", "strerror", "strftime", "strlen", "strncat", 
+					   "strncmp", "strncpy", "strpbrk", "strrchr", "strspn", "strstr", "strtod", 
+					   "strtok", "strtol", "strtoul", "strxfrm", "swprintf", "swscanf", "system", 
+					   "tan", "tanh", "time", "tmpfile", "tmpnam", "tolower", "toupper", 
+					   "towctrans", "towlower", "towupper", "ungetc", "ungetwc", "vfprintf", 
+					   "vfwprintf", "vprintf", "vsprintf", "vswprintf", "vwprintf", "wcrtomb", 
+					   "wcscat", "wcschr", "wcscmp", "wcscoll", "wcscpy", "wcscspn", "wcsftime", 
+					   "wcslen", "wcsncat", "wcsncmp", "wcsncpy", "wcspbrk", "wcsrchr", 
+					   "wcsrtombs", "wcsspn", "wcsstr", "wcstod", "wcstok", "wcstol", "wcstombs", 
+					   "wcstoul", "wcsxfrm", "wctob", "wctomb", "wctrans", "wctype", "wmemchr", 
+					   "wmemcmp", "wmemcpy", "wmemmove", "wmemset", "wprintf", "wscanf", );
+  
+  # Loop through all functions and check if the user is overridding a function from the stl.
+  my @funcrefs = $file->filerefs("Define"); 
+  foreach my $ref(@funcrefs) {
+	my $name = $ref->ent->name;
+	throwError($check, $ref->ent, $file, $ref->line,$ref->column,ERR1,$file->name) if grep {/^\Q$name\E$/} @reservedNames;
+  }
+}

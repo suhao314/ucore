@@ -1,0 +1,113 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Name for a standard library macro or object is reused in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "17-0-2 The names of standard library macros and objects shall not be reused";}
+
+# This is the full description of the rule being tested
+sub description { return "17-0-2 (Required) The names of standard library macros and objects shall not be reused.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Where the developer uses new versions of standard library macros or objects (e.g. to enhance
+functionality or add checks of input values), the modified macro or object shall have a new name.
+This is to avoid any confusion as to whether a standard macro or object, or a modified version of
+them, is being used.</p>
+<br>
+<p>Develope Note:<BR>
+This check will throw a violation on the overloaded exception mentioned above.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  #define NULL ( a > b ) // Non-compliant
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  #define my array of reserved keywords
+  my @reservedNames = ("assert", "BUFSIZ", "CLOCKS_PER_SEC", "EDOM", "EOF", "ERANGE", "errno", 
+                       "EXIT_FAILURE", "EXIT_SUCCESS", "FILENAME_MAX", "HUGE_VAL", "LC_ALL", 
+					   "LC_COLLATE", "LC_CTYPE", "LC_MONETARY", "LC_NUMERIC", "LC_TIME", "L_tmpnam", 
+					   "MB_CUR_MAX", "NULL", "FOPEN_MAX", "offsetof", "RAND_MAX", "SEEK_CUR", 
+					   "SEEK_END", "SEEK_SET", "setjmp", "SIGTERM", "SIG_DFL", "SIG_ERR", "SIG_IGN", 
+					   "stderr", "stdin", "SIGABRT", "SIGILL", "SIGINT", "SIGSEGV", "WCHAR_MAX", 
+					   "WCHAR_MIN", "WEOF", "WEOF", "_IOFBF", "_IOLBF", "stdout", "SIGFPE", "va_arg", 
+					   "va_end", "va_start", "_IONBF", "TMP_MAX", "CHAR_BIT", "CHAR_MAX", "CHAR_MIN", 
+					   "DBL_DIG", "DBL_EPSILON", "DBL_MANT_DIG", "DBL_MAX", "DBL_MAX_10_EXP", 
+					   "DBL_MAX_EXP", "DBL_MIN", "DBL_MIN_10_EXP", "DBL_MIN_EXP", "MB_LEN_MAX", 
+					   "SCHAR_MAX", "SCHAR_MIN", "SHRT_MAX", "SHRT_MIN", "UCHAR_MAX", "UINT_MAX", 
+					   "ULONG_MAX", "USHRT_MAX", "FLT_DIG", "FLT_EPSILON", "FLT_MANT_DIG", "FLT_MAX", 
+					   "FLT_MAX_10_EXP", "FLT_MAX_EXP", "FLT_MIN", "FLT_MIN_10_EXP", "FLT_MIN_EXP", 
+					   "FLT_RADIX", "FLT_ROUNDS", "INT_MAX", "INT_MIN", "LDBL_DIG", "LDBL_EPSILON", 
+					   "LDBL_MANT_DIG", "LDBL_MAX", "LDBL_MAX_10_EXP", "LDBL_MAX_EXP", "LDBL_MIN", 
+					   "LDBL_MIN_10_EXP", "LDBL_MIN_EXP", "LONG_MAX", "LONG_MIN", "clock_t", "div_t", 
+					   "FILE", "fpos_t", "ldiv_t", "mbstate_t", "ptrdiff_t", "sig_atomic_t", "size_t", 
+					   "time_t", "jmp_buf", "wint_t", "wctrans_t", "wctype_t", "wint_t", "va_list", 
+					   "lconv", "tm", "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", 
+					   "bitor", "bool", "break", "case", "catch", "char", "char16_t", "char32_t", 
+					   "class", "compl", "const", "constexpr", "const_cast", "continue", "decltype", 
+					   "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit", 
+					   "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline", 
+					   "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq", 
+					   "nullptr", "operator", "or", "or_eq", "private", "protected", "public", "register", 
+					   "reinterpret_cast", "return", "short", "signed", "sizeof", "static", "static_assert", 
+					   "static_cast", "struct", "switch", "template", "this", "thread_local", "throw", 
+					   "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", 
+					   "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq", );
+  
+  # Loop through all macros and check the defines against the black list
+  my @funcrefs = $file->filerefs("Define","macro"); 
+  foreach my $ref(@funcrefs) {
+	throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$file->name) if $ref->ent->name =~ /^_[A-Z]{1}.*$/;
+	throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$file->name) if $ref->ent->name =~ /^__.*$/;
+	my $name = $ref->ent->name;
+	throwError($check, $ref->ent, $file, $ref->line,$ref->column,ERR1,$file->name) if grep {/^\Q$name\E$/} @reservedNames;
+  }
+}

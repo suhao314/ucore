@@ -1,0 +1,73 @@
+#This script is designed to run with Understand - CodeCheck
+#Rule 3-9-2 typedefs that indicate size and signedness should be used in place of the basic numerical types.
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use Codecheck::Libraries::InfoSiftr qw(getObjectBitFieldWidth);
+
+use constant ERR1 => 'Violation: basic numerical type "%1" used.';
+use constant ERR2 => 'Violation: basic numerical type "%1" used in "%2".';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { 'Typedefs that indicate size and signedness should be used in place of the basic numerical types.' }
+
+sub description { 'Typedefs that indicate size and signedness should be used in place of the basic numerical types.' }
+
+sub detailed_description { <<'END_DESC'
+The basic numerical types of char, int, short, long, float, double and long double should not be used, but specific-length typedefs should be used. This rule helps to clarify the size of the storage, but does not guarantee portability because of the asymmetric behaviour of integral promotion. See the discussion of integral promotion in Section 6.5.0. It is still important to understand the integer size of the implementation.
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options { }
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c file');
+	
+	my $lexer = $file->lexer(0);
+	
+	my $basicNumericalTypesRegex = qr(long\s+double|char|int|short|long|float|double);
+	my $regex = qr/\b($basicNumericalTypesRegex)\b/;
+	
+	foreach my $ref ($file->filerefs('define, declare', 'object, parameter, function', 0)) {
+		my $ent = $ref->ent;
+		
+		# weed out bit fields (unsigned int var : 3), because they're valid
+		my $bits = getObjectBitFieldWidth($ent, $lexer);
+		next if defined $bits;
+		
+		if ($ent->type && $ent->type =~ $regex) {
+			if ($1 eq $ent->type) {
+				# examples:
+				#   Violation: basic numeral type "int" used.
+				#   Violation: basic numeral type "double" used.
+				#   Violation: basic numeral type "char" used.
+				$check->violation($ent, $file, $ref->line, $ref->column, ERR1, $ent->type);
+			}
+			else {
+				# examples:
+				#   Violation: basic numeral type "int" used in "int *".
+				#   Violation: basic numeral type "int" used in "int [100]".
+				#   Violation: basic numeral type "char" used in "char *".
+				$check->violation($ent, $file, $ref->line, $ref->column, ERR2, $1, $ent->type);
+			}
+		}
+	}
+	
+	return;
+}

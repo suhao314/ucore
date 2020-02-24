@@ -1,0 +1,168 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Identifier is typographically ambiguous to %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "Different identifiers shall be typographically unambiguous";}
+
+# This is the full description of the rule being tested
+sub description { return "Different identifiers shall be typographically unambiguous.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Depending on the font used to display the character set, it is possible for certain glyphs to appear
+the same, even though the characters are different. This may lead to the developer confusing an
+identifier with another one.</p>
+<br>
+<p>
+To help reduce the chance of this, identifiers shall not differ by any combination of:</p>
+<br>
+• Only a mixture of case;<br>
+• The presence or absence of the underscore character;<br>
+• The interchange of the letter “O”, and the number “0”;<br>
+• The interchange of the letter “I”, and the number “1”;<br>
+• The interchange of the letter “I”, and the letter “l” (el);<br>
+• The interchange of the letter “l” (el), and the number “1”;<br>
+• The interchange of the letter “S” and the number “5”;<br>
+• The interchange of the letter “Z” and the number “2”;<br>
+• The interchange of the letter “n” and the letter “h”;<br>
+• The interchange of the letter “B” and the number “8”;<br>
+• The interchange of the letter sequence “rn” (“r” followed by “n”) with the letter “m”.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  int id1_a_b_c;
+  int id1_abc; // Non-compliant
+  int id2_abc; // Non-compliant
+  int id2_ABC; // Non-compliant
+  int id3_a_bc;
+  int id3_ab_c; // Non-compliant
+  int id4_a_bc;
+  int id4_ab_c; // Non-compliant
+  int id5_ii;
+  int id5_11; // Non-compliant
+  int id6_i0;
+  int id6_1O; // Non-compliant
+  int id7_in;
+  int id7_1h; // Non-compliant
+  int id8_Z5;
+  int id8_2S; // Non-compliant
+  int id9_ZS;
+  int id9_25; // Non-compliant
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 1;}
+
+# Any defined options go here
+sub define_options{
+  my $check = shift;
+  $check->option->checkbox("Global","Test all identifiers in project?",0) # create a checkbox option
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  
+  # Test if we are inside a global check or per file check
+  my $testGlobal = $check->option->lookup("Global");
+  return if $file && $testGlobal;
+  return if !$file && !$testGlobal;
+  
+  # Use the results above to create our list of entities to be tested
+  my @entities;
+  @entities = $check->db->ents if $testGlobal;
+  @entities = map{$_->ent;}$file->filerefs("","",1) if $file;
+  
+  # Initialize Hash for data tracking
+  my %amb = ();
+  
+  # Loop through each object
+  foreach my $ent(@entities) {
+    my $name = $ent->name;
+	# Replace l (el) with 1
+	$name =~ s/l/1/g;
+	# Replace n with h
+	$name =~ s/n/h/g;
+	# Replace rn with m
+	$name =~ s/rn/m/g;
+	# Replace any lower case with upper case
+	$name =~ tr/a-z/A-Z/;
+	# Remove any _ from the name
+	$name =~ s/_//g;
+	# Replace O with 0
+	$name =~ s/O/0/g;
+	# Replace I with l (el)
+	$name =~ s/I/1/g;
+	# Replace S with 5
+	$name =~ s/S/5/g;
+	# Replace Z with 2
+	$name =~ s/Z/2/g;
+	# Replace 8 with B
+	$name =~ s/8/B/g;
+	if ( exists  $amb{ $name } ) {
+	  my $trueName = $ent->name;
+	  my $checkedName = $amb{$name};
+	  throwError($check, $ent,$file,$ent->ref->line,$ent->ref->column,ERR1,$checkedName) unless $trueName eq $checkedName;
+	}
+	else {
+	  my $trueName = $ent->name;
+	  $amb{$name} = $trueName;
+	}
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

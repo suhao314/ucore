@@ -1,0 +1,9 @@
+dyacclex for Debian
+-------------------
+
+Kylix violates the Debian standard of placing binaries in /usr/bin, and instead
+places them in /usr/local/bin.
+
+debian/rules was changed to pass OSTYPE to make.
+
+ -- Michiel Rook <michiel@grendelproject.nl>, Fri, 18 Feb 2005 11:30:17 +0100

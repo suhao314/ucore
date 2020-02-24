@@ -1,0 +1,144 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Function can throw an exception not of the indicated type in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "15-5-2 Where a function’s declaration includes an exception specification, the function shall only be capable of throwing exceptions of the indicated type(s)";}
+
+# This is the full description of the rule being tested
+sub description { return "15-5-2 (Required) Where a function’s declaration includes an exception specification, the function shall only be capable of throwing exceptions of the indicated type(s).";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+If a function declared with an <i>exception-specification</i> throws an exception of a type not included
+in the specification, the function <i>unexpected()</i> is called. The behaviour of this function can be
+overridden within a <i>project</i>, but by default causes an exception of <i>std::bad_exception</i> to be thrown.
+If <i>std::bad_exception</i> is not listed in the <i>exception-specification</i>, then <i>terminate()</i> will be called,
+leading to <i>implementation-defined</i> termination of the program.</p>
+<p><b>Developer Note:</b><br>
+This check walks the call tree of any function that has a throw specification. This check does not recognize if those 
+throws are in turn caught. If a throw command that does not match the functions specification is susequently caught before 
+completion of that function, then that throw command is not a violation. This false positive will be corrected in future 
+builds of Understand.
+<br>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  // foo does not have an exception specification, so can propagate
+  // exceptions of any type, including int
+  void foo ( )
+  {
+    throw ( 21 );
+  }
+  // goo specifies that it will only throw exceptions of type Exception.
+  // If foo throws an int the function unexpected() is called, which may
+  // terminate the program
+  void goo ( ) throw ( Exception )
+  {
+    foo ( ); // Non-compliant – int is not listed in the
+  // throw specification
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Create a list of all functions that are defined
+  my @functionsDefined = $file->filerefs("define", "function");
+  return unless @functionsDefined;
+  
+  # Loop through each function 
+  foreach my $function(@functionsDefined) {
+    # Next unless this function allow exceptions
+	my $exceptionText = $function->ent->freetext("AllowExceptions");
+    next unless $exceptionText;
+	
+	# Pull all references that this function calls
+	my @callList = walkCallPath($function);
+	foreach my $child(@callList) {
+	  my $otherException = $child->ent->freetext("ThrowExceptions");
+	  throwError($check, $child->ent,$file,$child->line,$child->column,ERR1,$file->name) if $otherException ne $exceptionText;
+	}
+  }
+}
+
+# This subroutine takes and define reference and returns all the calls made by that function and it's children
+sub walkCallPath {
+  my $ref = shift;
+  my %children;
+  my @fullList;
+  my @currentLevel = $ref->ent->refs("Call");
+  foreach my $elt(@currentLevel) {
+    my $id = $elt->ent->id;
+    next if exists($children{$elt});
+	$children{$id} = 1;
+	push (@fullList, $elt);
+	my @nextLevel = $elt->ent->refs("Call");
+	push (@currentLevel, @nextLevel);
+  }
+  return @fullList;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

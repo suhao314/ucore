@@ -1,0 +1,152 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# Updated 12/10/14 by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Virtual Function %1 is overridden with different default parameters in file %2 on line %3.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "Parameters in an overriding virtual function shall either use the same default arguments as the function they override, or else shall not specify any default arguments";}
+
+# This is the full description of the rule being tested
+sub description { return "(Required) Parameters in an overriding virtual function shall either use the same default arguments as the function they override, or else shall not specify any default arguments.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Default arguments are determined by the static type of the object. If a default argument is different
+for a parameter in an overriding function, the value used in the call will be different when calls are
+made via the base or derived object, which may be contrary to developer expectations.</p>
+
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  
+  class Base
+  {
+  public:
+    virtual void g1_831 ( int a = 0 );
+    virtual void g2_831 ( int a = 0 );
+    virtual void b1_831 ( int a = 0 );
+  };  
+
+  class Derived : public Base
+  {
+  public:
+    virtual void g1_831 ( int a = 0 ); // Compliant - same default used
+    virtual void g2_831 ( int a );     // Compliant -
+                                       // no default specified
+    virtual void b1 ( int a = 10 );    // Non-compliant - different value
+  };  
+
+  void f( Derived& d )
+  {
+    Base& b = d;
+    b.g1 ( );   // Will use default of 0
+    d.g1 ( );   // Will use default of 0
+    b.g2 ( );   // Will use default of 0
+    d.g2 ( 0 ); // No default value available to use
+    b.b1 ( );   // Will use default of 0
+    d.b1 ( );   // Will use default of 10
+  }
+
+  </pre>
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+
+  # Check if we are looking at a file
+  return unless $file->kind->check('c file');
+  
+  # Pull all objects references for sets and defines
+  my @allRefs = $file->filerefs( 'Define, Declare', 'Function Virtual', 1);
+  
+  # Loop through each reference
+  foreach my $ref ( @allRefs ) {
+    # Skip unless we are looking at the base
+    next unless $ref->ent->longname =~ /Base/;
+
+    # Initialize both strings for comparison and spin up lexer
+    my $baseWithDefaults = '';
+    my $baseWithoutDefaults = '';
+    my $baseLexeme = $ref->lexeme;
+
+    # Move lexer into position
+    while ( $baseLexeme->text ne '(' ) {
+      $baseLexeme = $baseLexeme->nextUseful;
+    }
+
+    # Build strings
+    my $default = 0;
+    while ( $baseLexeme->text ne ')' ) {
+      if ( $default == 1 ) {
+        $default = 0;
+      } elsif ( $baseLexeme->text eq '=' ) {
+        $default = 1;
+      } else {
+        $baseWithoutDefaults .= $baseLexeme->text;
+      }
+      $baseWithDefaults .= $baseLexeme->text;
+      $baseLexeme = $baseLexeme->nextUseful;
+    }
+
+    # Pull all reference that override this base
+    my @toCompare = $ref->ent->refs("Overriddenby");
+
+    # Loop through each override
+    foreach my $comp ( @toCompare ) {
+
+      #initialize string a lexer
+      my $override = '';
+      my $overrideLexeme = $comp->lexeme;
+
+      # Move lexer into postions
+      while ( $overrideLexeme->text ne '(' ) {
+        $overrideLexeme = $overrideLexeme->nextUseful;
+      }
+
+      # Build string
+      while ( $overrideLexeme->text ne ')' ) {
+        $override .= $overrideLexeme->text;
+        $overrideLexeme = $overrideLexeme->nextUseful;
+      }
+
+      if ( $override ne $baseWithDefaults and $override ne $baseWithoutDefaults ) {
+
+        $check->violation( $ref->ent, $ref->file, $ref->line, $ref->column, ERR1, $ref->ent->name, $comp->file->name, $comp->line );
+
+      }
+    }
+  }
+}

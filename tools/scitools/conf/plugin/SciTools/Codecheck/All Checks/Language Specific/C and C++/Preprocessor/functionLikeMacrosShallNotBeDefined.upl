@@ -1,0 +1,77 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Function like Macro defined in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "Function-like macros shall not be defined";}
+
+# This is the full description of the rule being tested
+sub description { return "Function-like macros shall not be defined.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+While macros can provide a speed advantage over functions, functions provide a safer and more
+robust mechanism. This is particularly true with respect to the type checking of parameters, and
+the problem of function-like macros potentially evaluating parameters multiple times.
+Inline functions should be used instead.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  #define FUNC_MACRO(X) ((X)+(X)) // Non-compliant
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Loop through all macros and check if they are functional
+  my @funcrefs = $file->filerefs("Define","macro functional"); 
+  foreach my $ref(@funcrefs) {
+    # Functional macros are not allowed, throw an error.
+	throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$file->name);
+  }
+}

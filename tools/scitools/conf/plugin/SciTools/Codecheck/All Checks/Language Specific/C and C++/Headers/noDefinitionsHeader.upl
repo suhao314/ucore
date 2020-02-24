@@ -1,0 +1,55 @@
+#This script is designed to run with Understand - CodeCheck
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => '"%1" defined in header file.';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+}
+
+sub name { 'Definitions in Header Files' }
+
+sub description { 'Objects and Functions should not be defined in Header Files.' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+Header files should be used to declare objects, not define them.</p>
+<p><b>Possible Exception</b><br>
+Inline Functions can be defined in the declaration of a class.
+</p>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options {
+  my $check = shift;
+  $check->option->checkbox("allowInlineFuncs","Allow Inline Functions in Header Files",0);
+}
+
+
+sub check {
+	my $check = shift;
+	my $file = shift;
+	return unless $file->kind->check('c header file ~unknown');
+	
+	my @refsDefined = $file->filerefs('define', 'function, object', 0);
+	
+	foreach my $ref (@refsDefined) {
+  next if $ref->ent->kind->check('member object ~static');
+  next if($ref->ent->kind->check('function') && $ref->scope->kind->check('class') && $check->option->lookup("allowInlineFuncs"));
+		$check->violation($ref->ent, $file, $ref->line, $ref->column, ERR1, $ref->ent->name);
+	}
+	
+	return;
+}

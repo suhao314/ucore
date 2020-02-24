@@ -1,0 +1,1330 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module understand</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>understand</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:///C:/sti/bin/pc-win64/python/understand.pyd">c:\sti\bin\pc-win64\python\understand.pyd</a></font></td></tr></table>
+    <p><tt>This&nbsp;is&nbsp;the&nbsp;python&nbsp;interface&nbsp;to&nbsp;Understand&nbsp;databases.<br>
+&nbsp;<br>
+It&nbsp;provides&nbsp;class-orientated&nbsp;access&nbsp;to&nbsp;Understand&nbsp;databases.&nbsp;Most<br>
+of&nbsp;the&nbsp;class&nbsp;objects&nbsp;are&nbsp;only&nbsp;valid&nbsp;when&nbsp;returned&nbsp;from&nbsp;a&nbsp;function.<br>
+&nbsp;<br>
+The&nbsp;following&nbsp;classes&nbsp;and&nbsp;methods&nbsp;are&nbsp;in&nbsp;this&nbsp;module:<br>
+Classes:<br>
+&nbsp;&nbsp;understand.<a href="#Arch">Arch</a><br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a><br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a><br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a><br>
+&nbsp;&nbsp;understand.<a href="#Lexer">Lexer</a><br>
+&nbsp;&nbsp;understand.<a href="#LexerIter">LexerIter</a><br>
+&nbsp;&nbsp;understand.<a href="#Metric">Metric</a><br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;&nbsp;understand.<a href="#UnderstandError">UnderstandError</a><br>
+&nbsp;&nbsp;understand.Visio<br>
+Methods:<br>
+&nbsp;&nbsp;understand.<a href="#-checksum">checksum</a>(text&nbsp;[,len])<br>
+&nbsp;&nbsp;understand.<a href="#-license">license</a>(path)<br>
+&nbsp;&nbsp;understand.<a href="#-open">open</a>(dbname)<br>
+&nbsp;&nbsp;understand.<a href="#-version">version</a>()<br>
+&nbsp;<br>
+Examples<br>
+&nbsp;<br>
+The&nbsp;following&nbsp;examples&nbsp;are&nbsp;meant&nbsp;to&nbsp;be&nbsp;complete,&nbsp;yet&nbsp;simplistic<br>
+scripts&nbsp;that&nbsp;demonstrate&nbsp;one&nbsp;or&nbsp;more&nbsp;features&nbsp;each.&nbsp;For&nbsp;the&nbsp;sake&nbsp;of<br>
+brevity,&nbsp;most&nbsp;try,&nbsp;except&nbsp;statements&nbsp;statements&nbsp;are&nbsp;ommitted.&nbsp;<br>
+&nbsp;<br>
+Sorted&nbsp;List&nbsp;of&nbsp;All&nbsp;Entities<br>
+---------------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+#&nbsp;Open&nbsp;Database<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+for&nbsp;ent&nbsp;in&nbsp;sorted(db.ents(),key=&nbsp;lambda&nbsp;ent:&nbsp;ent.name()):<br>
+&nbsp;&nbsp;print&nbsp;(ent.name(),"&nbsp;&nbsp;[",ent.kindname(),"]",sep="",end="\n")<br>
+&nbsp;<br>
+&nbsp;<br>
+List&nbsp;of&nbsp;Files<br>
+-------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+for&nbsp;file&nbsp;in&nbsp;db.ents("File"):<br>
+&nbsp;&nbsp;#&nbsp;print&nbsp;directory&nbsp;name<br>
+&nbsp;&nbsp;print&nbsp;(file.longname())<br>
+&nbsp;<br>
+&nbsp;<br>
+Lookup&nbsp;an&nbsp;Entity&nbsp;(Case&nbsp;Insensitive)<br>
+-----------------------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+import&nbsp;re<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+#&nbsp;Create&nbsp;a&nbsp;regular&nbsp;expression&nbsp;that&nbsp;is&nbsp;case&nbsp;insensitive<br>
+searchstr&nbsp;=&nbsp;re.compile("test*.cpp",re.I)<br>
+for&nbsp;file&nbsp;in&nbsp;db.lookup(searchstr,"File"):<br>
+&nbsp;&nbsp;print&nbsp;(file)<br>
+&nbsp;<br>
+&nbsp;<br>
+Global&nbsp;Variable&nbsp;Usage<br>
+---------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+for&nbsp;ent&nbsp;in&nbsp;db.ents("Global&nbsp;Object&nbsp;~Static"):<br>
+&nbsp;&nbsp;print&nbsp;(ent,":",sep="")<br>
+&nbsp;&nbsp;for&nbsp;ref&nbsp;in&nbsp;ent.refs():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;(ref.kindname(),ref.ent(),ref.file(),"(",ref.line(),",",ref.column(),")")<br>
+&nbsp;&nbsp;print&nbsp;("\n",end="")<br>
+&nbsp;<br>
+&nbsp;<br>
+List&nbsp;of&nbsp;Functions&nbsp;with&nbsp;Parameters<br>
+---------------------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+def&nbsp;sortKeyFunc(ent):<br>
+&nbsp;&nbsp;return&nbsp;str.lower(ent.longname())<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+ents&nbsp;=&nbsp;db.ents("function,method,procedure")<br>
+for&nbsp;func&nbsp;in&nbsp;sorted(ents,key&nbsp;=&nbsp;sortKeyFunc):<br>
+&nbsp;&nbsp;print&nbsp;(func.longname(),"&nbsp;(",sep="",end="")<br>
+&nbsp;&nbsp;first&nbsp;=&nbsp;True<br>
+&nbsp;&nbsp;for&nbsp;param&nbsp;in&nbsp;func.ents("Define","Parameter"):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;not&nbsp;first:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;(",&nbsp;",end="")<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;(param.type(),param,end="")<br>
+&nbsp;&nbsp;&nbsp;&nbsp;first&nbsp;=&nbsp;False<br>
+&nbsp;&nbsp;print&nbsp;(")")<br>
+&nbsp;<br>
+&nbsp;<br>
+List&nbsp;of&nbsp;Functions&nbsp;with&nbsp;Associated&nbsp;Comments<br>
+------------------------------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+for&nbsp;func&nbsp;in&nbsp;db.ents("function&nbsp;~unresolved&nbsp;~unknown"):<br>
+&nbsp;&nbsp;comments&nbsp;=&nbsp;func.comments("after")<br>
+&nbsp;&nbsp;if&nbsp;comments:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;(func.longname(),":\n&nbsp;&nbsp;",comments,"\n",sep="")<br>
+&nbsp;<br>
+&nbsp;<br>
+List&nbsp;of&nbsp;Ada&nbsp;Packages<br>
+--------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+print&nbsp;("Standard&nbsp;Packages:")<br>
+for&nbsp;package&nbsp;in&nbsp;db.ents("Package"):<br>
+&nbsp;&nbsp;if&nbsp;package.library()&nbsp;==&nbsp;"Standard":<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;("&nbsp;&nbsp;",package.longname())<br>
+&nbsp;<br>
+print&nbsp;("\nUser&nbsp;Packages:")<br>
+for&nbsp;package&nbsp;in&nbsp;db.ents("Package"):<br>
+&nbsp;&nbsp;if&nbsp;package.library()&nbsp;!=&nbsp;"Standard":<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print("&nbsp;&nbsp;",package.longname())<br>
+&nbsp;<br>
+&nbsp;<br>
+All&nbsp;Project&nbsp;Metrics<br>
+-------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+metrics&nbsp;=&nbsp;db.metric(db.metrics())<br>
+for&nbsp;k,v&nbsp;in&nbsp;sorted(metrics.items()):<br>
+&nbsp;&nbsp;print&nbsp;(k,"=",v)<br>
+&nbsp;<br>
+&nbsp;<br>
+Cyclomatic&nbsp;Complexity&nbsp;of&nbsp;Functions<br>
+----------------------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+for&nbsp;func&nbsp;in&nbsp;db.ents("function,method,procedure"):<br>
+&nbsp;&nbsp;metric&nbsp;=&nbsp;func.metric(("Cyclomatic",))<br>
+&nbsp;&nbsp;if&nbsp;metric["Cyclomatic"]&nbsp;is&nbsp;not&nbsp;None:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;(func,"&nbsp;=&nbsp;",metric["Cyclomatic"],sep="")<br>
+&nbsp;<br>
+&nbsp;<br>
+"Called&nbsp;By"&nbsp;Graphs&nbsp;of&nbsp;Functions<br>
+-------------------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+for&nbsp;func&nbsp;in&nbsp;db.ents("function,method,procedure"):<br>
+&nbsp;&nbsp;file&nbsp;=&nbsp;"callby_"&nbsp;+&nbsp;func.name()&nbsp;+&nbsp;".png"<br>
+&nbsp;&nbsp;print&nbsp;(func.longname(),"-&gt;",file)<br>
+&nbsp;&nbsp;func.draw("Called&nbsp;By",file)<br>
+&nbsp;<br>
+&nbsp;<br>
+Info&nbsp;Browser&nbsp;View&nbsp;of&nbsp;Functions<br>
+------------------------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+for&nbsp;func&nbsp;in&nbsp;db.ents("function,method,procedure"):<br>
+&nbsp;&nbsp;for&nbsp;line&nbsp;in&nbsp;func.ib():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print(line,end="")<br>
+&nbsp;<br>
+&nbsp;<br>
+Lexical&nbsp;Stream<br>
+--------------<br>
+&nbsp;<br>
+import&nbsp;understand<br>
+&nbsp;<br>
+db&nbsp;=&nbsp;understand.<a href="#-open">open</a>("test.udb")<br>
+&nbsp;<br>
+file&nbsp;=&nbsp;db.lookup("test.cpp")[0]<br>
+for&nbsp;lexeme&nbsp;in&nbsp;file.lexer():<br>
+&nbsp;&nbsp;print&nbsp;(lexeme.text(),end="")<br>
+&nbsp;&nbsp;if&nbsp;lexeme.ent():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;("@",end="")</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial">builtins.Exception(builtins.BaseException)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="understand.html#UnderstandError">UnderstandError</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial">builtins.object
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="understand.html#Arch">Arch</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Atn">Atn</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Db">Db</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Ent">Ent</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Kind">Kind</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Lexeme">Lexeme</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Lexer">Lexer</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#LexerIter">LexerIter</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Metric">Metric</a>
+</font></dt><dt><font face="helvetica, arial"><a href="understand.html#Ref">Ref</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Arch">class <strong>Arch</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;represents&nbsp;an&nbsp;understand&nbsp;Architecture.&nbsp;Available&nbsp;methods&nbsp;are:<br>
+&nbsp;<br>
+understand.<a href="#Arch">Arch</a>.children<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-contains">contains</a>(entity&nbsp;[,recursive])<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-depends">depends</a>(recursive=true,group=false)<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-dependsby">dependsby</a>(recursive=true,group=false)<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-ents">ents</a>([recursive])<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-longname">longname</a>()<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-name">name</a>()<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-parent">parent</a>()&nbsp;&nbsp;understand.<a href="#Arch">Arch</a>.<a href="#Arch-__repr__">__repr__</a>()&nbsp;&nbsp;--longname<br>
+understand.<a href="#Arch">Arch</a>.<a href="#Arch-__str__">__str__</a>()&nbsp;&nbsp;--name<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Arch-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#Arch-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="Arch-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#Arch-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="Arch-children"><strong>children</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-children">children</a>()&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Arch">Arch</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;children&nbsp;of&nbsp;the&nbsp;architecture.</tt></dd></dl>
+
+<dl><dt><a name="Arch-contains"><strong>contains</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-contains">contains</a>(entity&nbsp;[,recursive])&nbsp;-&gt;&nbsp;bool<br>
+&nbsp;<br>
+Return&nbsp;true&nbsp;if&nbsp;the&nbsp;entity&nbsp;is&nbsp;contained&nbsp;in&nbsp;the&nbsp;architecture<br>
+&nbsp;<br>
+The&nbsp;parameter&nbsp;entity&nbsp;should&nbsp;be&nbsp;an&nbsp;instance&nbsp;of&nbsp;understand.<a href="#Ent">Ent</a>.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;recursive&nbsp;specifies&nbsp;if&nbsp;the&nbsp;search&nbsp;is&nbsp;recursive.<br>
+If&nbsp;true,&nbsp;all&nbsp;nested&nbsp;architectures&nbsp;will&nbsp;be&nbsp;considered&nbsp;as&nbsp;well.&nbsp;It&nbsp;is<br>
+false&nbsp;by&nbsp;default.</tt></dd></dl>
+
+<dl><dt><a name="Arch-depends"><strong>depends</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-depends">depends</a>(recursive,group)&nbsp;-&gt;<br>
+&nbsp;&nbsp;dict&nbsp;key=understand.<a href="#Arch">Arch</a>&nbsp;value=list&nbsp;of&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;dependencies&nbsp;of&nbsp;the&nbsp;architecture.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;recursive&nbsp;is&nbsp;true&nbsp;by&nbsp;default.&nbsp;When&nbsp;false,&nbsp;child<br>
+architecture&nbsp;dependencies&nbsp;are&nbsp;not&nbsp;included.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;group&nbsp;is&nbsp;false&nbsp;by&nbsp;default.&nbsp;When&nbsp;true,&nbsp;the&nbsp;keys<br>
+in&nbsp;the&nbsp;dictionary&nbsp;will&nbsp;be&nbsp;grouped&nbsp;into&nbsp;as&nbsp;few&nbsp;keys&nbsp;as&nbsp;possible.<br>
+&nbsp;<br>
+For&nbsp;example,&nbsp;given&nbsp;the&nbsp;architecture&nbsp;structure:<br>
+&nbsp;&nbsp;All<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Bob<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lots&nbsp;of&nbsp;entities<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Sue<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Current<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lots&nbsp;of&nbsp;entities<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Old<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lots&nbsp;of&nbsp;entities<br>
+&nbsp;<br>
+calling&nbsp;sue.<a href="#Arch-depends">depends</a>(recursive=false)&nbsp;would&nbsp;return&nbsp;an&nbsp;empty&nbsp;dictionary<br>
+since&nbsp;sue's&nbsp;children&nbsp;(current&nbsp;and&nbsp;old)&nbsp;are&nbsp;not&nbsp;considered.&nbsp;Calling<br>
+bob.<a href="#Arch-depends">depends</a>(group=true)&nbsp;would&nbsp;result&nbsp;in&nbsp;a&nbsp;single&nbsp;key&nbsp;in&nbsp;the<br>
+dictionary&nbsp;(Sue),&nbsp;as&nbsp;opposed&nbsp;to&nbsp;two&nbsp;keys&nbsp;(Sue/Current&nbsp;and&nbsp;Sue/Old)<br>
+since&nbsp;all&nbsp;the&nbsp;entities&nbsp;were&nbsp;grouped&nbsp;together.</tt></dd></dl>
+
+<dl><dt><a name="Arch-dependsby"><strong>dependsby</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-dependsby">dependsby</a>(recursive,group)&nbsp;-&gt;<br>
+&nbsp;&nbsp;dict&nbsp;key=understand.<a href="#Arch">Arch</a>&nbsp;value=list&nbsp;of&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;architectures&nbsp;depended&nbsp;on&nbsp;by&nbsp;the&nbsp;architecture.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;recursive&nbsp;is&nbsp;true&nbsp;by&nbsp;default.&nbsp;When&nbsp;false,&nbsp;child<br>
+architecture&nbsp;dependencies&nbsp;are&nbsp;not&nbsp;included.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;group&nbsp;is&nbsp;false&nbsp;by&nbsp;default.&nbsp;When&nbsp;true,&nbsp;the&nbsp;keys<br>
+in&nbsp;the&nbsp;dictionary&nbsp;will&nbsp;be&nbsp;grouped&nbsp;into&nbsp;as&nbsp;few&nbsp;keys&nbsp;as&nbsp;possible.<br>
+&nbsp;<br>
+For&nbsp;more&nbsp;information,&nbsp;see&nbsp;the&nbsp;help&nbsp;for&nbsp;understand.<a href="#Arch">Arch</a>.<a href="#Arch-depends">depends</a>()</tt></dd></dl>
+
+<dl><dt><a name="Arch-ents"><strong>ents</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-ents">ents</a>([recursive])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;entities&nbsp;within&nbsp;the&nbsp;architecture.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;recursive&nbsp;determines&nbsp;if&nbsp;nested&nbsp;architectures<br>
+are&nbsp;considered.&nbsp;It&nbsp;is&nbsp;false&nbsp;by&nbsp;default.</tt></dd></dl>
+
+<dl><dt><a name="Arch-longname"><strong>longname</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-longname">longname</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;long&nbsp;name&nbsp;of&nbsp;the&nbsp;architecture.</tt></dd></dl>
+
+<dl><dt><a name="Arch-name"><strong>name</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-name">name</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;short&nbsp;name&nbsp;of&nbsp;the&nbsp;architecture.</tt></dd></dl>
+
+<dl><dt><a name="Arch-parent"><strong>parent</strong></a>(...)</dt><dd><tt>arch.<a href="#Arch-parent">parent</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Arch">Arch</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;parent&nbsp;of&nbsp;the&nbsp;<a href="#Arch">Arch</a>&nbsp;or&nbsp;None&nbsp;if&nbsp;it&nbsp;is&nbsp;a&nbsp;root.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Atn">class <strong>Atn</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;represents&nbsp;an&nbsp;understand&nbsp;annotation.&nbsp;Annotations&nbsp;can&nbsp;be&nbsp;obtained<br>
+for&nbsp;a&nbsp;database&nbsp;(db.annotations())&nbsp;or&nbsp;for&nbsp;an&nbsp;entity&nbsp;(ent.annotations())<br>
+Available&nbsp;Methods&nbsp;are:&nbsp;<br>
+&nbsp;&nbsp;understand.<a href="#Atn">Atn</a>.<a href="#Atn-author">author</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Atn">Atn</a>.<a href="#Atn-ent">ent</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Atn">Atn</a>.<a href="#Atn-date">date</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Atn">Atn</a>.<a href="#Atn-text">text</a>()<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Atn-author"><strong>author</strong></a>(...)</dt><dd><tt>atn.<a href="#Atn-author">author</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;author&nbsp;who&nbsp;created&nbsp;the&nbsp;annotation.</tt></dd></dl>
+
+<dl><dt><a name="Atn-date"><strong>date</strong></a>(...)</dt><dd><tt>atn.<a href="#Atn-date">date</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;date&nbsp;the&nbsp;annotation&nbsp;was&nbsp;last&nbsp;modified&nbsp;as&nbsp;a&nbsp;string&nbsp;of&nbsp;the&nbsp;form<br>
+YYYY-MM-DDTHH:MM:SS&nbsp;such&nbsp;as&nbsp;2000-01-01T19:20:30.</tt></dd></dl>
+
+<dl><dt><a name="Atn-ent"><strong>ent</strong></a>(...)</dt><dd><tt>atn.<a href="#Atn-ent">ent</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;entity&nbsp;this&nbsp;annotation&nbsp;belongs&nbsp;to.&nbsp;This&nbsp;may&nbsp;be&nbsp;None&nbsp;if&nbsp;the<br>
+annotation&nbsp;is&nbsp;an&nbsp;orphan.</tt></dd></dl>
+
+<dl><dt><a name="Atn-text"><strong>text</strong></a>(...)</dt><dd><tt>atn.<a href="#Atn-text">text</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;text&nbsp;of&nbsp;the&nbsp;annotation.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Db">class <strong>Db</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;represents&nbsp;an&nbsp;understand&nbsp;database.&nbsp;With&nbsp;the&nbsp;exception&nbsp;of<br>
+<a href="#Db">Db</a>.<a href="#Db-close">close</a>(),&nbsp;all&nbsp;methods&nbsp;require&nbsp;an&nbsp;open&nbsp;database.&nbsp;A&nbsp;database&nbsp;is<br>
+opened&nbsp;through&nbsp;the&nbsp;module&nbsp;function&nbsp;understand.<a href="#-open">open</a>(dbname).&nbsp;Available<br>
+methods&nbsp;are:<br>
+&nbsp;<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-annotations">annotations</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-archs">archs</a>(ent)<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-close">close</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-ent_from_id">ent_from_id</a>(id)<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-ents">ents</a>([kindstring])<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-language">language</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-lookup">lookup</a>(name&nbsp;[,kindstring])<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-lookup_arch">lookup_arch</a>(longname)<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-lookup_uniquename">lookup_uniquename</a>(uniquename)<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-metric">metric</a>(metriclist)<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-metrics">metrics</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.db.<a href="#Db-metrics_treemap">metrics_treemap</a>(file,&nbsp;sizemetric,&nbsp;colormetric&nbsp;[enttype&nbsp;[,arch]])<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-name">name</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-root_archs">root_archs</a>()&nbsp;&nbsp;understand.<a href="#Db">Db</a>.<a href="#Db-__str__">__str__</a>()&nbsp;--name<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Db-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#Db-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="Db-annotations"><strong>annotations</strong></a>(...)</dt><dd><tt>db.<a href="#Db-annotations">annotations</a>()&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Atn">Atn</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;annotations&nbsp;for&nbsp;the&nbsp;database.</tt></dd></dl>
+
+<dl><dt><a name="Db-archs"><strong>archs</strong></a>(...)</dt><dd><tt>db.<a href="#Db-archs">archs</a>(ent)&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Arch">Arch</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;architectures&nbsp;that&nbsp;contain&nbsp;ent&nbsp;(understand.<a href="#Ent">Ent</a>)</tt></dd></dl>
+
+<dl><dt><a name="Db-close"><strong>close</strong></a>(...)</dt><dd><tt>db.<a href="#Db-close">close</a>()&nbsp;-&gt;&nbsp;None<br>
+&nbsp;<br>
+Close&nbsp;the&nbsp;database.<br>
+&nbsp;<br>
+This&nbsp;allows&nbsp;a&nbsp;new&nbsp;database&nbsp;to&nbsp;be&nbsp;opened.&nbsp;It&nbsp;will&nbsp;never&nbsp;throw&nbsp;an<br>
+error&nbsp;and&nbsp;is&nbsp;safe&nbsp;to&nbsp;call&nbsp;even&nbsp;if&nbsp;the&nbsp;database&nbsp;is&nbsp;already&nbsp;closed.<br>
+After&nbsp;the&nbsp;database&nbsp;is&nbsp;closed,&nbsp;accessing&nbsp;objects&nbsp;associated&nbsp;with<br>
+the&nbsp;database&nbsp;(ents,&nbsp;refs,&nbsp;...)&nbsp;can&nbsp;cause&nbsp;Python&nbsp;to&nbsp;crash.</tt></dd></dl>
+
+<dl><dt><a name="Db-ent_from_id"><strong>ent_from_id</strong></a>(...)</dt><dd><tt>db.<a href="#Db-ent_from_id">ent_from_id</a>(id)&nbsp;-&gt;&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;ent&nbsp;associated&nbsp;with&nbsp;the&nbsp;id.<br>
+&nbsp;<br>
+The&nbsp;id&nbsp;is&nbsp;obtained&nbsp;using&nbsp;ent.id.&nbsp;This&nbsp;should&nbsp;only&nbsp;be&nbsp;called&nbsp;for<br>
+identifiers&nbsp;that&nbsp;have&nbsp;been&nbsp;obtained&nbsp;while&nbsp;the&nbsp;database&nbsp;has&nbsp;remained<br>
+open.&nbsp;When&nbsp;a&nbsp;database&nbsp;is&nbsp;reopened,&nbsp;the&nbsp;identifier&nbsp;is&nbsp;not&nbsp;guaranteed<br>
+to&nbsp;remain&nbsp;consistent&nbsp;and&nbsp;refer&nbsp;to&nbsp;the&nbsp;same&nbsp;entity.</tt></dd></dl>
+
+<dl><dt><a name="Db-ents"><strong>ents</strong></a>(...)</dt><dd><tt>db.<a href="#Db-ents">ents</a>([kindstring])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;entities&nbsp;in&nbsp;the&nbsp;database.<br>
+&nbsp;<br>
+If&nbsp;the&nbsp;optional&nbsp;parameter&nbsp;kindstring(string)&nbsp;is&nbsp;not&nbsp;passed,&nbsp;then&nbsp;all<br>
+the&nbsp;entities&nbsp;in&nbsp;the&nbsp;database&nbsp;are&nbsp;returned.&nbsp;Otherwise,&nbsp;kindstring<br>
+should&nbsp;be&nbsp;a&nbsp;language-specific&nbsp;entity&nbsp;filter&nbsp;string.&nbsp;The&nbsp;database&nbsp;<br>
+must&nbsp;be&nbsp;open&nbsp;or&nbsp;a&nbsp;<a href="#UnderstandError">UnderstandError</a>&nbsp;will&nbsp;be&nbsp;thrown.</tt></dd></dl>
+
+<dl><dt><a name="Db-language"><strong>language</strong></a>(...)</dt><dd><tt>db.<a href="#Db-language">language</a>()&nbsp;-&gt;&nbsp;tuple&nbsp;of&nbsp;strings<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;tuple&nbsp;with&nbsp;project&nbsp;languages<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;returns&nbsp;a&nbsp;tuple&nbsp;containing&nbsp;all&nbsp;the&nbsp;language&nbsp;names<br>
+enabled&nbsp;in&nbsp;the&nbsp;project.&nbsp;Possible&nbsp;language&nbsp;names&nbsp;are:&nbsp;"Ada",&nbsp;"C++",<br>
+"C#",&nbsp;"Fortran",&nbsp;"Java",&nbsp;"Jovial",&nbsp;"Pascal",&nbsp;"Plm",&nbsp;<br>
+"Python",&nbsp;"VHDL",&nbsp;or&nbsp;"Web".&nbsp;C&nbsp;is&nbsp;included&nbsp;with&nbsp;"C++"<br>
+This&nbsp;will&nbsp;throw&nbsp;a&nbsp;<a href="#UnderstandError">UnderstandError</a>&nbsp;if&nbsp;the&nbsp;database&nbsp;has&nbsp;been&nbsp;closed.</tt></dd></dl>
+
+<dl><dt><a name="Db-lookup"><strong>lookup</strong></a>(...)</dt><dd><tt>db.<a href="#Db-lookup">lookup</a>(name&nbsp;[,kindstring])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;entities&nbsp;that&nbsp;match&nbsp;the&nbsp;specified&nbsp;name.<br>
+&nbsp;<br>
+The&nbsp;parameter&nbsp;name&nbsp;should&nbsp;be&nbsp;a&nbsp;regular&nbsp;expression,&nbsp;either&nbsp;compiled&nbsp;or<br>
+as&nbsp;a&nbsp;string.&nbsp;By&nbsp;default,&nbsp;regular&nbsp;expressions&nbsp;are&nbsp;case&nbsp;sensitive.&nbsp;For<br>
+case&nbsp;insensitive&nbsp;search,&nbsp;compile&nbsp;the&nbsp;regular&nbsp;expression&nbsp;like&nbsp;this:<br>
+&nbsp;&nbsp;import&nbsp;re<br>
+&nbsp;&nbsp;db.<a href="#Db-lookup">lookup</a>(re.compile("searchstring",re.I))<br>
+The&nbsp;re.I&nbsp;flag&nbsp;is&nbsp;for&nbsp;case&nbsp;insensitivity.&nbsp;Otherwise,&nbsp;the&nbsp;lookup&nbsp;command<br>
+can&nbsp;be&nbsp;run&nbsp;simply<br>
+&nbsp;&nbsp;db.<a href="#Db-lookup">lookup</a>("searchstring")<br>
+The&nbsp;optional&nbsp;paramter&nbsp;kindstring&nbsp;is&nbsp;a&nbsp;language-specific&nbsp;entity&nbsp;filter<br>
+string.&nbsp;So,&nbsp;for&nbsp;example,<br>
+&nbsp;&nbsp;db.<a href="#Db-lookup">lookup</a>(".Test.","File")<br>
+would&nbsp;return&nbsp;a&nbsp;list&nbsp;of&nbsp;file&nbsp;entities&nbsp;containing&nbsp;"Test"&nbsp;(case&nbsp;sensitive)<br>
+in&nbsp;their&nbsp;names.</tt></dd></dl>
+
+<dl><dt><a name="Db-lookup_arch"><strong>lookup_arch</strong></a>(...)</dt><dd><tt>db.<a href="#Db-lookup_arch">lookup_arch</a>(longname)&nbsp;-&gt;&nbsp;understand.<a href="#Arch">Arch</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;architecture&nbsp;with&nbsp;the&nbsp;given&nbsp;longname,&nbsp;or&nbsp;None&nbsp;if&nbsp;not&nbsp;found.</tt></dd></dl>
+
+<dl><dt><a name="Db-lookup_uniquename"><strong>lookup_uniquename</strong></a>(...)</dt><dd><tt>db.<a href="#Db-lookup_uniquename">lookup_uniquename</a>(uniquename)&nbsp;-&gt;&nbsp;ent<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;entity&nbsp;identified&nbsp;by&nbsp;uniquename.<br>
+&nbsp;<br>
+Uniquename&nbsp;is&nbsp;the&nbsp;name&nbsp;returned&nbsp;by&nbsp;ent.uniquename&nbsp;and&nbsp;repr(ent).&nbsp;This<br>
+will&nbsp;return&nbsp;None&nbsp;if&nbsp;no&nbsp;entity&nbsp;is&nbsp;found.</tt></dd></dl>
+
+<dl><dt><a name="Db-metric"><strong>metric</strong></a>(...)</dt><dd><tt>db.<a href="#Db-metric">metric</a>(metriclist)&nbsp;-&gt;&nbsp;dict&nbsp;key=string&nbsp;value=metricvalue<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;metric&nbsp;value&nbsp;for&nbsp;each&nbsp;item&nbsp;in&nbsp;metriclist<br>
+&nbsp;<br>
+<a href="#Metric">Metric</a>&nbsp;list&nbsp;must&nbsp;be&nbsp;a&nbsp;tuple&nbsp;or&nbsp;list&nbsp;containing&nbsp;the&nbsp;names&nbsp;of&nbsp;metrics<br>
+as&nbsp;strings.&nbsp;If&nbsp;the&nbsp;metric&nbsp;is&nbsp;not&nbsp;available,&nbsp;it's&nbsp;value&nbsp;will&nbsp;be&nbsp;None.</tt></dd></dl>
+
+<dl><dt><a name="Db-metrics"><strong>metrics</strong></a>(...)</dt><dd><tt>db.<a href="#Db-metrics">metrics</a>()&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;project&nbsp;metric&nbsp;names.</tt></dd></dl>
+
+<dl><dt><a name="Db-metrics_treemap"><strong>metrics_treemap</strong></a>(...)</dt><dd><tt>db.<a href="#Db-metrics_treemap">metrics_treemap</a>(file,&nbsp;sizemetric,&nbsp;colormetric&nbsp;[,enttype&nbsp;[,arch]])&nbsp;-&gt;&nbsp;None<br>
+&nbsp;<br>
+Export&nbsp;a&nbsp;metrics&nbsp;treemap&nbsp;to&nbsp;the&nbsp;given&nbsp;file&nbsp;(must&nbsp;be&nbsp;jpg&nbsp;or&nbsp;png).&nbsp;The&nbsp;parameters<br>
+sizemetric&nbsp;and&nbsp;colormetric&nbsp;should&nbsp;be&nbsp;the&nbsp;API&nbsp;names&nbsp;of&nbsp;the&nbsp;metrics.&nbsp;The&nbsp;optional<br>
+parameter&nbsp;arch&nbsp;is&nbsp;the&nbsp;group-by&nbsp;arch.&nbsp;If&nbsp;none&nbsp;is&nbsp;given,&nbsp;the&nbsp;graph&nbsp;will&nbsp;be&nbsp;flat.<br>
+The&nbsp;optional&nbsp;parameter&nbsp;enttype&nbsp;is&nbsp;the&nbsp;type&nbsp;of&nbsp;entities&nbsp;to&nbsp;use&nbsp;in&nbsp;the&nbsp;treemap.&nbsp;It<br>
+must&nbsp;be&nbsp;a&nbsp;string&nbsp;either&nbsp;"file"&nbsp;"class"&nbsp;or&nbsp;"function".&nbsp;If&nbsp;none&nbsp;is&nbsp;given,<br>
+file&nbsp;is&nbsp;assumed.</tt></dd></dl>
+
+<dl><dt><a name="Db-name"><strong>name</strong></a>(...)</dt><dd><tt>db.<a href="#Db-name">name</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;filename&nbsp;of&nbsp;the&nbsp;database.<br>
+&nbsp;<br>
+This&nbsp;will&nbsp;throw&nbsp;a&nbsp;<a href="#UnderstandError">UnderstandError</a>&nbsp;if&nbsp;the&nbsp;database&nbsp;has&nbsp;been&nbsp;closed.</tt></dd></dl>
+
+<dl><dt><a name="Db-root_archs"><strong>root_archs</strong></a>(...)</dt><dd><tt>db.<a href="#Db-root_archs">root_archs</a>()&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Arch">Arch</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;root&nbsp;architectures&nbsp;for&nbsp;the&nbsp;database.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Ent">class <strong>Ent</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;represents&nbsp;an&nbsp;understand&nbsp;entity(files,&nbsp;functions,<br>
+variables,&nbsp;etc).&nbsp;Available&nbsp;methods&nbsp;are:<br>
+&nbsp;<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-annotations">annotations</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-comments">comments</a>([style&nbsp;[,raw&nbsp;[,refkindstring]]])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-contents">contents</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-depends">depends</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-dependsby">dependsby</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-draw">draw</a>(graph,filename&nbsp;[,options])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-ents">ents</a>(refkindstring&nbsp;[,entkindstring])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__eq__">__eq__</a>()&nbsp;--by&nbsp;id<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-filerefs">filerefs</a>([refkindstring&nbsp;[,entkindstring&nbsp;[,unique]]])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__ge__">__ge__</a>()&nbsp;--by&nbsp;id<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__gt__">__gt__</a>()&nbsp;--by&nbsp;id<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__hash__">__hash__</a>()&nbsp;--id<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-ib">ib</a>([options])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-id">id</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-kind">kind</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-kindname">kindname</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-language">language</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__le__">__le__</a>()&nbsp;--by&nbsp;id<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-lexer">lexer</a>([lookup_ents&nbsp;[,tabstop&nbsp;[,show_inactive&nbsp;[,expand_macros]]]])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-library">library</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-longname">longname</a>(preserve_named_root=false)<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__lt__">__lt__</a>()&nbsp;--by&nbsp;id<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-metric">metric</a>(metriclist)<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-metrics">metrics</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-name">name</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__ne__">__ne__</a>()&nbsp;--by&nbsp;id<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-parameters">parameters</a>(shownames&nbsp;=&nbsp;True)<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-parsetime">parsetime</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-ref">ref</a>([refkindstring&nbsp;[,entkindstring]])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-refs">refs</a>([refkindstring&nbsp;[,entkindstring]])<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-relname">relname</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__repr__">__repr__</a>()&nbsp;--uniquename<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-simplename">simplename</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-__str__">__str__</a>()&nbsp;--name<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-type">type</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-uniquename">uniquename</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ent">Ent</a>.<a href="#Ent-value">value</a>()<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Ent-__eq__"><strong>__eq__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__eq__">__eq__</a>(y)&nbsp;&lt;==&gt;&nbsp;x==y</tt></dd></dl>
+
+<dl><dt><a name="Ent-__ge__"><strong>__ge__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__ge__">__ge__</a>(y)&nbsp;&lt;==&gt;&nbsp;x&gt;=y</tt></dd></dl>
+
+<dl><dt><a name="Ent-__gt__"><strong>__gt__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__gt__">__gt__</a>(y)&nbsp;&lt;==&gt;&nbsp;x&gt;y</tt></dd></dl>
+
+<dl><dt><a name="Ent-__hash__"><strong>__hash__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__hash__">__hash__</a>()&nbsp;&lt;==&gt;&nbsp;hash(x)</tt></dd></dl>
+
+<dl><dt><a name="Ent-__le__"><strong>__le__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__le__">__le__</a>(y)&nbsp;&lt;==&gt;&nbsp;x&lt;=y</tt></dd></dl>
+
+<dl><dt><a name="Ent-__lt__"><strong>__lt__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__lt__">__lt__</a>(y)&nbsp;&lt;==&gt;&nbsp;x&lt;y</tt></dd></dl>
+
+<dl><dt><a name="Ent-__ne__"><strong>__ne__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__ne__">__ne__</a>(y)&nbsp;&lt;==&gt;&nbsp;x!=y</tt></dd></dl>
+
+<dl><dt><a name="Ent-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="Ent-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#Ent-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="Ent-annotations"><strong>annotations</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-annotations">annotations</a>()&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Atn">Atn</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;annotations&nbsp;associated&nbsp;with&nbsp;the&nbsp;entity,&nbsp;or&nbsp;empty&nbsp;list&nbsp;if<br>
+there&nbsp;are&nbsp;none.</tt></dd></dl>
+
+<dl><dt><a name="Ent-comments"><strong>comments</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-comments">comments</a>(&nbsp;[style&nbsp;[,raw&nbsp;[,refkindstring]]]&nbsp;)&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;comments&nbsp;associated&nbsp;with&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramter&nbsp;style&nbsp;(string)&nbsp;is&nbsp;used&nbsp;to&nbsp;specify&nbsp;which&nbsp;comments<br>
+are&nbsp;to&nbsp;be&nbsp;used.&nbsp;By&nbsp;default,&nbsp;comments&nbsp;that&nbsp;come&nbsp;after&nbsp;the&nbsp;entity&nbsp;<br>
+declaration&nbsp;are&nbsp;processed.&nbsp;Possible&nbsp;values&nbsp;are:<br>
+&nbsp;&nbsp;default&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;same&nbsp;as&nbsp;after<br>
+&nbsp;&nbsp;after&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;process&nbsp;comments&nbsp;after&nbsp;the&nbsp;entity&nbsp;declaration<br>
+&nbsp;&nbsp;before&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;process&nbsp;comments&nbsp;before&nbsp;the&nbsp;entity&nbsp;declaration<br>
+If&nbsp;a&nbsp;different&nbsp;value&nbsp;is&nbsp;passed&nbsp;in,&nbsp;it&nbsp;will&nbsp;be&nbsp;silently&nbsp;ignored.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramater&nbsp;raw&nbsp;(true/false)&nbsp;is&nbsp;used&nbsp;to&nbsp;specify&nbsp;what&nbsp;kind&nbsp;of<br>
+formatting,&nbsp;if&nbsp;any,&nbsp;is&nbsp;applied&nbsp;to&nbsp;the&nbsp;comment&nbsp;text.&nbsp;If&nbsp;raw&nbsp;is&nbsp;false,<br>
+function&nbsp;will&nbsp;remove&nbsp;comment&nbsp;characters&nbsp;and&nbsp;certain&nbsp;repeating&nbsp;<br>
+characters,&nbsp;while&nbsp;retaining&nbsp;the&nbsp;original&nbsp;newlines.&nbsp;If&nbsp;raw&nbsp;is&nbsp;true,&nbsp;the<br>
+function&nbsp;will&nbsp;return&nbsp;a&nbsp;list&nbsp;of&nbsp;comment&nbsp;strings&nbsp;in&nbsp;original&nbsp;format,<br>
+including&nbsp;comment&nbsp;characters.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;refkindstring&nbsp;should&nbsp;be&nbsp;a&nbsp;language&nbsp;specific<br>
+reference&nbsp;filter&nbsp;string.&nbsp;For&nbsp;C++,&nbsp;the&nbsp;default&nbsp;is&nbsp;"definein",&nbsp;<br>
+which&nbsp;is&nbsp;almost&nbsp;always&nbsp;correct.&nbsp;However,&nbsp;to&nbsp;see&nbsp;comments&nbsp;associated<br>
+member&nbsp;declarations,&nbsp;"declarein"&nbsp;should&nbsp;be&nbsp;used.&nbsp;For&nbsp;Ada,&nbsp;there<br>
+are&nbsp;many&nbsp;declaration&nbsp;kinds&nbsp;that&nbsp;may&nbsp;be&nbsp;used,&nbsp;including&nbsp;"declarein<br>
+body",&nbsp;"declarein&nbsp;spec"&nbsp;and&nbsp;"declarein&nbsp;instance".&nbsp;A&nbsp;bad<br>
+refkindstring&nbsp;may&nbsp;result&nbsp;in&nbsp;an&nbsp;<a href="#UnderstandError">UnderstandError</a>.</tt></dd></dl>
+
+<dl><dt><a name="Ent-contents"><strong>contents</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-contents">contents</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;contents&nbsp;of&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+Only&nbsp;certain&nbsp;entities&nbsp;are&nbsp;supported,&nbsp;such&nbsp;as&nbsp;files&nbsp;and&nbsp;defined<br>
+functions.&nbsp;Entities&nbsp;with&nbsp;no&nbsp;contents&nbsp;will&nbsp;return&nbsp;empty&nbsp;string.</tt></dd></dl>
+
+<dl><dt><a name="Ent-depends"><strong>depends</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-depends">depends</a>()&nbsp;-&gt;&nbsp;dict&nbsp;key=understand.<a href="#Ent">Ent</a>&nbsp;value=list&nbsp;of&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;dependencies&nbsp;of&nbsp;the&nbsp;class&nbsp;or&nbsp;file<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;returns&nbsp;all&nbsp;the&nbsp;dependencies&nbsp;as&nbsp;a&nbsp;dictionary&nbsp;between&nbsp;an<br>
+ent&nbsp;and&nbsp;the&nbsp;references&nbsp;occurring&nbsp;in&nbsp;the&nbsp;ent.&nbsp;An&nbsp;empty&nbsp;dictionary&nbsp;will<br>
+be&nbsp;returned&nbsp;if&nbsp;there&nbsp;are&nbsp;no&nbsp;dependencies&nbsp;for&nbsp;the&nbsp;ent.&nbsp;The&nbsp;ent&nbsp;should&nbsp;be<br>
+a&nbsp;class&nbsp;or&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="Ent-dependsby"><strong>dependsby</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-dependsby">dependsby</a>()&nbsp;-&gt;&nbsp;dict&nbsp;key=understand.<a href="#Ent">Ent</a>&nbsp;value=list&nbsp;of&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;ents&nbsp;depended&nbsp;on&nbsp;by&nbsp;the&nbsp;class&nbsp;or&nbsp;file<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;returns&nbsp;all&nbsp;the&nbsp;dependencies&nbsp;as&nbsp;a&nbsp;dictionary&nbsp;between&nbsp;an<br>
+ent&nbsp;and&nbsp;the&nbsp;references&nbsp;occurring&nbsp;in&nbsp;the&nbsp;ent.&nbsp;An&nbsp;empty&nbsp;dictionary&nbsp;will<br>
+be&nbsp;returned&nbsp;if&nbsp;there&nbsp;are&nbsp;no&nbsp;dependencies&nbsp;on&nbsp;the&nbsp;ent.&nbsp;The&nbsp;ent&nbsp;should&nbsp;be<br>
+a&nbsp;class&nbsp;or&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="Ent-draw"><strong>draw</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-draw">draw</a>(graph,&nbsp;filename&nbsp;[,options])&nbsp;-&gt;&nbsp;None<br>
+&nbsp;<br>
+Generate&nbsp;a&nbsp;graphics&nbsp;file&nbsp;for&nbsp;the&nbsp;entity<br>
+&nbsp;<br>
+The&nbsp;parameter&nbsp;graph(string)&nbsp;should&nbsp;be&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;graph&nbsp;to<br>
+generate.&nbsp;Available&nbsp;graphs&nbsp;vary&nbsp;by&nbsp;language&nbsp;and&nbsp;entity,&nbsp;but&nbsp;the&nbsp;name<br>
+will&nbsp;be&nbsp;the&nbsp;same&nbsp;as&nbsp;the&nbsp;name&nbsp;in&nbsp;the&nbsp;Understand&nbsp;GUI.&nbsp;Some&nbsp;examples&nbsp;are:<br>
+&nbsp;&nbsp;"Base&nbsp;Classes"<br>
+&nbsp;&nbsp;"Butterfly"<br>
+&nbsp;&nbsp;"Called&nbsp;By"<br>
+&nbsp;&nbsp;"Control&nbsp;Flow"<br>
+&nbsp;&nbsp;"Calls"<br>
+&nbsp;&nbsp;"Declaration"<br>
+&nbsp;&nbsp;"DependsOn"<br>
+&nbsp;<br>
+The&nbsp;parameter&nbsp;filename(string)&nbsp;should&nbsp;be&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;file.<br>
+Only&nbsp;jpg,&nbsp;png,&nbsp;and&nbsp;svg&nbsp;file&nbsp;formats&nbsp;are&nbsp;supported&nbsp;on&nbsp;all&nbsp;platforms,<br>
+so&nbsp;the&nbsp;filename&nbsp;parameter&nbsp;must&nbsp;end&nbsp;with&nbsp;either&nbsp;the&nbsp;extension&nbsp;.jpg,<br>
+.png&nbsp;or&nbsp;.svg.&nbsp;The&nbsp;extension&nbsp;.dot&nbsp;may&nbsp;be&nbsp;also&nbsp;specified.&nbsp;This&nbsp;will&nbsp;<br>
+&nbsp;create&nbsp;a&nbsp;.svg&nbsp;image&nbsp;file&nbsp;as&nbsp;well&nbsp;as&nbsp;the&nbsp;.dot&nbsp;file.&nbsp;<br>
+On&nbsp;windows&nbsp;systems&nbsp;that&nbsp;have&nbsp;Visio&nbsp;installed,&nbsp;the&nbsp;<br>
+filename&nbsp;may&nbsp;end&nbsp;with&nbsp;.vsd,&nbsp;which&nbsp;will&nbsp;cause&nbsp;Visio&nbsp;to&nbsp;be&nbsp;invoked,&nbsp;to<br>
+draw&nbsp;the&nbsp;graphics,&nbsp;and&nbsp;to&nbsp;save&nbsp;the&nbsp;drawing&nbsp;to&nbsp;the&nbsp;named&nbsp;file.&nbsp;Visio<br>
+will&nbsp;remain&nbsp;running,&nbsp;but&nbsp;may&nbsp;be&nbsp;quit&nbsp;by&nbsp;calling&nbsp;quit()&nbsp;from&nbsp;the&nbsp;<br>
+understand.Visio&nbsp;module.<br>
+&nbsp;<br>
+The&nbsp;parameter&nbsp;options&nbsp;(string)&nbsp;is&nbsp;used&nbsp;to&nbsp;specify&nbsp;paramters&nbsp;used&nbsp;to<br>
+generate&nbsp;the&nbsp;graphics.&nbsp;The&nbsp;format&nbsp;of&nbsp;the&nbsp;options&nbsp;string&nbsp;is&nbsp;<br>
+"name=value".&nbsp;Multiple&nbsp;options&nbsp;are&nbsp;seperated&nbsp;with&nbsp;a&nbsp;semicolon.<br>
+spaces&nbsp;are&nbsp;allowed&nbsp;and&nbsp;are&nbsp;significant&nbsp;between&nbsp;mutli-word&nbsp;field&nbsp;names,<br>
+wherase,&nbsp;case&nbsp;is&nbsp;not&nbsp;significant.&nbsp;The&nbsp;valid&nbsp;names&nbsp;and&nbsp;values&nbsp;are&nbsp;the<br>
+same&nbsp;as&nbsp;appear&nbsp;in&nbsp;that&nbsp;graphs&nbsp;right&nbsp;click&nbsp;menu&nbsp;and&nbsp;vary&nbsp;by&nbsp;view.&nbsp;They<br>
+may&nbsp;be&nbsp;abbreviated&nbsp;to&nbsp;any&nbsp;unique&nbsp;prefix&nbsp;of&nbsp;their&nbsp;full&nbsp;names.&nbsp;Some<br>
+examples&nbsp;are:<br>
+&nbsp;&nbsp;"Layout=Crossing;&nbsp;name=Fullname;Level=AllLevels"<br>
+&nbsp;&nbsp;"Display&nbsp;Preceding&nbsp;Comments=On;Display&nbsp;Entity&nbsp;Name=On"<br>
+&nbsp;<br>
+If&nbsp;an&nbsp;error&nbsp;occurs,&nbsp;and&nbsp;<a href="#UnderstandError">UnderstandError</a>&nbsp;will&nbsp;be&nbsp;thrown.&nbsp;Some&nbsp;possible&nbsp;errors<br>
+are:<br>
+&nbsp;&nbsp;NoFont&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;no&nbsp;suitable&nbsp;font&nbsp;can&nbsp;be&nbsp;found<br>
+&nbsp;&nbsp;NoImage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;no&nbsp;image&nbsp;is&nbsp;defined&nbsp;or&nbsp;is&nbsp;empty<br>
+&nbsp;&nbsp;NoVisioSupport&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;no&nbsp;Visio&nbsp;.vsd&nbsp;files&nbsp;can&nbsp;be&nbsp;generated&nbsp;on<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;non-windows<br>
+&nbsp;&nbsp;TooBig&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;jpg&nbsp;does&nbsp;not&nbsp;support&nbsp;a&nbsp;dimension&nbsp;greater<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;than&nbsp;64k<br>
+&nbsp;&nbsp;UnableCreateFile&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;file&nbsp;cannot&nbsp;be&nbsp;opened/created<br>
+&nbsp;&nbsp;UnsupportedFile&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;only&nbsp;.jpg,&nbsp;.png,&nbsp;or&nbsp;.svg&nbsp;files&nbsp;are&nbsp;supported<br>
+Additional&nbsp;error&nbsp;messages&nbsp;are&nbsp;also&nbsp;possible&nbsp;when&nbsp;generating&nbsp;a&nbsp;Visio<br>
+file.</tt></dd></dl>
+
+<dl><dt><a name="Ent-ents"><strong>ents</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-ents">ents</a>(refkindstring&nbsp;[,entkindstring])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;entities&nbsp;that&nbsp;reference,&nbsp;or&nbsp;are&nbsp;referenced&nbsp;by,&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+The&nbsp;parameter&nbsp;refkindstring&nbsp;(string)&nbsp;should&nbsp;be&nbsp;a&nbsp;language-specific<br>
+reference&nbsp;filter&nbsp;string.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramater&nbsp;entkindstring&nbsp;(string)&nbsp;should&nbsp;be&nbsp;a&nbsp;language-<br>
+specific&nbsp;entity&nbsp;filter&nbsp;string&nbsp;that&nbsp;specifies&nbsp;what&nbsp;kind&nbsp;of&nbsp;referenced<br>
+entities&nbsp;are&nbsp;to&nbsp;be&nbsp;returned.&nbsp;If&nbsp;it&nbsp;is&nbsp;not&nbsp;included,&nbsp;all&nbsp;referenced<br>
+entities&nbsp;are&nbsp;returned.</tt></dd></dl>
+
+<dl><dt><a name="Ent-extname"><strong>extname</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="Ent-filerefs"><strong>filerefs</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-filerefs">filerefs</a>([refkindstring&nbsp;[,entkindstring&nbsp;[,unique]]])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;references&nbsp;that&nbsp;occur&nbsp;in&nbsp;a&nbsp;file&nbsp;entity.<br>
+&nbsp;<br>
+If&nbsp;this&nbsp;is&nbsp;called&nbsp;on&nbsp;a&nbsp;non-file&nbsp;entity,&nbsp;it&nbsp;will&nbsp;return&nbsp;an&nbsp;empty&nbsp;list.<br>
+The&nbsp;references&nbsp;returned&nbsp;will&nbsp;not&nbsp;necessarily&nbsp;have&nbsp;the&nbsp;file&nbsp;entity&nbsp;for<br>
+their&nbsp;.scope&nbsp;value.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramter&nbsp;refkindstring&nbsp;(string)&nbsp;should&nbsp;be&nbsp;a&nbsp;language-<br>
+specific&nbsp;reference&nbsp;filter&nbsp;string.&nbsp;If&nbsp;it&nbsp;is&nbsp;not&nbsp;given,&nbsp;all&nbsp;references<br>
+&nbsp;are&nbsp;returned.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramter&nbsp;entkindstring&nbsp;(string)&nbsp;should&nbsp;be&nbsp;a&nbsp;language-<br>
+specific&nbsp;entity&nbsp;filter&nbsp;string&nbsp;that&nbsp;specifies&nbsp;what&nbsp;kind&nbsp;of&nbsp;referenced<br>
+entities&nbsp;should&nbsp;be&nbsp;returned.&nbsp;If&nbsp;it&nbsp;is&nbsp;not&nbsp;given,&nbsp;all&nbsp;references&nbsp;to<br>
+any&nbsp;kind&nbsp;of&nbsp;entity&nbsp;are&nbsp;returned.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;unique&nbsp;(bool)&nbsp;is&nbsp;false&nbsp;by&nbsp;default.&nbsp;If&nbsp;it&nbsp;is<br>
+true,&nbsp;only&nbsp;the&nbsp;first&nbsp;matching&nbsp;reference&nbsp;to&nbsp;each&nbsp;unique&nbsp;entity&nbsp;is<br>
+returned</tt></dd></dl>
+
+<dl><dt><a name="Ent-freetext"><strong>freetext</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-freetext">freetext</a>(option)&nbsp;-&gt;&nbsp;string</tt></dd></dl>
+
+<dl><dt><a name="Ent-ib"><strong>ib</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-ib">ib</a>([options])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;Info&nbsp;Browser&nbsp;information&nbsp;for&nbsp;an&nbsp;entity.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;options&nbsp;(string)&nbsp;may&nbsp;be&nbsp;used&nbsp;to&nbsp;specify&nbsp;some<br>
+parameters&nbsp;used&nbsp;to&nbsp;create&nbsp;the&nbsp;text.&nbsp;The&nbsp;format&nbsp;of&nbsp;the&nbsp;options&nbsp;string<br>
+is&nbsp;"name=value"&nbsp;or&nbsp;"{field-name}name=value".&nbsp;Multiple&nbsp;options&nbsp;are<br>
+separated&nbsp;with&nbsp;a&nbsp;semicolon.&nbsp;Spaces&nbsp;are&nbsp;allowed&nbsp;and&nbsp;are&nbsp;significant<br>
+between&nbsp;multi-word&nbsp;field&nbsp;names,&nbsp;whereas,&nbsp;case&nbsp;is&nbsp;not&nbsp;significant.&nbsp;An<br>
+option&nbsp;that&nbsp;specifies&nbsp;a&nbsp;field&nbsp;name&nbsp;is&nbsp;specific&nbsp;to&nbsp;that&nbsp;named&nbsp;field&nbsp;of<br>
+the&nbsp;Info&nbsp;Browser.&nbsp;The&nbsp;available&nbsp;field&nbsp;names&nbsp;are&nbsp;exactly&nbsp;as&nbsp;they&nbsp;appear<br>
+in&nbsp;the&nbsp;Info&nbsp;Browser.&nbsp;When&nbsp;a&nbsp;field&nbsp;is&nbsp;nested&nbsp;within&nbsp;another&nbsp;field,&nbsp;the<br>
+correct&nbsp;name&nbsp;is&nbsp;the&nbsp;two&nbsp;names&nbsp;combined.&nbsp;For&nbsp;example,&nbsp;in&nbsp;C++,&nbsp;the&nbsp;field<br>
+Macros&nbsp;within&nbsp;the&nbsp;field&nbsp;Local&nbsp;would&nbsp;be&nbsp;specified&nbsp;as&nbsp;"Local&nbsp;Macros".<br>
+&nbsp;<br>
+A&nbsp;field&nbsp;and&nbsp;its&nbsp;subfields&nbsp;may&nbsp;be&nbsp;disabled&nbsp;by&nbsp;specifying&nbsp;levels=0,&nbsp;or<br>
+by&nbsp;specifying&nbsp;the&nbsp;field&nbsp;off,&nbsp;without&nbsp;specifying&nbsp;any&nbsp;option.&nbsp;For&nbsp;example,<br>
+either&nbsp;of&nbsp;the&nbsp;will&nbsp;disable&nbsp;and&nbsp;hide&nbsp;the&nbsp;Metrics&nbsp;field:<br>
+&nbsp;&nbsp;{Metrics}levels=0;<br>
+&nbsp;&nbsp;{Metrics}=off;<br>
+The&nbsp;following&nbsp;option&nbsp;is&nbsp;currently&nbsp;available&nbsp;only&nbsp;without&nbsp;a&nbsp;field&nbsp;name.<br>
+&nbsp;&nbsp;Indent&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;this&nbsp;specifies&nbsp;the&nbsp;number&nbsp;of&nbsp;indent&nbsp;spaces&nbsp;to&nbsp;output&nbsp;for<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;each&nbsp;level&nbsp;of&nbsp;a&nbsp;line&nbsp;of&nbsp;text.&nbsp;The&nbsp;default&nbsp;is&nbsp;2.<br>
+&nbsp;<br>
+Other&nbsp;options&nbsp;are&nbsp;the&nbsp;same&nbsp;as&nbsp;are&nbsp;displayed&nbsp;when&nbsp;right-clicking&nbsp;on&nbsp;the<br>
+field&nbsp;name&nbsp;in&nbsp;the&nbsp;Understand&nbsp;tool.&nbsp;No&nbsp;defaults&nbsp;are&nbsp;given&nbsp;for&nbsp;these<br>
+options,&nbsp;as&nbsp;the&nbsp;defaults&nbsp;are&nbsp;specific&nbsp;for&nbsp;each&nbsp;language&nbsp;and&nbsp;each&nbsp;field<br>
+name<br>
+An&nbsp;example&nbsp;of&nbsp;a&nbsp;properly&nbsp;formatted&nbsp;option&nbsp;string&nbsp;would&nbsp;be:<br>
+&nbsp;&nbsp;"{Metrics}=off;{calls}levels=-1;{callbys}levels=-1;{references}sort=name"<br>
+&nbsp;<br>
+The&nbsp;Architectures&nbsp;field&nbsp;is&nbsp;not&nbsp;generated&nbsp;by&nbsp;this&nbsp;command&nbsp;and&nbsp;can&nbsp;be&nbsp;<br>
+generated&nbsp;separately&nbsp;using&nbsp;db.archs(ent)</tt></dd></dl>
+
+<dl><dt><a name="Ent-id"><strong>id</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-id">id</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;unique&nbsp;numeric&nbsp;identifier&nbsp;for&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+The&nbsp;identifier&nbsp;is&nbsp;not&nbsp;guaranteed&nbsp;to&nbsp;remain&nbsp;constant&nbsp;after&nbsp;the<br>
+database&nbsp;has&nbsp;been&nbsp;updated.&nbsp;An&nbsp;id&nbsp;can&nbsp;be&nbsp;converted&nbsp;back&nbsp;into&nbsp;an<br>
+understand.<a href="#Ent">Ent</a>&nbsp;with&nbsp;db.ent_from_id(id).&nbsp;The&nbsp;id&nbsp;is&nbsp;used&nbsp;for<br>
+comparisons&nbsp;and&nbsp;the&nbsp;hash&nbsp;function.</tt></dd></dl>
+
+<dl><dt><a name="Ent-kind"><strong>kind</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-kind">kind</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Kind">Kind</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;kind&nbsp;object&nbsp;for&nbsp;the&nbsp;entity.</tt></dd></dl>
+
+<dl><dt><a name="Ent-kindname"><strong>kindname</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-kindname">kindname</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;simple&nbsp;name&nbsp;for&nbsp;the&nbsp;kind&nbsp;of&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;similar&nbsp;to&nbsp;ent.<a href="#Ent-kind">kind</a>().<a href="#Ent-name">name</a>(),&nbsp;but&nbsp;does&nbsp;not&nbsp;create&nbsp;a&nbsp;<a href="#Kind">Kind</a><br>
+object.</tt></dd></dl>
+
+<dl><dt><a name="Ent-language"><strong>language</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-language">language</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;language&nbsp;of&nbsp;the&nbsp;entity<br>
+&nbsp;<br>
+Possible&nbsp;values&nbsp;include&nbsp;"Ada",&nbsp;"C++","C#",&nbsp;"Fortran",<br>
+"Java",&nbsp;"Jovial",&nbsp;"Pascal",&nbsp;"Plm",&nbsp;"Python",<br>
+"VHDL"&nbsp;or&nbsp;"Web".&nbsp;C&nbsp;is&nbsp;included&nbsp;with&nbsp;"C++".</tt></dd></dl>
+
+<dl><dt><a name="Ent-lexer"><strong>lexer</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-lexer">lexer</a>([lookup_ents&nbsp;[,tabstop&nbsp;[,show_inactive&nbsp;[,expand_macros]]]])<br>
+&nbsp;&nbsp;-&gt;&nbsp;understand.<a href="#Lexer">Lexer</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;lexer&nbsp;object&nbsp;for&nbsp;the&nbsp;specified&nbsp;file&nbsp;entity.&nbsp;The&nbsp;original<br>
+source&nbsp;file&nbsp;must&nbsp;be&nbsp;readable&nbsp;and&nbsp;unchanged&nbsp;since&nbsp;the&nbsp;last&nbsp;database<br>
+parse.&nbsp;If&nbsp;an&nbsp;error&nbsp;occurs,&nbsp;an&nbsp;<a href="#UnderstandError">UnderstandError</a>&nbsp;will&nbsp;be&nbsp;thrown.&nbsp;Possible<br>
+errors&nbsp;are:<br>
+&nbsp;&nbsp;FileModified&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;the&nbsp;file&nbsp;must&nbsp;not&nbsp;be&nbsp;modified&nbsp;since&nbsp;the&nbsp;last<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;parse<br>
+&nbsp;&nbsp;FileUnreadable&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;the&nbsp;file&nbsp;must&nbsp;be&nbsp;readable&nbsp;from&nbsp;the&nbsp;original<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;location<br>
+&nbsp;&nbsp;UnsupportedLanguage&nbsp;&nbsp;-&nbsp;the&nbsp;file&nbsp;language&nbsp;is&nbsp;not&nbsp;supported<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramter&nbsp;lookup_ents&nbsp;is&nbsp;true&nbsp;by&nbsp;default.&nbsp;If&nbsp;it&nbsp;is<br>
+specified&nbsp;false,&nbsp;the&nbsp;lexemes&nbsp;for&nbsp;the&nbsp;constructed&nbsp;lexer&nbsp;will&nbsp;not<br>
+have&nbsp;entity&nbsp;or&nbsp;reference&nbsp;information,&nbsp;but&nbsp;the&nbsp;lexer&nbsp;construction&nbsp;will<br>
+be&nbsp;much&nbsp;faster.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramter&nbsp;tabstop&nbsp;is&nbsp;8&nbsp;by&nbsp;default.&nbsp;If&nbsp;it&nbsp;is&nbsp;specified&nbsp;it<br>
+must&nbsp;be&nbsp;greater&nbsp;than&nbsp;0,&nbsp;and&nbsp;is&nbsp;the&nbsp;value&nbsp;to&nbsp;use&nbsp;for&nbsp;tab&nbsp;stops<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;show_inactive&nbsp;is&nbsp;true&nbsp;by&nbsp;default.&nbsp;If&nbsp;false,<br>
+inactive&nbsp;lexemes&nbsp;will&nbsp;not&nbsp;be&nbsp;returned.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;expand_macros&nbsp;is&nbsp;false&nbsp;by&nbsp;default.&nbsp;If&nbsp;true,<br>
+and&nbsp;if&nbsp;macro&nbsp;expansion&nbsp;text&nbsp;is&nbsp;stored,&nbsp;lexemes&nbsp;that&nbsp;are&nbsp;macros&nbsp;will<br>
+be&nbsp;replaced&nbsp;with&nbsp;the&nbsp;lexeme&nbsp;stream&nbsp;of&nbsp;the&nbsp;expansion&nbsp;text.</tt></dd></dl>
+
+<dl><dt><a name="Ent-library"><strong>library</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-library">library</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;library&nbsp;the&nbsp;entity&nbsp;belongs&nbsp;to.<br>
+&nbsp;<br>
+This&nbsp;will&nbsp;return&nbsp;""&nbsp;if&nbsp;the&nbsp;entity&nbsp;does&nbsp;not&nbsp;belong&nbsp;to&nbsp;a<br>
+library.&nbsp;Predefined&nbsp;Ada&nbsp;entities&nbsp;such&nbsp;as&nbsp;text_io&nbsp;will&nbsp;bin&nbsp;the<br>
+'Standard'&nbsp;library.&nbsp;Predefined&nbsp;VHDL&nbsp;entities&nbsp;will&nbsp;be&nbsp;in&nbsp;either&nbsp;the<br>
+'std'&nbsp;or&nbsp;'ieee'&nbsp;libraries.</tt></dd></dl>
+
+<dl><dt><a name="Ent-longname"><strong>longname</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-longname">longname</a>(preserve_named_root=false)&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;long&nbsp;name&nbsp;of&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+If&nbsp;there&nbsp;is&nbsp;no&nbsp;long&nbsp;name&nbsp;defined,&nbsp;the&nbsp;regular&nbsp;name&nbsp;(ent.<a href="#Ent-name">name</a>())&nbsp;is<br>
+returned.&nbsp;Examples&nbsp;of&nbsp;entities&nbsp;with&nbsp;long&nbsp;names&nbsp;include&nbsp;files,&nbsp;c++<br>
+members,&nbsp;and&nbsp;most&nbsp;ada&nbsp;entities.<br>
+&nbsp;<br>
+For&nbsp;file&nbsp;entities,&nbsp;if&nbsp;preserve_named_root&nbsp;is&nbsp;true,&nbsp;if&nbsp;a&nbsp;long&nbsp;filename<br>
+includes&nbsp;a&nbsp;named&nbsp;root,&nbsp;it&nbsp;is&nbsp;preserved;&nbsp;otherwise,&nbsp;the&nbsp;named&nbsp;root&nbsp;is<br>
+expanded&nbsp;to&nbsp;return&nbsp;the&nbsp;regular&nbsp;absolute&nbsp;filename.<br>
+&nbsp;<br>
+The&nbsp;named&nbsp;root&nbsp;will&nbsp;need&nbsp;to&nbsp;be&nbsp;specified&nbsp;with&nbsp;an&nbsp;environment&nbsp;variable<br>
+of&nbsp;the&nbsp;form&nbsp;UND_NAMED_ROOT_&lt;named&nbsp;root&nbsp;name&nbsp;without&nbsp;trailing&nbsp;colon&gt;.<br>
+For&nbsp;example,&nbsp;to&nbsp;create&nbsp;the&nbsp;named&nbsp;root&nbsp;HOME_DIR:=C:\projects\home&nbsp;run<br>
+the&nbsp;following&nbsp;in&nbsp;your&nbsp;script&nbsp;(after&nbsp;import&nbsp;os):<br>
+&nbsp;&nbsp;os.environ["UND_NAMED_ROOT_HOME_DIR"]&nbsp;=&nbsp;"C:\projects\home"</tt></dd></dl>
+
+<dl><dt><a name="Ent-metric"><strong>metric</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-metric">metric</a>(metriclist)&nbsp;-&gt;&nbsp;dict&nbsp;key=string&nbsp;value=metricvalue<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;metric&nbsp;value&nbsp;for&nbsp;each&nbsp;item&nbsp;in&nbsp;metriclist<br>
+&nbsp;<br>
+<a href="#Metric">Metric</a>&nbsp;list&nbsp;must&nbsp;be&nbsp;a&nbsp;tuple&nbsp;or&nbsp;list&nbsp;containing&nbsp;the&nbsp;names&nbsp;of&nbsp;metrics<br>
+as&nbsp;strings.&nbsp;If&nbsp;the&nbsp;metric&nbsp;is&nbsp;not&nbsp;available,&nbsp;it's&nbsp;value&nbsp;will&nbsp;be&nbsp;None.</tt></dd></dl>
+
+<dl><dt><a name="Ent-metrics"><strong>metrics</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-metrics">metrics</a>()&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;metric&nbsp;names&nbsp;defined&nbsp;for&nbsp;the&nbsp;entity.</tt></dd></dl>
+
+<dl><dt><a name="Ent-name"><strong>name</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-name">name</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;shortname&nbsp;for&nbsp;an&nbsp;entity.<br>
+&nbsp;<br>
+For&nbsp;Java,&nbsp;this&nbsp;may&nbsp;return&nbsp;a&nbsp;name&nbsp;with&nbsp;a&nbsp;single&nbsp;dot&nbsp;in&nbsp;it.&nbsp;Use&nbsp;<br>
+ent.<a href="#Ent-simplename">simplename</a>()&nbsp;to&nbsp;obtain&nbsp;the&nbsp;simplest,&nbsp;shortest&nbsp;name&nbsp;possible.&nbsp;This<br>
+is&nbsp;what&nbsp;str()&nbsp;shows.</tt></dd></dl>
+
+<dl><dt><a name="Ent-parameters"><strong>parameters</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-parameters">parameters</a>(shownames=True)&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;string&nbsp;containing&nbsp;the&nbsp;parameters&nbsp;for&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;shownames&nbsp;should&nbsp;be&nbsp;True&nbsp;or&nbsp;False.&nbsp;If&nbsp;it&nbsp;is<br>
+False&nbsp;only&nbsp;the&nbsp;types,&nbsp;not&nbsp;the&nbsp;names,&nbsp;of&nbsp;the&nbsp;parameters&nbsp;are&nbsp;returned.<br>
+There&nbsp;are&nbsp;some&nbsp;language-specific&nbsp;cases&nbsp;where&nbsp;there&nbsp;are&nbsp;no&nbsp;entities&nbsp;in<br>
+the&nbsp;database&nbsp;for&nbsp;certain&nbsp;kinds&nbsp;of&nbsp;parameters.&nbsp;For&nbsp;example,&nbsp;in&nbsp;c++,<br>
+there&nbsp;are&nbsp;no&nbsp;database&nbsp;entities&nbsp;for&nbsp;parameters&nbsp;for&nbsp;functions&nbsp;that&nbsp;are<br>
+only&nbsp;declared,&nbsp;not&nbsp;defined,&nbsp;and&nbsp;there&nbsp;are&nbsp;no&nbsp;database&nbsp;entities&nbsp;for<br>
+parameters&nbsp;for&nbsp;functional&nbsp;macro&nbsp;definitions.&nbsp;This&nbsp;method&nbsp;can&nbsp;be&nbsp;used<br>
+to&nbsp;get&nbsp;some&nbsp;information&nbsp;about&nbsp;these&nbsp;cases.&nbsp;If&nbsp;no&nbsp;parameters&nbsp;are<br>
+available,&nbsp;None&nbsp;is&nbsp;returned.</tt></dd></dl>
+
+<dl><dt><a name="Ent-parent"><strong>parent</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-parent">parent</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;parent&nbsp;of&nbsp;the&nbsp;entity&nbsp;or&nbsp;None&nbsp;if&nbsp;none</tt></dd></dl>
+
+<dl><dt><a name="Ent-parsetime"><strong>parsetime</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-parsetime">parsetime</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;last&nbsp;time&nbsp;the&nbsp;file&nbsp;entity&nbsp;was&nbsp;parse&nbsp;in&nbsp;the&nbsp;database.<br>
+&nbsp;<br>
+If&nbsp;the&nbsp;entity&nbsp;is&nbsp;not&nbsp;a&nbsp;parse&nbsp;file,&nbsp;it&nbsp;will&nbsp;be&nbsp;0.&nbsp;The&nbsp;time&nbsp;is&nbsp;in<br>
+Unix/Postix&nbsp;Time</tt></dd></dl>
+
+<dl><dt><a name="Ent-ref"><strong>ref</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-ref">ref</a>([refkindstring&nbsp;[,entkindstring])&nbsp;-&gt;&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+This&nbsp;is&nbsp;the&nbsp;same&nbsp;as&nbsp;ent.<a href="#Ent-refs">refs</a>()[:1]</tt></dd></dl>
+
+<dl><dt><a name="Ent-refs"><strong>refs</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-refs">refs</a>([refkindstring&nbsp;[,entkindstring&nbsp;[,unique]]])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;references.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramter&nbsp;refkindstring&nbsp;(string)&nbsp;should&nbsp;be&nbsp;a&nbsp;language-<br>
+specific&nbsp;reference&nbsp;filter&nbsp;string.&nbsp;If&nbsp;it&nbsp;is&nbsp;not&nbsp;given,&nbsp;all&nbsp;references<br>
+&nbsp;are&nbsp;returned.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;paramter&nbsp;entkindstring&nbsp;(string)&nbsp;should&nbsp;be&nbsp;a&nbsp;language-<br>
+specific&nbsp;entity&nbsp;filter&nbsp;string&nbsp;that&nbsp;specifies&nbsp;what&nbsp;kind&nbsp;of&nbsp;referenced<br>
+entities&nbsp;should&nbsp;be&nbsp;returned.&nbsp;If&nbsp;it&nbsp;is&nbsp;not&nbsp;given,&nbsp;all&nbsp;references&nbsp;to<br>
+any&nbsp;kind&nbsp;of&nbsp;entity&nbsp;are&nbsp;returned.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;unique&nbsp;(bool)&nbsp;is&nbsp;false&nbsp;by&nbsp;default.&nbsp;If&nbsp;it&nbsp;is<br>
+true,&nbsp;only&nbsp;the&nbsp;first&nbsp;matching&nbsp;reference&nbsp;to&nbsp;each&nbsp;unique&nbsp;entity&nbsp;is<br>
+returned</tt></dd></dl>
+
+<dl><dt><a name="Ent-relname"><strong>relname</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-relname">relname</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;relative&nbsp;name&nbsp;of&nbsp;the&nbsp;file&nbsp;entity.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;the&nbsp;fullname&nbsp;for&nbsp;the&nbsp;file,&nbsp;minus&nbsp;any&nbsp;root&nbsp;directories&nbsp;that<br>
+are&nbsp;common&nbsp;for&nbsp;all&nbsp;project&nbsp;files.&nbsp;Return&nbsp;None&nbsp;for&nbsp;non-file&nbsp;entities.</tt></dd></dl>
+
+<dl><dt><a name="Ent-simplename"><strong>simplename</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-simplename">simplename</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;simplename&nbsp;for&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;the&nbsp;simplest,&nbsp;shortest&nbsp;name&nbsp;possible&nbsp;for&nbsp;the&nbsp;entity.&nbsp;It&nbsp;is<br>
+generally&nbsp;the&nbsp;same&nbsp;as&nbsp;ent.<a href="#Ent-name">name</a>()&nbsp;except&nbsp;for&nbsp;languages&nbsp;like&nbsp;Java,&nbsp;for<br>
+which&nbsp;this&nbsp;will&nbsp;not&nbsp;return&nbsp;a&nbsp;name&nbsp;with&nbsp;any&nbsp;dots&nbsp;in&nbsp;it.</tt></dd></dl>
+
+<dl><dt><a name="Ent-type"><strong>type</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-type">type</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;type&nbsp;string&nbsp;of&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;defined&nbsp;for&nbsp;entity&nbsp;kinds&nbsp;like&nbsp;variables&nbsp;and&nbsp;types,&nbsp;as&nbsp;well&nbsp;as<br>
+entity&nbsp;kinds&nbsp;that&nbsp;have&nbsp;a&nbsp;return&nbsp;type&nbsp;like&nbsp;functions.</tt></dd></dl>
+
+<dl><dt><a name="Ent-uniquename"><strong>uniquename</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-uniquename">uniquename</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;unique&nbsp;name&nbsp;of&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+This&nbsp;name&nbsp;is&nbsp;not&nbsp;suitable&nbsp;for&nbsp;use&nbsp;by&nbsp;an&nbsp;end&nbsp;user.&nbsp;Rather,&nbsp;it&nbsp;is&nbsp;a<br>
+means&nbsp;of&nbsp;identifying&nbsp;an&nbsp;entity&nbsp;uniquely&nbsp;in&nbsp;multiple&nbsp;databases,&nbsp;perhaps<br>
+as&nbsp;the&nbsp;source&nbsp;code&nbsp;changes&nbsp;slightly&nbsp;over&nbsp;time.&nbsp;The&nbsp;unique&nbsp;name&nbsp;is<br>
+composed&nbsp;of&nbsp;things&nbsp;like&nbsp;parameters&nbsp;and&nbsp;parent&nbsp;names.&nbsp;So,&nbsp;the&nbsp;some<br>
+code&nbsp;changes&nbsp;will&nbsp;in&nbsp;new&nbsp;uniquenames&nbsp;for&nbsp;the&nbsp;same&nbsp;intrinsic&nbsp;entity.<br>
+Use&nbsp;db.lookup_uniquename()&nbsp;to&nbsp;convert&nbsp;a&nbsp;unqiuename&nbsp;back&nbsp;to&nbsp;an&nbsp;object<br>
+of&nbsp;understand.<a href="#Ent">Ent</a>.&nbsp;This&nbsp;is&nbsp;what&nbsp;repr()&nbsp;shows.</tt></dd></dl>
+
+<dl><dt><a name="Ent-value"><strong>value</strong></a>(...)</dt><dd><tt>ent.<a href="#Ent-value">value</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;value&nbsp;associated&nbsp;with&nbsp;the&nbsp;entity.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;for&nbsp;enumerators,&nbsp;initialized&nbsp;variables,&nbsp;and&nbsp;macros.&nbsp;Not&nbsp;all<br>
+languages&nbsp;are&nbsp;supported.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Kind">class <strong>Kind</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;represents&nbsp;a&nbsp;kind&nbsp;of&nbsp;an&nbsp;entity&nbsp;or&nbsp;reference.&nbsp;For&nbsp;example,an&nbsp;entity&nbsp;kind&nbsp;might&nbsp;be&nbsp;a&nbsp;"C&nbsp;Header&nbsp;File"&nbsp;and&nbsp;a&nbsp;reference&nbsp;kind<br>
+kind&nbsp;could&nbsp;be&nbsp;"Call."&nbsp;Kindstrings&nbsp;and&nbsp;refkindstrings&nbsp;filters&nbsp;are<br>
+built&nbsp;from&nbsp;these.&nbsp;A&nbsp;filter&nbsp;string&nbsp;may&nbsp;use&nbsp;the&nbsp;tilde&nbsp;"~"&nbsp;to&nbsp;indicate<br>
+the&nbsp;absence&nbsp;of&nbsp;a&nbsp;token,&nbsp;and&nbsp;comma&nbsp;","&nbsp;to&nbsp;"or"&nbsp;filters&nbsp;together.<br>
+Otherwise,&nbsp;filters&nbsp;are&nbsp;constructed&nbsp;with&nbsp;an&nbsp;"and"&nbsp;relationship.&nbsp;For<br>
+more&nbsp;information&nbsp;on&nbsp;filter&nbsp;strings&nbsp;or&nbsp;a&nbsp;full&nbsp;list&nbsp;of&nbsp;available&nbsp;kinds<br>
+and&nbsp;reference&nbsp;kinds&nbsp;see&nbsp;the&nbsp;Understand&nbsp;Perl&nbsp;API&nbsp;documentation.<br>
+&nbsp;<br>
+Available&nbsp;methods&nbsp;are:<br>
+&nbsp;<br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-check">check</a>(kindstring)<br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-inv">inv</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-longname">longname</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-name">name</a>()&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-__repr__">__repr__</a>()&nbsp;--longname<br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-__str__">__str__</a>()&nbsp;--name<br>
+Static&nbsp;Methods:<br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-list_entity">list_entity</a>([entkind])<br>
+&nbsp;&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-list_reference">list_reference</a>([refkind])<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Kind-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#Kind-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="Kind-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#Kind-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="Kind-check"><strong>check</strong></a>(...)</dt><dd><tt>kind.<a href="#Kind-check">check</a>(kindstring)&nbsp;-&gt;&nbsp;bool<br>
+&nbsp;<br>
+Return&nbsp;true&nbsp;if&nbsp;the&nbsp;kind&nbsp;matches&nbsp;the&nbsp;filter&nbsp;string&nbsp;kindstring.</tt></dd></dl>
+
+<dl><dt><a name="Kind-inv"><strong>inv</strong></a>(...)</dt><dd><tt>kind.<a href="#Kind-inv">inv</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Kind">Kind</a><br>
+&nbsp;<br>
+The&nbsp;logical&nbsp;inverse&nbsp;of&nbsp;a&nbsp;reference&nbsp;kind.&nbsp;This&nbsp;will&nbsp;throw&nbsp;an<br>
+<a href="#UnderstandError">UnderstandError</a>&nbsp;if&nbsp;called&nbsp;with&nbsp;an&nbsp;entity&nbsp;kind.</tt></dd></dl>
+
+<dl><dt><a name="Kind-longname"><strong>longname</strong></a>(...)</dt><dd><tt>kind.<a href="#Kind-longname">longname</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;long&nbsp;form&nbsp;of&nbsp;the&nbsp;kind&nbsp;name.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;usually&nbsp;more&nbsp;detailed&nbsp;than&nbsp;desired&nbsp;for&nbsp;human&nbsp;reading.&nbsp;It&nbsp;is<br>
+the&nbsp;same&nbsp;as&nbsp;repr(kind)</tt></dd></dl>
+
+<dl><dt><a name="Kind-name"><strong>name</strong></a>(...)</dt><dd><tt>kind.<a href="#Kind-name">name</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;kind.<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;the&nbsp;same&nbsp;as&nbsp;str(kind).</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="Kind-list_entity"><strong>list_entity</strong></a>(...)</dt><dd><tt><a href="#Kind">Kind</a>.<a href="#Kind-list_entity">list_entity</a>([entkind])&nbsp;(static&nbsp;method)-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Kind">Kind</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;list&nbsp;of&nbsp;entity&nbsp;kinds&nbsp;that&nbsp;match&nbsp;the&nbsp;filter&nbsp;entkind.<br>
+&nbsp;<br>
+If&nbsp;no&nbsp;entkind&nbsp;is&nbsp;given,&nbsp;all&nbsp;entity&nbsp;kinds&nbsp;are&nbsp;returned.&nbsp;For&nbsp;example,<br>
+to&nbsp;get&nbsp;the&nbsp;list&nbsp;of&nbsp;all&nbsp;c&nbsp;function&nbsp;entity&nbsp;kinds:<br>
+&nbsp;&nbsp;kinds&nbsp;=&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-list_entity">list_entity</a>("c&nbsp;function")</tt></dd></dl>
+
+<dl><dt><a name="Kind-list_reference"><strong>list_reference</strong></a>(...)</dt><dd><tt><a href="#Kind">Kind</a>.<a href="#Kind-list_reference">list_reference</a>([refkind])&nbsp;(static&nbsp;method)-&gt;list&nbsp;of&nbsp;understand.<a href="#Kind">Kind</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;list&nbsp;of&nbsp;reference&nbsp;kinds&nbsp;that&nbsp;match&nbsp;the&nbsp;filter&nbsp;refkind.<br>
+&nbsp;<br>
+If&nbsp;no&nbsp;refkind&nbsp;is&nbsp;given,&nbsp;all&nbsp;reference&nbsp;kinds&nbsp;are&nbsp;returned.&nbsp;For&nbsp;example,<br>
+to&nbsp;get&nbsp;the&nbsp;list&nbsp;of&nbsp;all&nbsp;ada&nbsp;declare&nbsp;reference&nbsp;kinds:<br>
+&nbsp;&nbsp;kinds&nbsp;=&nbsp;understand.<a href="#Kind">Kind</a>.<a href="#Kind-list_entity">list_entity</a>("ada&nbsp;declare")</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Lexeme">class <strong>Lexeme</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;lexeme&nbsp;is&nbsp;basically&nbsp;a&nbsp;token&nbsp;recieved&nbsp;from&nbsp;an&nbsp;<a href="#Lexer">Lexer</a>.&nbsp;Available<br>
+methods&nbsp;are:<br>
+&nbsp;<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-column_begin">column_begin</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-column_end">column_end</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-ent">ent</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-inactive">inactive</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-line_begin">line_begin</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-line_end">line_end</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-next">next</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-previous">previous</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-ref">ref</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-text">text</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexeme">Lexeme</a>.<a href="#Lexeme-token">token</a>()<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Lexeme-column_begin"><strong>column_begin</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-column_begin">column_begin</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;beginning&nbsp;column&nbsp;number&nbsp;of&nbsp;the&nbsp;lexeme.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-column_end"><strong>column_end</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-column_end">column_end</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;ending&nbsp;column&nbsp;number&nbsp;of&nbsp;the&nbsp;lexeme.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-ent"><strong>ent</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-ent">ent</a>()&nbsp;-&gt;&nbsp;Understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;entity&nbsp;associated&nbsp;with&nbsp;the&nbsp;lexeme&nbsp;or&nbsp;None&nbsp;if&nbsp;none.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-inactive"><strong>inactive</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-inactive">inactive</a>()&nbsp;-&gt;&nbsp;bool<br>
+&nbsp;<br>
+Return&nbsp;True&nbsp;if&nbsp;the&nbsp;lexeme&nbsp;is&nbsp;part&nbsp;of&nbsp;inactive&nbsp;code.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-line_begin"><strong>line_begin</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-line_begin">line_begin</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;beginning&nbsp;line&nbsp;number&nbsp;of&nbsp;the&nbsp;lexeme.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-line_end"><strong>line_end</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-line_end">line_end</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;ending&nbsp;line&nbsp;number&nbsp;of&nbsp;the&nbsp;lexeme.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-next"><strong>next</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-next">next</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Lexeme">Lexeme</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;next&nbsp;lexeme,&nbsp;or&nbsp;None&nbsp;if&nbsp;no&nbsp;lexemes&nbsp;remain.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-previous"><strong>previous</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-previous">previous</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Lexeme">Lexeme</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;previous&nbsp;lexeme,&nbsp;or&nbsp;None&nbsp;if&nbsp;beginning&nbsp;of&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-ref"><strong>ref</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-ref">ref</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Ref">Ref</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;reference&nbsp;associated&nbsp;with&nbsp;the&nbsp;lexer,&nbsp;or&nbsp;None&nbsp;if&nbsp;none.</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-text"><strong>text</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-text">text</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;text&nbsp;for&nbsp;the&nbsp;lexeme,&nbsp;which&nbsp;may&nbsp;be&nbsp;empty&nbsp;("").</tt></dd></dl>
+
+<dl><dt><a name="Lexeme-token"><strong>token</strong></a>(...)</dt><dd><tt>lexeme.<a href="#Lexeme-token">token</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;token&nbsp;kind&nbsp;of&nbsp;the&nbsp;lexeme.<br>
+&nbsp;<br>
+Values&nbsp;include:<br>
+&nbsp;&nbsp;Comment<br>
+&nbsp;&nbsp;Continuation<br>
+&nbsp;&nbsp;EndOfStatemen<br>
+&nbsp;&nbsp;Identifier<br>
+&nbsp;&nbsp;Keyword<br>
+&nbsp;&nbsp;Label<br>
+&nbsp;&nbsp;Literal<br>
+&nbsp;&nbsp;Newline<br>
+&nbsp;&nbsp;Operator<br>
+&nbsp;&nbsp;Preprocessor<br>
+&nbsp;&nbsp;Punctuation<br>
+&nbsp;&nbsp;String<br>
+&nbsp;&nbsp;Whitespace<br>
+&nbsp;&nbsp;Indent<br>
+&nbsp;&nbsp;Dedent</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Lexer">class <strong>Lexer</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;lexer&nbsp;is&nbsp;a&nbsp;lexical&nbsp;stream&nbsp;generated&nbsp;for&nbsp;a&nbsp;file&nbsp;entity,&nbsp;if&nbsp;the<br>
+original&nbsp;file&nbsp;exists&nbsp;and&nbsp;is&nbsp;unchanged&nbsp;from&nbsp;the&nbsp;last&nbsp;database&nbsp;reparse.<br>
+The&nbsp;first&nbsp;lexeme&nbsp;(token)&nbsp;in&nbsp;the&nbsp;stream&nbsp;can&nbsp;be&nbsp;accessed&nbsp;using<br>
+<a href="#Lexer">Lexer</a>.first.&nbsp;A&nbsp;lexer&nbsp;can&nbsp;be&nbsp;iterated&nbsp;over,&nbsp;where&nbsp;each&nbsp;item&nbsp;returned&nbsp;is<br>
+a&nbsp;lexeme.&nbsp;Available&nbsp;methods&nbsp;are:<br>
+&nbsp;<br>
+&nbsp;&nbsp;understand.<a href="#Lexer">Lexer</a>.<a href="#Lexer-first">first</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Lexer">Lexer</a>.<a href="#Lexer-__iter__">__iter__</a>()<br>
+&nbsp;&nbsp;undersatnd.<a href="#Lexer">Lexer</a>.<a href="#Lexer-lexeme">lexeme</a>(line,column)<br>
+&nbsp;&nbsp;understand.<a href="#Lexer">Lexer</a>.<a href="#Lexer-lexemes">lexemes</a>([start_line&nbsp;[,end_line]])<br>
+&nbsp;&nbsp;understand.<a href="#Lexer">Lexer</a>.<a href="#Lexer-lines">lines</a>()<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Lexer-__iter__"><strong>__iter__</strong></a>(...)</dt><dd><tt>x.<a href="#Lexer-__iter__">__iter__</a>()&nbsp;&lt;==&gt;&nbsp;iter(x)</tt></dd></dl>
+
+<dl><dt><a name="Lexer-first"><strong>first</strong></a>(...)</dt><dd><tt>lexer.<a href="#Lexer-first">first</a>()&nbsp;-&gt;&nbsp;lexeme<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;first&nbsp;lexeme&nbsp;for&nbsp;the&nbsp;lexer.</tt></dd></dl>
+
+<dl><dt><a name="Lexer-lexeme"><strong>lexeme</strong></a>(...)</dt><dd><tt>lexer.<a href="#Lexer-lexeme">lexeme</a>(line,column)&nbsp;-&gt;&nbsp;understand.<a href="#Lexeme">Lexeme</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;lexeme&nbsp;at&nbsp;the&nbsp;specified&nbsp;line&nbsp;and&nbsp;column.</tt></dd></dl>
+
+<dl><dt><a name="Lexer-lexemes"><strong>lexemes</strong></a>(...)</dt><dd><tt>lexer.<a href="#Lexer-lexemes">lexemes</a>([start_line&nbsp;[,end_line]])&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;understand.<a href="#Lexeme">Lexeme</a><br>
+&nbsp;<br>
+Return&nbsp;all&nbsp;lexemes.&nbsp;If&nbsp;the&nbsp;optional&nbsp;parameters&nbsp;start_line&nbsp;or&nbsp;end_line<br>
+are&nbsp;specified,&nbsp;only&nbsp;the&nbsp;lexemes&nbsp;within&nbsp;these&nbsp;lines&nbsp;are&nbsp;returned.</tt></dd></dl>
+
+<dl><dt><a name="Lexer-lines"><strong>lines</strong></a>(...)</dt><dd><tt>lexer.<a href="#Lexer-lines">lines</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;number&nbsp;of&nbsp;lines&nbsp;in&nbsp;the&nbsp;lexer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="LexerIter">class <strong>LexerIter</strong></a>(builtins.object)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="LexerIter-__iter__"><strong>__iter__</strong></a>(...)</dt><dd><tt>x.<a href="#LexerIter-__iter__">__iter__</a>()&nbsp;&lt;==&gt;&nbsp;iter(x)</tt></dd></dl>
+
+<dl><dt><a name="LexerIter-__next__"><strong>__next__</strong></a>(...)</dt><dd><tt>x.<a href="#LexerIter-__next__">__next__</a>()&nbsp;&lt;==&gt;&nbsp;next(x)</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Metric">class <strong>Metric</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;is&nbsp;really&nbsp;just&nbsp;a&nbsp;shell&nbsp;for&nbsp;the&nbsp;two&nbsp;methods,&nbsp;description<br>
+and&nbsp;list.&nbsp;The&nbsp;description&nbsp;method&nbsp;will&nbsp;give&nbsp;a&nbsp;description&nbsp;for&nbsp;a&nbsp;metric<br>
+and&nbsp;list&nbsp;will&nbsp;list&nbsp;all&nbsp;the&nbsp;available&nbsp;metrics.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Static methods defined here:<br>
+<dl><dt><a name="Metric-description"><strong>description</strong></a>(...)</dt><dd><tt><a href="#Metric">Metric</a>.<a href="#Metric-description">description</a>(metricname)&nbsp;(static&nbsp;method)&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;description&nbsp;of&nbsp;the&nbsp;metric.<br>
+&nbsp;<br>
+The&nbsp;parameter&nbsp;metricname&nbsp;is&nbsp;the&nbsp;string&nbsp;name&nbsp;of&nbsp;the&nbsp;metric.&nbsp;This&nbsp;will<br>
+return&nbsp;an&nbsp;empty&nbsp;string&nbsp;if&nbsp;there&nbsp;is&nbsp;no&nbsp;metric&nbsp;for&nbsp;metricname</tt></dd></dl>
+
+<dl><dt><a name="Metric-list"><strong>list</strong></a>(...)</dt><dd><tt><a href="#Metric">Metric</a>.<a href="#Metric-list">list</a>([kindstring])&nbsp;(static&nbsp;method)&nbsp;-&gt;&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;list&nbsp;of&nbsp;metric&nbsp;names.<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;kindstring&nbsp;should&nbsp;be&nbsp;a&nbsp;filter&nbsp;string.&nbsp;If&nbsp;given<br>
+only&nbsp;the&nbsp;names&nbsp;of&nbsp;metrics&nbsp;defined&nbsp;for&nbsp;entities&nbsp;that&nbsp;match&nbsp;are&nbsp;returned.<br>
+Otherwise,&nbsp;all&nbsp;possible&nbsp;metric&nbsp;names&nbsp;are&nbsp;returned.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#Metric-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;object&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Ref">class <strong>Ref</strong></a>(builtins.object)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;reference&nbsp;object&nbsp;stores&nbsp;an&nbsp;reference&nbsp;between&nbsp;on&nbsp;entity&nbsp;an&nbsp;another.<br>
+Available&nbsp;methods&nbsp;are:<br>
+&nbsp;<br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a>.<a href="#Ref-column">column</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a>.<a href="#Ref-ent">ent</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a>.<a href="#Ref-file">file</a>()<br>
+&nbsp;&nbsp;undersatnd.<a href="#Ref">Ref</a>.<a href="#Ref-kind">kind</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a>.<a href="#Ref-kindname">kindname</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a>.<a href="#Ref-line">line</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a>.<a href="#Ref-scope">scope</a>()<br>
+&nbsp;&nbsp;understand.<a href="#Ref">Ref</a>.<a href="#Ref-__str__">__str__</a>()&nbsp;--kindname,&nbsp;ent,&nbsp;file<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Ref-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#Ref-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="Ref-column"><strong>column</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-column">column</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;column&nbsp;in&nbsp;source&nbsp;where&nbsp;the&nbsp;reference&nbsp;occurred.</tt></dd></dl>
+
+<dl><dt><a name="Ref-ent"><strong>ent</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-ent">ent</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;entity&nbsp;being&nbsp;referenced.</tt></dd></dl>
+
+<dl><dt><a name="Ref-file"><strong>file</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-file">file</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;file&nbsp;where&nbsp;the&nbsp;reference&nbsp;occurred.</tt></dd></dl>
+
+<dl><dt><a name="Ref-isforward"><strong>isforward</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-isforward">isforward</a>()&nbsp;-&gt;&nbsp;bool<br>
+&nbsp;<br>
+Return&nbsp;True&nbsp;if&nbsp;the&nbsp;reference&nbsp;is&nbsp;forward.</tt></dd></dl>
+
+<dl><dt><a name="Ref-kind"><strong>kind</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-kind">kind</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Kind">Kind</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;reference&nbsp;kind.</tt></dd></dl>
+
+<dl><dt><a name="Ref-kindname"><strong>kindname</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-kindname">kindname</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;short&nbsp;name&nbsp;of&nbsp;the&nbsp;reference&nbsp;kind<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;similar&nbsp;to&nbsp;ref.<a href="#Ref-kind">kind</a>().name(),&nbsp;but&nbsp;does&nbsp;not&nbsp;create&nbsp;anunderstand.<a href="#Kind">Kind</a>&nbsp;object.</tt></dd></dl>
+
+<dl><dt><a name="Ref-line"><strong>line</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-line">line</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;line&nbsp;in&nbsp;source&nbsp;where&nbsp;the&nbsp;reference&nbsp;occurred.</tt></dd></dl>
+
+<dl><dt><a name="Ref-macroexpansion"><strong>macroexpansion</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-macroexpansion">macroexpansion</a>()&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;macro&nbsp;expansion&nbsp;text&nbsp;for&nbsp;the&nbsp;refence&nbsp;file,&nbsp;line&nbsp;and&nbsp;column.<br>
+This&nbsp;function&nbsp;may&nbsp;return&nbsp;None&nbsp;if&nbsp;no&nbsp;text&nbsp;is&nbsp;available.</tt></dd></dl>
+
+<dl><dt><a name="Ref-scope"><strong>scope</strong></a>(...)</dt><dd><tt>ref.<a href="#Ref-scope">scope</a>()&nbsp;-&gt;&nbsp;understand.<a href="#Ent">Ent</a><br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;entity&nbsp;performing&nbsp;the&nbsp;reference.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="UnderstandError">class <strong>UnderstandError</strong></a>(builtins.Exception)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="understand.html#UnderstandError">UnderstandError</a></dd>
+<dd>builtins.Exception</dd>
+<dd>builtins.BaseException</dd>
+<dd>builtins.object</dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from builtins.Exception:<br>
+<dl><dt><a name="UnderstandError-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#UnderstandError-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from builtins.Exception:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#UnderstandError-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;object&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from builtins.BaseException:<br>
+<dl><dt><a name="UnderstandError-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#UnderstandError-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="UnderstandError-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#UnderstandError-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="UnderstandError-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="UnderstandError-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#UnderstandError-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="UnderstandError-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#UnderstandError-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="UnderstandError-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="UnderstandError-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#UnderstandError-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="UnderstandError-with_traceback"><strong>with_traceback</strong></a>(...)</dt><dd><tt>Exception.<a href="#UnderstandError-with_traceback">with_traceback</a>(tb)&nbsp;--<br>
+set&nbsp;self.<strong>__traceback__</strong>&nbsp;to&nbsp;tb&nbsp;and&nbsp;return&nbsp;self.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from builtins.BaseException:<br>
+<dl><dt><strong>__cause__</strong></dt>
+<dd><tt>exception&nbsp;cause</tt></dd>
+</dl>
+<dl><dt><strong>__context__</strong></dt>
+<dd><tt>exception&nbsp;context</tt></dd>
+</dl>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>__suppress_context__</strong></dt>
+</dl>
+<dl><dt><strong>__traceback__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-checksum"><strong>checksum</strong></a>(...)</dt><dd><tt>understand.<a href="#-checksum">checksum</a>(text&nbsp;[,len])&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;checksum&nbsp;of&nbsp;the&nbsp;text<br>
+&nbsp;<br>
+The&nbsp;optional&nbsp;parameter&nbsp;len&nbsp;specifies&nbsp;the&nbsp;length&nbsp;of&nbsp;the&nbsp;checksum,<br>
+which&nbsp;may&nbsp;be&nbsp;between&nbsp;1&nbsp;and&nbsp;32&nbsp;characters,&nbsp;with&nbsp;32&nbsp;being&nbsp;the&nbsp;default</tt></dd></dl>
+ <dl><dt><a name="-license"><strong>license</strong></a>(...)</dt><dd><tt>understand.<a href="#-license">license</a>(name)&nbsp;-&gt;&nbsp;None<br>
+&nbsp;<br>
+Set&nbsp;a&nbsp;regcode&nbsp;string&nbsp;or&nbsp;a&nbsp;specific&nbsp;path&nbsp;to&nbsp;an&nbsp;understand&nbsp;license</tt></dd></dl>
+ <dl><dt><a name="-open"><strong>open</strong></a>(...)</dt><dd><tt>understand.<a href="#-open">open</a>(dbname)&nbsp;-&gt;&nbsp;understand.<a href="#Db">Db</a><br>
+&nbsp;<br>
+Open&nbsp;a&nbsp;database&nbsp;from&nbsp;the&nbsp;passed&nbsp;in&nbsp;filename.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;a&nbsp;new&nbsp;understand.<a href="#Db">Db</a>&nbsp;given&nbsp;the&nbsp;dbname&nbsp;(string).&nbsp;It<br>
+will&nbsp;throw&nbsp;an&nbsp;understand.<a href="#UnderstandError">UnderstandError</a>&nbsp;if&nbsp;unsuccessful.&nbsp;Possible&nbsp;causes<br>
+for&nbsp;error&nbsp;are:<br>
+&nbsp;&nbsp;DBAlreadyOpen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;only&nbsp;one&nbsp;database&nbsp;may&nbsp;be&nbsp;open&nbsp;at&nbsp;once<br>
+&nbsp;&nbsp;DBCorrupt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;bad&nbsp;database&nbsp;file<br>
+&nbsp;&nbsp;DBOldVersion&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;database&nbsp;needs&nbsp;to&nbsp;be&nbsp;rebuilt<br>
+&nbsp;&nbsp;DBUnknownVersion&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;database&nbsp;needs&nbsp;to&nbsp;be&nbsp;rebuilt<br>
+&nbsp;&nbsp;DBUnableOpen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;database&nbsp;is&nbsp;unreadable&nbsp;or&nbsp;does&nbsp;not&nbsp;exist<br>
+&nbsp;&nbsp;NoApiLicense&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;Understand&nbsp;license&nbsp;required</tt></dd></dl>
+ <dl><dt><a name="-version"><strong>version</strong></a>(...)</dt><dd><tt>understand.<a href="#-version">version</a>()&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;current&nbsp;build&nbsp;number&nbsp;for&nbsp;this&nbsp;module</tt></dd></dl>
+</td></tr></table>
+</body></html>

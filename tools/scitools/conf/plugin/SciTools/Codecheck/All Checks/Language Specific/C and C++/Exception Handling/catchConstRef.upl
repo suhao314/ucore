@@ -1,0 +1,104 @@
+# Report catch statements that do not use const references.
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => "Catch Statement Not Const";
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+sub name {
+  return "Catch Const References";
+}
+
+sub description {
+  return "Report catch statements that do not use const references.";
+}
+
+sub detailed_description {
+  return "Report catch statements that do not use const references.
+    look for syntax: ... const ... & ... )";
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/;
+}
+
+sub test_entity {
+  return 1;
+}
+
+sub test_global {
+  return 0;
+}
+
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("c file ~unresolved ~unknown");
+
+  # create lexer once for file
+  my $lexer = undef;
+  # loop through functions defined in the file
+  foreach my $ref ($file->filerefs("define","function",1)) {
+      my $func = $ref->ent();
+      my ($begin,$end) = getFunctionDefnLines($func);
+      next if (!$begin);
+
+      $lexer = $file->lexer() if (!$lexer);
+      return unless $lexer;
+      do_one_function($check,$file,$func,$lexer,$begin,$end);
+  }
+  
+}
+
+# check one function.
+sub do_one_function {
+  my $check = shift;
+  my $file = shift;
+  my $func = shift;
+  my $lexer = shift;
+  my $begin = shift;
+  my $end = shift;
+
+  # find catch statements
+  foreach my $lexeme ($lexer->lexemes($begin,$end)) {
+    next if ($lexeme->token() ne "Keyword" || $lexeme->text() ne "catch");
+    my $catchLex = $lexeme;
+    # look for lexemes: ... const ... & ... )
+    my $okay=0;
+    my $seen_const=0;
+    $lexeme = $lexeme->next();
+    while (!$okay && $lexeme) {
+        last if $lexeme->text eq ")";
+        if (!$seen_const && $lexeme->text() eq "const") {
+          $seen_const = 1;
+        } elsif ($seen_const && $lexeme->text() eq "&") {
+          $okay = 1;
+        }
+        $lexeme = $lexeme->next();
+    }
+    if (!$okay) {
+        $check->violation($func,$file,$catchLex->line_begin,$catchLex->column_begin,ERR1);  
+    }
+  }
+}
+
+
+
+# Pass a function entity. Return an array of:
+#   the begin line
+#   the end line
+#   the defn file entity
+# Return undef if this info cannot be provided.
+sub getFunctionDefnLines {
+    my $func = shift;
+    my $begin_ref = $func->ref("definein");
+    my $end_ref = $func->ref("end");
+    return undef if (!$begin_ref || !$end_ref);
+    return ($begin_ref->line(), $end_ref->line(), $begin_ref->file());
+}

@@ -1,0 +1,76 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Octal Constants not allowed: %1';
+use constant ERR2 => 'Octal Escape Sequences not allowed: %1';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub name { return "2-13-2 Octal constants and octal escape sequences shall not be used";}
+
+sub description { return "2-13-2 (Required) Octal constants (other than zero) and octal escape sequences(other than \"\\0\") shall not be used.";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Any integer constant beginning with a "0" (zero) is treated as octal. Because of this, it is possible 
+for a zero-prefxed constant that is intended to be a decimal number to be incorrectly entered as an 
+octal number, contrary to developer expectations.</p>
+<p>Octal escape sequences can also be problematic because the inadvertent introduction of a decimal 
+digit (i.e. "8" or "9") ends the octal escape and introduces another character.
+The integer constant zero (written as a single numeric digit), is strictly speaking an octal constant, 
+but is a permitted exception to this rule. Additionally, "\\0" is the only permitted octal escape 
+sequence.</p>
+<p><b>Example</b><br>
+The following array initialization for 3-digit decimal bus messages would not behave as 
+expected:<br>
+code[ 1 ] = 109;   // Compliant     - decimal 109 <br>
+code[ 2 ] = 100;   // Compliant     - decimal 100 <br>
+code[ 3 ] = 052;   // Non-compliant - equivalent to decimal 42 <br>
+code[ 4 ] = 071;   // Non-compliant - equivalent to decimal 57
+<p>The  value  of  the frst  expression  in  the  following  example  is  implementation-defned because 
+the character constant consists of two characters, "\\10" and "9". The second character constant 
+expression contains the single character "\\100".<br>
+code[ 5 ] = '\\109';   // Non-compliant - implementation-defined, two character constant <br>
+code[ 6 ] = '\\100';   // Non-compliant - set to 64.<br>
+</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file"); 
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  my $scope;
+  foreach my $lexeme ($lexer->lexemes){
+    $scope = $lexeme->ref->scope if $lexeme->ref;
+    $scope = $file unless $scope;
+    if($lexeme->token eq "Literal"  &&$lexeme->text =~ /^0\d+$/){
+        $check->violation($scope,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1,$lexeme->text);
+    }elsif($lexeme->token eq "String" && $lexeme->text =~ /(\\\d\d?\d?)/ && $lexeme->text !~ /\\0[\D]*/ && $lexeme->text !~ /\\\\\d\d?\d?/){
+        $check->violation($scope,$file,$lexeme->line_begin,$lexeme->column_begin,ERR2,$1);
+    }
+  }
+}
+
+

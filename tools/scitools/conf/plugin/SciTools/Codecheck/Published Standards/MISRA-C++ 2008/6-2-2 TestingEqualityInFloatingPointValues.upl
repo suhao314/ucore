@@ -1,0 +1,225 @@
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => "Floating Point in Equality operation";
+
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+
+}
+
+
+sub name {
+  return "6-2-2 Floating-point expressions shall not be directly or indirectly tested for equality or inequality.";
+}
+
+sub description {
+  return "6-2-2 (Required) Floating-point expressions shall not be directly or indirectly tested for equality or inequality.";
+}
+
+sub detailed_description {
+  return  << "END_DESC"
+<p><b>Check Limitations</b><br>
+Only handles simple expressions like a==b, not complex expressions like a==b+c, a==(t)b or a==b-&gt;c. In these three cases, however, 
+if at least one operand is simple (like \'a\' in these cases) and that operand is a floating-point type, then the check will still be valid.
+This check also cannot detect if array's of floats or doubles are being compared with one another as that would require static evaluation of an
+expression, which code check is unable to do at this time.
+</p>
+<p><b>Rationale</b><br>
+The inherent nature of floating-point types is such that comparisons of equality will often not 
+evaluate to true, even when they are expected to. Also, the behaviour of such a comparison cannot 
+be predicted before execution, and may well vary from one implementation to another.</p>
+<p>The  recommended  method  for  achieving  deterministic  floating-point  comparisons  is  to  write 
+a  library  that  implements  the  comparison  operations. The  library  should  take  into  account  the 
+floating-point  granularity  (std::numeric_limits<float>::epsilon())  and  the  magnitude  of  the 
+numbers being compared.</p>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  //The result of the test in the following code is unpredictable:
+  float32_t x, y;
+  if ( x == y )     // Non-compliant 
+  if ( x == 0.0f )  // Non-compliant
+  //An indirect test is equally problematic and is also prohibited by this rule:
+  if ( ( x &lt;= y ) && ( x &gt;= y ) )   // Non-compliant
+  if ( ( x &lt; y ) || ( x &gt; y ) )     // Non-compliant
+  //The following is better, but only if the magnitudes are appropriate:
+  if ( fabs ( x - y ) &lt;= std::numeric_limits<float>::epsilon( ) )   // Compliant
+  </pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/;
+}
+
+sub test_entity {
+  return 1;
+}
+
+sub test_global {
+  return 0;
+}
+
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("c ~unresolved ~unknown");
+  
+
+  
+  # create lexer once for file
+  my $lexer = undef;
+
+  # loop through functions defined in the file
+  foreach my $ref ($file->filerefs("define","function",1)) {
+      my $func = $ref->ent();
+      my ($begin,$end) = getFunctionDefnLines($func);
+      next if (!$begin);
+
+      $lexer = $file->lexer() if (!$lexer);
+      return unless $lexer;
+      do_one_function($check,$file,$func,$lexer,$begin,$end);
+  }
+}
+
+
+# check one function.
+sub do_one_function {
+  my $check = shift;
+  my $file = shift;
+  my $func = shift;
+  my $lexer = shift;
+  my $begin = shift;
+  my $end = shift;
+
+  # setup lexemes
+  my $lexeme_pos = 0;
+  my @lexemes = $lexer->lexemes($begin,$end);
+  my $lexeme = nextLexeme(\@lexemes, \$lexeme_pos);
+
+  my $seen_floating = 0; # if previous token was floating id or literal
+  my $seen_equality = 0; # if previous token was '=='
+  my $seen_paren = 0;    # if previous token was ')'
+
+  while ($lexeme) {
+
+    if ($lexeme->text() eq "==") {
+
+      if ($seen_floating) {
+
+        $check->violation($func,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1);
+        $seen_floating = 0;
+
+      } else {
+
+        $seen_equality = 1;
+
+      }
+      $seen_paren = 0;
+
+    } elsif (checkFloating( $check, $file, $lexeme ) && !$seen_paren) {
+
+      if ($seen_equality) {
+
+        $check->violation($func,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1);
+        $seen_equality = 0;
+
+      } else {
+
+        $seen_floating = 1;
+
+      }
+      $seen_paren = 0;
+
+    } elsif ($lexeme->text() eq ")") {
+
+      $seen_floating = 0;
+      $seen_equality = 0;
+      $seen_paren = 1;
+
+    } else {
+
+      $seen_floating = 0;
+      $seen_equality = 0;
+      $seen_paren = 0;
+
+    }
+    $lexeme = nextLexeme(\@lexemes, \$lexeme_pos);
+  }
+}
+
+
+# return true if the lexeme is either a floating-point literal or
+# an entity of floating-point type.
+sub checkFloating {
+
+  my $check = shift;
+  my $file = shift;
+
+  my $lexeme = shift;
+  return 0 unless $lexeme;
+
+  if ($lexeme->token() eq "Literal") {
+
+    my $text = $lexeme->text();
+    return 0 if $text =~ m/^0[xXbB]/;
+    return 1 if $text =~ m/[.eE]/;
+
+  } else {
+
+    my $ent;
+    if ( $lexeme->ent() ) {
+
+      $ent = $lexeme->ent();
+
+    } else {
+
+      return 0;
+
+    }
+
+    my $type_ref = $ent->ref("typed");
+    my %seen; #Avoid recursive typing
+    while ($type_ref && $type_ref->ent() != $ent &&  ! $seen{$type_ref->ent->id}) { # hack for parse problem before b273
+
+      $seen{$type_ref->ent->id}=1;
+      $ent = $type_ref->ent();
+      $type_ref = $ent->ref("typed");
+
+    }
+
+    return 1 if $ent->type() =~ m/float|double/ and $ent->type() !~ m/float\s\*|double\s\*/;
+
+  }
+  return 0;
+}
+
+
+# Pass a function entity. Return an array of:
+#   the begin line
+#   the end line
+#   the defn file entity
+# Return undef if this info cannot be provided.
+sub getFunctionDefnLines {
+    my $func = shift;
+    my $begin_ref = $func->ref("definein");
+    my $end_ref = $func->ref("end");
+    return undef if (!$begin_ref || !$end_ref);
+    return ($begin_ref->line(), $end_ref->line(), $begin_ref->file());
+}
+
+
+
+# Return the next interesting lexeme or undef when all lexemes
+# are used.
+sub nextLexeme  {
+  my $lexemes = shift;
+  my $lexeme_pos = shift;
+  while (${$lexeme_pos} < $#$lexemes) {
+    my $lexeme = $lexemes->[${$lexeme_pos}++];
+    next if ($lexeme->token() =~ m/Comment|Whitespace|Newline/);
+    return $lexeme;
+  };
+  return undef;
+}

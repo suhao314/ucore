@@ -1,0 +1,52 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'Static Identifier \'%1\' reused';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub name { return "5.5 No object or function identifier with static storage duration should be reused";}
+
+sub description { return "5.5 (Advisory) No object or function identifier with static storage duration should be reused.";}
+
+sub detailed_description { return <<"END_DESC"
+<p>Regardless of scope, no identifer with static storage duration should be re-used across any source
+files in the system. This includes objects or functions with external linkage and any objects or
+functions with the static storage class specifer.<br>
+While the compiler can understand this and is in no way confused, the possibility exists for the
+user to incorrectly associate unrelated variables with the same name.<br>
+One example of this confusion is having an identifer name with internal linkage in one file and
+the same identifer name with external linkage in another file.
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 0;}
+
+sub test_global { return 1;}
+
+sub define_options{}
+
+
+sub check {
+  my $check = shift; 
+
+  my @statics = map{$_->name;}$check->db->ents("c static function ~member, c static object ~member");
+  my @notStatics = $check->db->ents("c function ~static, c object ~static");
+  foreach my $ent (@notStatics){
+    if($ent->name ~~ @statics){
+      my $ref= $ent->ref("define, declare");
+      $ref = $ent->ref unless $ref;
+      $check->violation($ent,$ref->file,$ref->line,$ref->column,ERR1,$ent->name);
+    }
+  }
+}

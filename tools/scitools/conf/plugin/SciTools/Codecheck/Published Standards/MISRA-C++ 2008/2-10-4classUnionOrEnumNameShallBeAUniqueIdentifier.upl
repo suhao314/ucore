@@ -1,0 +1,125 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Literal suffix for variable %1, is not upper case.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "2-13-4 Literal suffixes shall be upper case";}
+
+# This is the full description of the rule being tested
+sub description { return "2-13-4 (Required) Literal suffixes shall be upper case.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Using upper case literal suffixes removes the potential ambiguity between “1” (digit 1) and “l”
+(letter el) for declaring literals.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  const unsigned int a = 0U; 
+  const unsigned int b = 0u; // Non-compliant
+  const long int c = 0L;
+  const long int d = 0l; // Non-compliant
+  const unsigned long int e = 0UL;
+  const unsigned long int f = 0Ul; // Non-compliant
+  const unsigned int g = 0x12bU;
+  const unsigned int h = 0x12bu; // Non-compliant
+  const float m = 1.2F;
+  const float n = 2.4f; // Non-compliant
+  const double o = 1.2L;
+  const double p = 2.4l; // Non-compliant
+  const double q = o;
+  const double r = p;
+</pre>
+<p><b>See also</b><br>
+ISO/IEC 14882:2003 [1] §2.13</p>
+<br>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull any references that are numerical literals
+  my @references = $file->filerefs("setby","char, short, int, long, float, double");
+  my @functions = $file->filerefs("Callby");
+  my @merged = (@references, @functions);
+  
+  # Loop through each setby reference
+  REF: foreach my $ref(@merged) {
+    my $lexeme = $ref->lexeme;
+	while ( $lexeme ) {
+	  next REF if $lexeme->text eq ";";
+	  if ( $lexeme->token eq "Literal" ) {
+	    # Throw error if a lower case suffix is used.
+	    throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$lexeme->text) if $lexeme->text =~ /[l$]/;
+		throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$lexeme->text) if $lexeme->text =~ /[f$]/;
+		throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$lexeme->text) if $lexeme->text =~ /[u$]/;
+	  }
+	}
+	continue {
+      $lexeme = $lexeme->next;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

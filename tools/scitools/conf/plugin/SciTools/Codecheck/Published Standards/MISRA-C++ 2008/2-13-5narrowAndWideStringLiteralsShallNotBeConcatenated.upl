@@ -1,0 +1,111 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Narrow and Wide String literal concatenated together: %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+sub name { return "2-13-5 Narrow and wide string literals shall not be concatenated";}
+
+# This is the full description of the rule being tested
+sub description { return "2-13-5 (Required) Narrow and wide string literals shall not be concatenated.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Concatenation of wide and narrow string literals leads to undefined behaviour.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  char n_array[] = "Hello" "World"; // Compliant
+  wchar_t w_array[] = L"Hello" L"World"; // Compliant
+  wchar_t mixed[] = "Hello" L"World"; // Non-compliant
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  # Pull any references for wchar setby references
+  my @references = $file->filerefs("Set");
+  
+  # Loop through each setby reference for wchar_t types
+  REF: foreach my $ref(@references) {
+    next unless $ref->ent->type =~ /^wchar_t\s\[\d+\]$/;
+    my $L = 0;
+    my $lexeme = $ref->lexeme;
+	while ( $lexeme->text ne ";" ) {
+	  if ( $lexeme->token eq "String" ) {
+	    throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$lexeme->text) unless $L == 1;
+		$L = 0;
+		next REF;
+	  }
+	  elsif ( $lexeme->token eq "Identifier" && $lexeme->text eq "L" && $lexeme->next->token eq "String" ) {
+	    $L = 1;
+	  }
+	}
+	continue {
+      $lexeme = $lexeme->next;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
