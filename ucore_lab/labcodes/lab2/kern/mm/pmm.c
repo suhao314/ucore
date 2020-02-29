@@ -380,6 +380,20 @@ get_pte(pde_t *pgdir, uintptr_t la, bool create) {
     }
     return NULL;          // (8) return page table entry
 #endif
+    pde_t* pdePtr = &(pgdir[PDX(la)]);                                              // 获取页表基址
+    if(!(*pdePtr & PTE_P)){                                                         // 页表不存在
+        struct Page* page=0;
+        if(!(create) || ((page=alloc_page())==0)){                                    // 无需创建或创建失败
+            return 0;
+        }
+        else{                                                                       // 需要创建页表: 最多1024项, 占 <4KB 空间
+            set_page_ref(page, 1);                                                  // 该页表被页目录表引用
+            uintptr_t pa = page2pa(page);
+            memset(KADDR(pa), 0, PGSIZE);                                                  // 清除页表中的所有内容
+            *pdePtr = pa | PTE_P | PTE_U | PTE_W;
+        }
+    }
+    return &((pte_t*)KADDR(PDE_ADDR(*pdePtr)))[PTX(la)];
 }
 
 //get_page - get related Page struct for linear address la using PDT pgdir
@@ -425,6 +439,16 @@ page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep) {
                                   //(6) flush tlb
     }
 #endif
+    if(!(*ptep & PTE_P)) return;                                                    // 所要移除的页表不存在
+    else{
+        struct Page* page = pte2page(*ptep);
+        if (page_ref_dec(page) == 0) {                                              // 页表仅被引用一次: 页目录表?
+            free_page(page);
+        }
+        *ptep = 0;
+        tlb_invalidate(pgdir, la);
+    }
+    
 }
 
 //page_remove - free an Page which is related linear address la and has an validated pte
