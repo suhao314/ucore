@@ -138,7 +138,7 @@ default_free_pages(struct Page *base, size_t n) {
     //    set_page_ref(p, 0);
     //}
     base->property = n;
-    SetPageProperty(base);
+    //SetPageProperty(base);
     list_entry_t *le = list_next(&free_list);
     while (le != &free_list) {                                                          // 寻找插入点: 插在 le/p 空闲块之后
         p = le2page(le, page_link);
@@ -150,11 +150,13 @@ default_free_pages(struct Page *base, size_t n) {
     for(i=0; i<n; i++,iter++){                                                          // 将空闲页面加入到空闲链表
         //assert(!PageReserved(iter) && !PageProperty(iter));                           // ?
         iter->flags = 0;
+        //SetPageProperty(iter);
+        //ClearPageReserved(iter);                                                      // 可只关心base页面, 判断是否为空闲块起始以来 property 成员变量
         set_page_ref(iter, 0);
         list_add_before(le, &(iter->page_link));
     }
-    ClearPageProperty(base);                                                            // 初始化首页面
     SetPageProperty(base);
+    ClearPageReserved(base);
     base->property = n;
 
     if(base+n==p){                                                                      // 后方有空闲块
