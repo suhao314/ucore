@@ -51,6 +51,8 @@ _fifo_map_swappable(struct mm_struct *mm, uintptr_t addr, struct Page *page, int
     //record the page access situlation
     /*LAB3 EXERCISE 2: YOUR CODE*/ 
     //(1)link the most recent arrival page at the back of the pra_list_head qeueue.
+    // list_entry_t* tail_node = head->next;
+    list_add_after(head, entry);
     return 0;
 }
 /*
@@ -67,6 +69,13 @@ _fifo_swap_out_victim(struct mm_struct *mm, struct Page ** ptr_page, int in_tick
      /*LAB3 EXERCISE 2: YOUR CODE*/ 
      //(1)  unlink the  earliest arrival page in front of pra_list_head qeueue
      //(2)  set the addr of addr of this page to ptr_page
+     list_entry_t* victim_node = head->prev;
+     list_del(victim_node);
+     struct Page* victim_page = le2page(victim_node, pra_page_link);
+    // 下一行的写法不对
+    //  ptr_page = &victim_page;
+    // 使用二级指针的目的是修改值 *ptr_page
+     *ptr_page = victim_page;
      return 0;
 }
 

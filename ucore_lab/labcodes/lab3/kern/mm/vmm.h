@@ -11,6 +11,7 @@ struct mm_struct;
 
 // the virtual continuous memory area(vma), [vm_start, vm_end), 
 // addr belong to a vma means  vma.vm_start<= addr <vma.vm_end 
+// 合法的虚存: [vm_start, vm_end) 借助此数据结构完成缺页异常的处理(虚存描述符?)
 struct vma_struct {
     struct mm_struct *vm_mm; // the set of vma using the same PDT 
     uintptr_t vm_start;      // start addr of vma      
@@ -27,6 +28,7 @@ struct vma_struct {
 #define VM_EXEC                 0x00000004
 
 // the control struct for a set of vma using the same PDT
+// 管理虚拟内存的数据结构, 和物理内存使用同一个页表 可视为管理所有内存的最高层数据结构
 struct mm_struct {
     list_entry_t mmap_list;        // linear list link which sorted by start addr of vma
     struct vma_struct *mmap_cache; // current accessed vma, used for speed purpose

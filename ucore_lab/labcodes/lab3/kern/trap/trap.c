@@ -48,6 +48,22 @@ idt_init(void) {
       *     You don't know the meaning of this instruction? just google it! and check the libs/x86.h to know more.
       *     Notice: the argument of lidt is idt_pd. try to find it!
       */
+     
+     // 声明中断向量表 [0...255] 共256个 0...31为Exception 其余为 Interrupts
+     extern uintptr_t __vectors[];
+     // 在中断向量表中设置中断服务例程入口：借助 SETGATE(gate, istrap, sel, off, dpl) 宏来设置 IDT 中的每一个表项
+     // gate 实际上是 struct gatedesc 即中断门描述符类型
+     int i;
+     // 为中断描述符表设置中断服务例程入口地址
+     for(i = 0; i < sizeof(idt)/sizeof(struct gatedesc); i++){
+         SETGATE(idt[i], 0, GD_KTEXT, __vectors[i], DPL_KERNEL);
+     }
+
+     // set for switch from user to kernel
+     // 用户态到内核态的转换 T_SWITCH_TOK:121
+     SETGATE(idt[T_SWITCH_TOK], 0, GD_KTEXT, __vectors[T_SWITCH_TOK], DPL_USER);
+	 // 封装好的 lidt 指令：加载 IDT 到 IDTR
+     lidt(&idt_pd);
 }
 
 static const char *
@@ -162,6 +178,11 @@ pgfault_handler(struct trapframe *tf) {
 static volatile int in_swap_tick_event = 0;
 extern struct mm_struct *check_mm_struct;
 
+// 临时变量:供状态切换的处理代码使用
+struct trapframe switchk2u;
+struct trapframe* switchu2k;
+
+/* trap_dispatch - dispatch based on what type of trap occurred */
 static void
 trap_dispatch(struct trapframe *tf) {
     char c;
@@ -186,6 +207,14 @@ trap_dispatch(struct trapframe *tf) {
          * (2) Every TICK_NUM cycle, you can print some info using a funciton, such as print_ticks().
          * (3) Too Simple? Yes, I think so!
          */
+        /* 处理时钟中断
+         * 时钟中断发生后，使用全局变量记录此事件：全局变量自增；可使用 kern/driver/clock.c 中的 ticks
+         * 每到达 TICK_NUM 打印响应的信息；使用 print_ticks()
+        */
+        ticks++;
+        if(ticks%TICK_NUM == 0){
+            print_ticks();
+        }
         break;
     case IRQ_OFFSET + IRQ_COM1:
         c = cons_getc();
@@ -197,8 +226,39 @@ trap_dispatch(struct trapframe *tf) {
         break;
     //LAB1 CHALLENGE 1 : YOUR CODE you should modify below codes.
     case T_SWITCH_TOU:
+        // 从内核态切换至用户态:
+        if(tf->tf_cs != USER_CS){
+            switchk2u = *tf;
+            // 改写标志位
+            switchk2u.tf_cs = USER_CS;
+            switchk2u.tf_ds = switchk2u.tf_es = switchk2u.tf_ss = USER_DS;
+            switchk2u.tf_esp = (uint32_t)tf + sizeof(struct trapframe) - 8;
+		
+            // set eflags, make sure ucore can use io under user mode.
+            // if CPL > IOPL, then cpu will generate a general protection.
+            switchk2u.tf_eflags |= FL_IOPL_MASK;
+		
+            // set temporary stack
+            // then iret will jump to the right stack
+            *((uint32_t *)tf - 1) = (uint32_t)&switchk2u;
+        }
+        // 从用户态切换至用户态:无需处理
+        else;
+        break;
+        
+    // 切换至内核态
     case T_SWITCH_TOK:
-        panic("T_SWITCH_** ??\n");
+        // 从用户态切换至内核态:
+        if (tf->tf_cs != KERNEL_CS) {
+            tf->tf_cs = KERNEL_CS;
+            tf->tf_ds = tf->tf_es = KERNEL_DS;
+            tf->tf_eflags &= ~FL_IOPL_MASK;
+            switchu2k = (struct trapframe *)(tf->tf_esp - (sizeof(struct trapframe) - 8));
+            memmove(switchu2k, tf, sizeof(struct trapframe) - 8);
+            *((uint32_t *)tf - 1) = (uint32_t)switchu2k;
+        }
+        // 从内核态切换至内核态:无需处理
+        else;
         break;
     case IRQ_OFFSET + IRQ_IDE1:
     case IRQ_OFFSET + IRQ_IDE2:
