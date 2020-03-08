@@ -397,7 +397,7 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
         }
    }
 #endif
-    ptep=get_pte(mm->pgdir, addr, 1);                                                           // 如不存在包含此 pte 的页表需要初始化一个页表
+    if((ptep=get_pte(mm->pgdir, addr, 1)) == 0) goto failed;                        // 如不存在包含此 pte 的页表需要初始化一个页表 此处注意赋值和比较的运算优先级(需要加括号,否则ptep会得到0或1)
     // 线性地址和物理地址未建立映射, 如果包含此页表项的页目录表不存在则创建页目录表
     if(*ptep==0){
         struct Page* page = pgdir_alloc_page(mm->pgdir, addr, perm);
@@ -408,18 +408,20 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     else{
         if(swap_init_ok){
             struct Page* page = 0;
-            swap_in(mm, addr, &page);
+            if((ret = swap_in(mm, addr, &page)) != 0) goto failed;
+            
             page_insert(mm->pgdir, page, addr, perm);
             // swap_map_swappable(mm, addr, page, 0);
             swap_map_swappable(mm, addr, page, 1);
             
         }
-        else{
-            cprintf("no swap_init_ok but ptep is %x, failed", *ptep);
+        else {
+            cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
             goto failed;
         }
     }
-   ret = 0;
+    tlb_invalidate(mm->pgdir, addr);
+    ret = 0;
 failed:
     return ret;
 }
