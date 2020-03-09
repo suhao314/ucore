@@ -361,6 +361,7 @@ pmm_init(void) {
 //  la:     the linear address need to map
 //  create: a logical value to decide if alloc a page for PT
 // return vaule: the kernel virtual address of this pte
+// 获取一个 pte 且返回 la 对应的内核虚地址 如果包含此 pte 的 PT 不存在, 分配一个页面给PT
 pte_t *
 get_pte(pde_t *pgdir, uintptr_t la, bool create) {
     /* LAB2 EXERCISE 2: YOUR CODE
@@ -396,6 +397,20 @@ get_pte(pde_t *pgdir, uintptr_t la, bool create) {
     }
     return NULL;          // (8) return page table entry
 #endif
+    pde_t* pdePtr = &(pgdir[PDX(la)]);                                              // 获取页表基址
+    if(!(*pdePtr & PTE_P)){                                                         // 页表不存在
+        struct Page* page=0;
+        if(!(create) || ((page=alloc_page())==0)){                                  // 无需创建或创建失败
+            return 0;
+        }
+        else{                                                                       // 需要创建页表: 最多1024项, 占 <4KB 空间
+            set_page_ref(page, 1);                                                  // 该页表被页目录表引用
+            uintptr_t pa = page2pa(page);
+            memset(KADDR(pa), 0, PGSIZE);                                           // 清除页表中的所有内容
+            *pdePtr = pa | PTE_P | PTE_U | PTE_W;
+        }
+    }
+    return &((pte_t*)KADDR(PDE_ADDR(*pdePtr)))[PTX(la)];
 }
 
 //get_page - get related Page struct for linear address la using PDT pgdir
@@ -441,6 +456,16 @@ page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep) {
                                   //(6) flush tlb
     }
 #endif
+    if(!(*ptep & PTE_P)) return;                                                    // 所要移除的页表不存在
+    else{
+        struct Page* page = pte2page(*ptep);
+        if (page_ref_dec(page) == 0) {                                              // 页表仅被引用一次: 页目录表?
+            free_page(page);
+        }
+        *ptep = 0;
+        tlb_invalidate(pgdir, la);
+    }
+    
 }
 
 //page_remove - free an Page which is related linear address la and has an validated pte
@@ -493,6 +518,7 @@ tlb_invalidate(pde_t *pgdir, uintptr_t la) {
 // pgdir_alloc_page - call alloc_page & page_insert functions to 
 //                  - allocate a page size memory & setup an addr map
 //                  - pa<->la with linear address la and the PDT pgdir
+// 分配一页大小的内存，并设置 pa 和 la 之间以及页目录表的映射
 struct Page *
 pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm) {
     struct Page *page = alloc_page();

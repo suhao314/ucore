@@ -298,29 +298,30 @@ volatile unsigned int pgfault_num=0;
  *         -- The U/S flag (bit 2) indicates whether the processor was executing at user mode (1)
  *            or supervisor mode (0) at the time of the exception.
  */
+// 处理页异常的函数: addr为引起异常的地址即CR2中的内容 mm为管理一系列vma的链表表头
 int
 do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     int ret = -E_INVAL;
-    //try to find a vma which include addr
+    // 尝试寻找一个包含 addr 的 vma_struct
     struct vma_struct *vma = find_vma(mm, addr);
 
     pgfault_num++;
-    //If the addr is in the range of a mm's vma?
-    if (vma == NULL || vma->vm_start > addr) {
+    // 没有找到
+    if (vma == NULL || vma->vm_start > addr) {                                                                              // 越界
         cprintf("not valid addr %x, and  can not find it in vma\n", addr);
         goto failed;
     }
-    //check the error_code
+    // 找到了包含 addr 的 vma: 根据页错误相关信息(err_code)处理
     switch (error_code & 3) {
-    default:
+    default:                                                                                                                // ==3, 访问权限异常
             /* error code flag : default is 3 ( W/R=1, P=1): write, present */
-    case 2: /* error code flag : (W/R=1, P=0): write, not present */
+    case 2: /* error code flag : (W/R=1, P=0): write, not present */                                                        // 写异常
         if (!(vma->vm_flags & VM_WRITE)) {
             cprintf("do_pgfault failed: error code flag = write AND not present, but the addr's vma cannot write\n");
             goto failed;
         }
         break;
-    case 1: /* error code flag : (W/R=0, P=1): read, present */
+    case 1: /* error code flag : (W/R=0, P=1): read, present */                                                             // 页面存在, 非法读
         cprintf("do_pgfault failed: error code flag = read AND present\n");
         goto failed;
     case 0: /* error code flag : (W/R=0, P=0): read, not present */
@@ -393,7 +394,31 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
         }
    }
 #endif
-   ret = 0;
+    if((ptep=get_pte(mm->pgdir, addr, 1)) == 0) goto failed;                        // 如不存在包含此 pte 的页表需要初始化一个页表 此处注意赋值和比较的运算优先级(需要加括号,否则ptep会得到0或1)
+    // 线性地址和物理地址未建立映射, 如果包含此页表项的页目录表不存在则创建页目录表
+    if(*ptep==0){
+        struct Page* page = pgdir_alloc_page(mm->pgdir, addr, perm);
+        if(page==0) goto failed;
+        // else tlb_invalidate(mm->pgdir, addr);
+    }
+    // 目标页不在物理内存, 在磁盘上
+    else{
+        if(swap_init_ok){
+            struct Page* page = 0;
+            if((ret = swap_in(mm, addr, &page)) != 0) goto failed;
+            
+            page_insert(mm->pgdir, page, addr, perm);
+            // swap_map_swappable(mm, addr, page, 0);
+            swap_map_swappable(mm, addr, page, 1);
+            
+        }
+        else {
+            cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
+            goto failed;
+        }
+    }
+    tlb_invalidate(mm->pgdir, addr);
+    ret = 0;
 failed:
     return ret;
 }
